@@ -37,11 +37,13 @@ final class GlobalHotKeyRegistrar {
   ) throws {
     unregister()
     self.handler = handler
-    let definitions = MeetingAction.allCases.enumerated().map { index, action in
-      HotKeyDefinition(
+    let definitions: [HotKeyDefinition] = MeetingAction.allCases.enumerated().compactMap {
+      index, action in
+      guard let shortcut = bindings[action] else { return nil }
+      return HotKeyDefinition(
         id: UInt32(index + 1),
         action: action,
-        shortcut: bindings[action] ?? ActionCatalog.defaultTrigger(for: action)
+        shortcut: shortcut
       )
     }
     definitionsByID = Dictionary(uniqueKeysWithValues: definitions.map { ($0.id, $0) })

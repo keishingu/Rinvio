@@ -6,8 +6,10 @@ final class QuickDrawConfigurationTests: XCTestCase {
   func testDefaultsComeFromCatalogWithoutStoredOverrides() {
     let store = QuickDrawConfigurationStore(fileURL: nil)
 
-    XCTAssertEqual(store.trigger(for: .mute).displayValue, "F6")
-    XCTAssertEqual(store.shortcut(for: .camera, target: .zoomWorkplace).displayValue, "⌘⇧V")
+    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "F6")
+    XCTAssertEqual(store.shortcut(for: .camera, target: .zoomWorkplace)?.displayValue, "⌘⇧V")
+    XCTAssertNil(store.trigger(for: .openChat))
+    XCTAssertNil(store.shortcut(for: .openChat, target: .microsoftTeams))
     XCTAssertTrue(store.configuration.triggerOverrides.isEmpty)
     XCTAssertTrue(store.configuration.shortcutOverrides.isEmpty)
   }
@@ -20,8 +22,9 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertEqual(store.trigger(for: .mute), custom)
     XCTAssertTrue(store.isTriggerOverridden(for: .mute))
 
-    try store.setTriggerOverride(ActionCatalog.defaultTrigger(for: .mute), for: .mute)
-    XCTAssertEqual(store.trigger(for: .mute).displayValue, "F6")
+    let defaultTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .mute))
+    try store.setTriggerOverride(defaultTrigger, for: .mute)
+    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "F6")
     XCTAssertFalse(store.isTriggerOverridden(for: .mute))
   }
 
@@ -36,12 +39,30 @@ final class QuickDrawConfigurationTests: XCTestCase {
 
   func testRejectsDuplicateTrigger() throws {
     let store = QuickDrawConfigurationStore(fileURL: nil)
+    let cameraTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .camera))
 
     XCTAssertThrowsError(
-      try store.setTriggerOverride(ActionCatalog.defaultTrigger(for: .camera), for: .mute)
+      try store.setTriggerOverride(cameraTrigger, for: .mute)
     ) { error in
       XCTAssertEqual(error as? QuickDrawConfigurationError, .duplicateTrigger(.camera))
     }
+  }
+
+  func testUnassignedActionCanReceiveAndResetTrigger() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let custom = KeyStroke(
+      virtualKeyCode: 8,
+      modifiers: [.command, .option],
+      displayValue: "⌥⌘C"
+    )
+
+    try store.setTriggerOverride(custom, for: .openChat)
+    XCTAssertEqual(store.trigger(for: .openChat), custom)
+    XCTAssertTrue(store.isTriggerOverridden(for: .openChat))
+
+    try store.resetTrigger(for: .openChat)
+    XCTAssertNil(store.trigger(for: .openChat))
+    XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
   }
 
   func testMappingOverrideAndActionResetRemoveOnlySelectedAction() throws {

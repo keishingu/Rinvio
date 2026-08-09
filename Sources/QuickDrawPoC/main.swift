@@ -39,8 +39,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     menuController.setLanguage(model.language)
 
     let updateTriggerPresentation = {
-      let summary = MeetingAction.allCases.map {
-        configurationStore.trigger(for: $0).displayValue
+      let summary = MeetingAction.allCases.compactMap {
+        configurationStore.trigger(for: $0)?.displayValue
       }.joined(separator: "/")
       controller.triggerSummary = summary
       menuController.setTriggerSummary(summary)

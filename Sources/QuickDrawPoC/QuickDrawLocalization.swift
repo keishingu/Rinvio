@@ -53,6 +53,8 @@ struct QuickDrawCopy {
     text("1つの操作を、対応アプリごとの操作へ変換します。", "One action, translated for every supported application.")
   }
   var meetingControls: String { text("会議コントロール", "Meeting controls") }
+  var panelsAndSharing: String { text("パネルと共有", "Panels and sharing") }
+  var reactions: String { text("リアクション", "Reactions") }
   var applicationsSubtitle: String {
     text(
       "各アプリでActionがどう実行されるか確認できます。",
@@ -61,7 +63,9 @@ struct QuickDrawCopy {
   }
   var detected: String { text("検出済み", "Detected") }
   var notInstalled: String { text("未インストール", "Not installed") }
-  var threeActions: String { text("3つのAction", "3 Actions") }
+  func actionCount(_ count: Int) -> String {
+    text("\(count)個のAction", "\(count) Actions")
+  }
 
   var diagnosticsSubtitle: String {
     text(
@@ -92,6 +96,8 @@ struct QuickDrawCopy {
   }
   var changeShortcut: String { text("変更…", "Change…") }
   var pressShortcut: String { text("ショートカットを入力…", "Press shortcut…") }
+  var unassigned: String { text("未割り当て", "Unassigned") }
+  var noShortcut: String { text("ショートカットなし", "No shortcut") }
   var cancel: String { text("キャンセル", "Cancel") }
   var modified: String { text("変更済み", "Modified") }
   var defaultValue: String { text("デフォルト", "Default") }
@@ -127,6 +133,9 @@ struct QuickDrawCopy {
   var actionMappings: String { text("Actionのマッピング", "Action mappings") }
   var capability: String { text("対応状況", "Capability") }
   var supported: String { text("対応済み", "Supported") }
+  func shortcutCapability(_ supported: Int, total: Int) -> String {
+    text("\(supported)/\(total) Actionに対応", "\(supported) of \(total) Actions")
+  }
   var method: String { text("実行方式", "Method") }
   var shortcut: String { text("ショートカット", "Shortcut") }
   var shortcutAccessibilityPrefix: String { text("ショートカット", "Shortcut") }
@@ -204,11 +213,31 @@ struct QuickDrawCopy {
     application.id == "googleMeet" ? activeTabAndShortcut : officialKeyboardShortcut
   }
 
+  func actionCategoryName(_ category: ActionCategory) -> String {
+    switch category {
+    case .meetingControls: meetingControls
+    case .panelsAndSharing: panelsAndSharing
+    case .reactions: reactions
+    }
+  }
+
   func actionName(_ action: MeetingAction) -> String {
     switch action {
     case .mute: text("ミュート切替", "Mute Toggle")
     case .camera: text("カメラ切替", "Camera Toggle")
     case .raiseHand: text("挙手切替", "Raise Hand Toggle")
+    case .openChat: text("チャットを表示", "Show Chat")
+    case .showParticipants: text("参加者を表示", "Show Participants")
+    case .toggleCaptions: text("字幕切替", "Captions Toggle")
+    case .shareScreen: text("画面共有", "Share Screen")
+    case .switchCamera: text("カメラを切り替える", "Switch Camera")
+    case .pictureInPicture: text("ピクチャ・イン・ピクチャ", "Picture in Picture")
+    case .reactionLike: text("リアクション：👍", "Reaction: 👍")
+    case .reactionHeart: text("リアクション：❤️", "Reaction: ❤️")
+    case .reactionClap: text("リアクション：👏", "Reaction: 👏")
+    case .reactionLaugh: text("リアクション：😂", "Reaction: 😂")
+    case .reactionWow: text("リアクション：😮", "Reaction: 😮")
+    case .reactionCelebrate: text("リアクション：🎉", "Reaction: 🎉")
     }
   }
 
@@ -220,6 +249,30 @@ struct QuickDrawCopy {
       text("現在の会議でカメラをオン／オフします", "Turn the camera on or off in the active meeting")
     case .raiseHand:
       text("現在の会議で挙手／挙手解除します", "Raise or lower your hand in the active meeting")
+    case .openChat:
+      text("会議中のチャットパネルを表示／非表示にします", "Show or hide the in-meeting chat")
+    case .showParticipants:
+      text("会議の参加者パネルを表示／非表示にします", "Show or hide meeting participants")
+    case .toggleCaptions:
+      text("会議の字幕を表示／非表示にします", "Show or hide meeting captions")
+    case .shareScreen:
+      text("画面共有の開始または共有メニューを開きます", "Start sharing or open the sharing controls")
+    case .switchCamera:
+      text("利用するカメラを切り替えます", "Switch to the next available camera")
+    case .pictureInPicture:
+      text("会議をピクチャ・イン・ピクチャで表示します", "Open the meeting in picture-in-picture")
+    case .reactionLike:
+      text("👍リアクションを送信します", "Send a thumbs-up reaction")
+    case .reactionHeart:
+      text("❤️リアクションを送信します", "Send a heart reaction")
+    case .reactionClap:
+      text("👏リアクションを送信します", "Send a clapping reaction")
+    case .reactionLaugh:
+      text("😂リアクションを送信します", "Send a laughing reaction")
+    case .reactionWow:
+      text("😮リアクションを送信します", "Send a wow reaction")
+    case .reactionCelebrate:
+      text("🎉リアクションを送信します", "Send a celebration reaction")
     }
   }
 
@@ -234,13 +287,9 @@ struct QuickDrawCopy {
     }
     if value.hasPrefix("This trigger is already assigned to ") {
       let englishName = String(value.dropFirst("This trigger is already assigned to ".count))
-      let localizedName: String
-      switch englishName {
-      case MeetingAction.mute.displayName: localizedName = actionName(.mute)
-      case MeetingAction.camera.displayName: localizedName = actionName(.camera)
-      case MeetingAction.raiseHand.displayName: localizedName = actionName(.raiseHand)
-      default: localizedName = englishName
-      }
+      let localizedName =
+        MeetingAction.allCases.first { $0.displayName == englishName }
+        .map(actionName) ?? englishName
       return "このTriggerはすでに\(localizedName)へ割り当てられています。"
     }
     if value.contains("could not be registered") {
@@ -254,14 +303,22 @@ struct QuickDrawCopy {
     return ActionStatus(
       action: status.action,
       headline: localizedHeadline(status.headline),
-      detail: localizedDetail(status.detail),
+      detail: localizedDetail(status.detail, action: status.action),
       target: status.target == "Not detected" ? "未検出" : status.target,
       isError: status.isError
     )
   }
 
   private func localizedHeadline(_ value: String) -> String {
-    switch value {
+    for action in MeetingAction.allCases {
+      if value == "\(action.displayName) delivered" {
+        return "\(actionName(action))を送信しました"
+      }
+      if value == "\(action.displayName) not delivered" {
+        return "\(actionName(action))を送信できませんでした"
+      }
+    }
+    return switch value {
     case "Starting…": "起動中…"
     case "Enabled — shortcuts ready": "有効 — ショートカットを使用できます"
     case "Disabled": "停止中"
@@ -270,18 +327,12 @@ struct QuickDrawCopy {
     case "Accessibility granted": "アクセシビリティは許可済みです"
     case "Accessibility permission requested": "アクセシビリティの許可を要求しました"
     case "Dry Run route matched": "ドライランで経路を確認しました"
-    case "Mute delivered": "ミュート操作を送信しました"
-    case "Camera delivered": "カメラ操作を送信しました"
-    case "Raise Hand delivered": "挙手操作を送信しました"
-    case "Mute not delivered": "ミュート操作を送信できませんでした"
-    case "Camera not delivered": "カメラ操作を送信できませんでした"
-    case "Raise Hand not delivered": "挙手操作を送信できませんでした"
     case "Global shortcut registration failed": "グローバルショートカットを登録できませんでした"
     default: value
     }
   }
 
-  private func localizedDetail(_ value: String) -> String {
+  private func localizedDetail(_ value: String, action: MeetingAction?) -> String {
     let exact: [String: String] = [
       "Preparing shortcuts": "ショートカットを準備しています",
       "Accessibility: Granted": "アクセシビリティ: 許可済み",
@@ -295,12 +346,23 @@ struct QuickDrawCopy {
         "システム設定でQuickDraw PoCを有効にして、もう一度お試しください",
     ]
     if let localized = exact[value] { return localized }
-    if value.contains(" would send ") {
-      return
+    if let action, value.contains(" has no shortcut for ") {
+      let suffix =
+        value.split(separator: "·", maxSplits: 1).dropFirst().first
+        .map { " ·\($0)" } ?? ""
+      let target =
         value
-        .replacingOccurrences(of: "Mute would send ", with: "ミュート送信予定: ")
-        .replacingOccurrences(of: "Camera would send ", with: "カメラ送信予定: ")
-        .replacingOccurrences(of: "Raise Hand would send ", with: "挙手送信予定: ")
+        .replacingOccurrences(of: "\(action.displayName) has no shortcut for ", with: "")
+        .split(separator: "·", maxSplits: 1).first.map(String.init) ?? "対象アプリ"
+      return "\(target)では\(actionName(action))のショートカットがありません\(suffix)"
+    }
+    if value.contains(" would send ") {
+      for action in MeetingAction.allCases {
+        let prefix = "\(action.displayName) would send "
+        if value.hasPrefix(prefix) {
+          return value.replacingOccurrences(of: prefix, with: "\(actionName(action))送信予定: ")
+        }
+      }
     }
     return value
   }

@@ -111,6 +111,19 @@ final class ActionPipelineTests: XCTestCase {
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
   }
 
+  func testUnsupportedActionFailsWithoutDelivery() {
+    let fixture = makeFixture(bundleIdentifier: "com.microsoft.teams2")
+
+    let report = fixture.pipeline.run(action: .reactionHeart, mode: .live)
+
+    XCTAssertEqual(
+      report.outcome,
+      .failed(.routing(.unsupportedAction(action: .reactionHeart, target: .microsoftTeams)))
+    )
+    XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
+    XCTAssertEqual(fixture.applicationProvider.revalidationCount, 0)
+  }
+
   func testMissingForegroundApplicationIsReported() {
     let fixture = makeFixture(bundleIdentifier: nil, hasApplication: false)
 

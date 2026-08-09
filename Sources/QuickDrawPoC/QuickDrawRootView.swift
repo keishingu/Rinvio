@@ -149,10 +149,12 @@ private struct ActionsView: View {
       Divider()
 
       List(selection: $selection) {
-        Section(model.copy.meetingControls) {
-          ForEach(model.actions) { definition in
-            ActionRow(definition: definition, model: model)
-              .tag(definition.id)
+        ForEach(ActionCategory.allCases) { category in
+          Section(model.copy.actionCategoryName(category)) {
+            ForEach(model.actions.filter { $0.category == category }) { definition in
+              ActionRow(definition: definition, model: model)
+                .tag(definition.id)
+            }
           }
         }
       }
@@ -179,11 +181,17 @@ private struct ActionRow: View {
         HStack(spacing: 8) {
           Text(model.copy.actionName(definition.action))
             .font(.headline)
-          KeyBadge(
-            text: model.trigger(for: definition.action).displayValue,
-            accessibilityLabel:
-              "\(model.copy.shortcutAccessibilityPrefix) \(model.trigger(for: definition.action).displayValue)"
-          )
+          if let trigger = model.trigger(for: definition.action) {
+            KeyBadge(
+              text: trigger.displayValue,
+              accessibilityLabel:
+                "\(model.copy.shortcutAccessibilityPrefix) \(trigger.displayValue)"
+            )
+          } else {
+            Text(model.copy.unassigned)
+              .font(.caption)
+              .foregroundStyle(.tertiary)
+          }
         }
         Text(model.copy.actionDescription(definition.action))
           .font(.subheadline)
@@ -217,9 +225,12 @@ private struct CompactMapping: View {
         Text(application.compactName)
           .font(.caption)
           .lineLimit(1)
-        Text(model.shortcut(for: action, target: application.target).displayValue)
+        Text(model.shortcut(for: action, target: application.target)?.displayValue ?? "—")
           .font(.caption2.monospaced())
-          .foregroundStyle(.secondary)
+          .foregroundStyle(
+            model.shortcut(for: action, target: application.target) == nil
+              ? .tertiary : .secondary
+          )
       }
     }
     .frame(minWidth: 88, alignment: .leading)
@@ -254,7 +265,7 @@ private struct ApplicationsView: View {
           Spacer()
 
           VStack(alignment: .trailing, spacing: 3) {
-            Text(model.copy.threeActions)
+            Text(model.copy.actionCount(model.supportedActionCount(for: application.target)))
             Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
               .font(.caption)
               .foregroundStyle(.secondary)
@@ -325,7 +336,7 @@ private struct ActionInspector: View {
           VStack(alignment: .leading, spacing: 3) {
             Text(model.copy.actionName(definition.action))
               .font(.title3.weight(.semibold))
-            Text(model.copy.meetingControl)
+            Text(model.copy.actionCategoryName(definition.category))
               .foregroundStyle(.secondary)
           }
         }
@@ -339,11 +350,16 @@ private struct ActionInspector: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
-            KeyBadge(
-              text: model.trigger(for: definition.action).displayValue,
-              accessibilityLabel:
-                "\(model.copy.shortcutAccessibilityPrefix) \(model.trigger(for: definition.action).displayValue)"
-            )
+            if let trigger = model.trigger(for: definition.action) {
+              KeyBadge(
+                text: trigger.displayValue,
+                accessibilityLabel:
+                  "\(model.copy.shortcutAccessibilityPrefix) \(trigger.displayValue)"
+              )
+            } else {
+              Text(model.copy.unassigned)
+                .foregroundStyle(.secondary)
+            }
           }
         }
 
@@ -457,9 +473,13 @@ private struct MappingRow: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        KeyBadge(
-          text: model.shortcut(for: action, target: application.target).displayValue
-        )
+        if let shortcut = model.shortcut(for: action, target: application.target) {
+          KeyBadge(text: shortcut.displayValue)
+        } else {
+          Label(model.copy.noShortcut, systemImage: "minus.circle")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+        }
       }
 
       if model.recordingDestination == .application(action, application.target) {
@@ -523,34 +543,46 @@ private struct ApplicationInspector: View {
           .textSelection(.enabled)
       }
 
-      Section(model.copy.actionMappings) {
-        ForEach(model.actions) { definition in
-          HStack {
-            Label(
-              model.copy.actionName(definition.action),
-              systemImage: definition.systemImage
-            )
-            Spacer()
-            if model.isShortcutOverridden(
-              for: definition.action,
-              target: application.target
-            ) {
-              Text(model.copy.modified)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-            KeyBadge(
-              text: model.shortcut(
+      ForEach(ActionCategory.allCases) { category in
+        Section(model.copy.actionCategoryName(category)) {
+          ForEach(model.actions.filter { $0.category == category }) { definition in
+            HStack {
+              Label(
+                model.copy.actionName(definition.action),
+                systemImage: definition.systemImage
+              )
+              Spacer()
+              if model.isShortcutOverridden(
                 for: definition.action,
                 target: application.target
-              ).displayValue
-            )
+              ) {
+                Text(model.copy.modified)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+              }
+              if let shortcut = model.shortcut(
+                for: definition.action,
+                target: application.target
+              ) {
+                KeyBadge(text: shortcut.displayValue)
+              } else {
+                Text(model.copy.noShortcut)
+                  .font(.caption)
+                  .foregroundStyle(.tertiary)
+              }
+            }
           }
         }
       }
 
       Section(model.copy.method) {
-        LabeledContent(model.copy.capability, value: model.copy.supported)
+        LabeledContent(
+          model.copy.capability,
+          value: model.copy.shortcutCapability(
+            model.supportedActionCount(for: application.target),
+            total: model.actions.count
+          )
+        )
         Text(model.copy.executionDetail(for: application))
           .foregroundStyle(.secondary)
       }

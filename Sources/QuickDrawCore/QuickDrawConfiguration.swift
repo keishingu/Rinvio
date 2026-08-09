@@ -95,7 +95,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
     lock.withLock { storedConfiguration }
   }
 
-  public func trigger(for action: MeetingAction) -> KeyStroke {
+  public func trigger(for action: MeetingAction) -> KeyStroke? {
     lock.withLock {
       storedConfiguration.triggerOverrides.first { $0.action == action }?.shortcut
         ?? ActionCatalog.defaultTrigger(for: action)
@@ -108,7 +108,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
     }
   }
 
-  public func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke {
+  public func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke? {
     shortcutOverride(for: action, target: target)
       ?? ActionCatalog.defaultShortcut(for: action, target: target)
   }
@@ -131,8 +131,9 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
       throw QuickDrawConfigurationError.unsafeTrigger
     }
 
-    if let duplicate = MeetingAction.allCases.first(where: {
-      $0 != action && trigger(for: $0).matchesPhysicalShortcut(shortcut)
+    if let duplicate = MeetingAction.allCases.first(where: { candidate in
+      candidate != action
+        && trigger(for: candidate)?.matchesPhysicalShortcut(shortcut) == true
     }) {
       throw QuickDrawConfigurationError.duplicateTrigger(duplicate)
     }

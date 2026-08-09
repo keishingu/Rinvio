@@ -48,6 +48,86 @@ final class ActionRouterTests: XCTestCase {
       modifiers: [.command, .control], display: "⌃⌘H")
   }
 
+  func testRoutesExpandedMeetingActions() throws {
+    try assertRoute(
+      .toggleCaptions, bundleIdentifier: "com.microsoft.teams2", keyCode: 0,
+      modifiers: [.command, .shift], display: "⌘⇧A")
+    try assertRoute(
+      .shareScreen, bundleIdentifier: "com.microsoft.teams2", keyCode: 14,
+      modifiers: [.command, .shift], display: "⌘⇧E")
+
+    try assertRoute(
+      .openChat, bundleIdentifier: "us.zoom.xos", keyCode: 4,
+      modifiers: [.command, .shift], display: "⌘⇧H")
+    try assertRoute(
+      .showParticipants, bundleIdentifier: "us.zoom.xos", keyCode: 32,
+      modifiers: [.command], display: "⌘U")
+    try assertRoute(
+      .switchCamera, bundleIdentifier: "us.zoom.xos", keyCode: 45,
+      modifiers: [.command, .shift], display: "⌘⇧N")
+    try assertRoute(
+      .reactionLike, bundleIdentifier: "us.zoom.xos", keyCode: 23,
+      modifiers: [.command, .option], display: "⌥⌘5")
+    try assertRoute(
+      .reactionCelebrate, bundleIdentifier: "us.zoom.xos", keyCode: 25,
+      modifiers: [.command, .option], display: "⌥⌘9")
+
+    let meetURL = URL(string: "https://meet.google.com/abc-defg-hij")
+    try assertRoute(
+      .openChat, bundleIdentifier: "com.google.Chrome", activeTabURL: meetURL, keyCode: 8,
+      modifiers: [.command, .control], display: "⌃⌘C")
+    try assertRoute(
+      .showParticipants, bundleIdentifier: "com.google.Chrome", activeTabURL: meetURL, keyCode: 35,
+      modifiers: [.command, .control], display: "⌃⌘P")
+    try assertRoute(
+      .shareScreen, bundleIdentifier: "com.google.Chrome", activeTabURL: meetURL, keyCode: 17,
+      modifiers: [.command, .control], display: "⌃⌘T")
+    try assertRoute(
+      .pictureInPicture, bundleIdentifier: "com.google.Chrome", activeTabURL: meetURL,
+      keyCode: 46, modifiers: [.shift], display: "⇧M")
+  }
+
+  func testUnsupportedActionFailsWithoutShortcut() {
+    assertFailure(
+      action: .reactionLike,
+      bundleIdentifier: "com.microsoft.teams2",
+      activeTabURL: nil,
+      expected: .unsupportedAction(action: .reactionLike, target: .microsoftTeams)
+    )
+  }
+
+  func testEveryCatalogActionHasAtLeastOneBuiltInApplicationShortcut() {
+    for action in MeetingAction.allCases {
+      XCTAssertTrue(
+        ActionTarget.allCases.contains {
+          ActionCatalog.defaultShortcut(for: action, target: $0) != nil
+        },
+        "\(action.rawValue) must have at least one built-in application shortcut"
+      )
+    }
+  }
+
+  func testAllZoomReactionShortcuts() throws {
+    let expected: [(MeetingAction, UInt16, String)] = [
+      (.reactionClap, 21, "⌥⌘4"),
+      (.reactionLike, 23, "⌥⌘5"),
+      (.reactionHeart, 22, "⌥⌘6"),
+      (.reactionLaugh, 26, "⌥⌘7"),
+      (.reactionWow, 28, "⌥⌘8"),
+      (.reactionCelebrate, 25, "⌥⌘9"),
+    ]
+
+    for (action, keyCode, display) in expected {
+      try assertRoute(
+        action,
+        bundleIdentifier: "us.zoom.xos",
+        keyCode: keyCode,
+        modifiers: [.command, .option],
+        display: display
+      )
+    }
+  }
+
   func testRejectsLookalikeMeetHost() {
     assertFailure(
       bundleIdentifier: "com.google.Chrome",
@@ -117,6 +197,24 @@ final class ActionRouterTests: XCTestCase {
     XCTAssertEqual(route.shortcut, override)
   }
 
+  func testOverrideCanAddShortcutForUnsupportedApplicationAction() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let override = KeyStroke(
+      virtualKeyCode: 23,
+      modifiers: [.command, .option],
+      displayValue: "⌥⌘5"
+    )
+    try store.setShortcutOverride(override, for: .reactionLike, target: .microsoftTeams)
+    let router = ActionRouter(overrideProvider: store)
+
+    let route = try router.route(
+      action: .reactionLike,
+      context: ForegroundContext(bundleIdentifier: "com.microsoft.teams2")
+    ).get()
+
+    XCTAssertEqual(route.shortcut, override)
+  }
+
   private func assertRoute(
     _ action: MeetingAction,
     bundleIdentifier: String,
@@ -149,6 +247,7 @@ final class ActionRouterTests: XCTestCase {
   }
 
   private func assertFailure(
+    action: MeetingAction = .mute,
     bundleIdentifier: String?,
     activeTabURL: URL?,
     expected: ActionRoutingFailure,
@@ -156,7 +255,7 @@ final class ActionRouterTests: XCTestCase {
     line: UInt = #line
   ) {
     let result = router.route(
-      action: .mute,
+      action: action,
       context: ForegroundContext(
         bundleIdentifier: bundleIdentifier,
         activeTabURL: activeTabURL

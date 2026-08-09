@@ -65,15 +65,69 @@ struct ApplicationMapping: Identifiable, Equatable {
   }
 }
 
+enum ActionCategory: String, CaseIterable, Identifiable {
+  case meetingControls
+  case panelsAndSharing
+  case reactions
+
+  var id: Self { self }
+}
+
 struct ActionDefinition: Identifiable, Equatable {
   let action: MeetingAction
   let systemImage: String
+  let category: ActionCategory
 
   var id: String { action.rawValue }
   static let all: [ActionDefinition] = [
-    ActionDefinition(action: .mute, systemImage: "mic.slash.fill"),
-    ActionDefinition(action: .camera, systemImage: "video.fill"),
-    ActionDefinition(action: .raiseHand, systemImage: "hand.raised.fill"),
+    ActionDefinition(action: .mute, systemImage: "mic.slash.fill", category: .meetingControls),
+    ActionDefinition(action: .camera, systemImage: "video.fill", category: .meetingControls),
+    ActionDefinition(
+      action: .raiseHand, systemImage: "hand.raised.fill", category: .meetingControls),
+    ActionDefinition(
+      action: .switchCamera,
+      systemImage: "arrow.triangle.2.circlepath.camera",
+      category: .meetingControls
+    ),
+    ActionDefinition(
+      action: .openChat,
+      systemImage: "bubble.left.and.bubble.right.fill",
+      category: .panelsAndSharing
+    ),
+    ActionDefinition(
+      action: .showParticipants,
+      systemImage: "person.2.fill",
+      category: .panelsAndSharing
+    ),
+    ActionDefinition(
+      action: .toggleCaptions,
+      systemImage: "captions.bubble.fill",
+      category: .panelsAndSharing
+    ),
+    ActionDefinition(
+      action: .shareScreen,
+      systemImage: "rectangle.on.rectangle.angled",
+      category: .panelsAndSharing
+    ),
+    ActionDefinition(
+      action: .pictureInPicture,
+      systemImage: "pip",
+      category: .panelsAndSharing
+    ),
+    ActionDefinition(
+      action: .reactionLike,
+      systemImage: "hand.thumbsup.fill",
+      category: .reactions
+    ),
+    ActionDefinition(action: .reactionHeart, systemImage: "heart.fill", category: .reactions),
+    ActionDefinition(action: .reactionClap, systemImage: "hands.clap.fill", category: .reactions),
+    ActionDefinition(action: .reactionLaugh, systemImage: "face.smiling", category: .reactions),
+    ActionDefinition(action: .reactionWow, systemImage: "sparkles", category: .reactions),
+    ActionDefinition(
+      action: .reactionCelebrate,
+      systemImage: "party.popper.fill",
+      category: .reactions
+    ),
   ]
 }
 
@@ -139,13 +193,13 @@ final class QuickDrawAppModel: ObservableObject {
   }
 
   var triggerSummary: String {
-    MeetingAction.allCases.map {
-      "\(trigger(for: $0).displayValue) \(copy.actionName($0))"
+    MeetingAction.allCases.compactMap { action in
+      trigger(for: action).map { "\($0.displayValue) \(copy.actionName(action))" }
     }.joined(separator: " · ")
   }
 
   var registeredTriggerSummary: String {
-    MeetingAction.allCases.map { trigger(for: $0).displayValue }.joined(separator: "／")
+    MeetingAction.allCases.compactMap { trigger(for: $0)?.displayValue }.joined(separator: "／")
   }
 
   func setLanguage(_ language: AppLanguage) {
@@ -168,7 +222,7 @@ final class QuickDrawAppModel: ObservableObject {
     onRunDryCheck?(action)
   }
 
-  func trigger(for action: MeetingAction) -> KeyStroke {
+  func trigger(for action: MeetingAction) -> KeyStroke? {
     configurationStore.trigger(for: action)
   }
 
@@ -176,12 +230,16 @@ final class QuickDrawAppModel: ObservableObject {
     configurationStore.isTriggerOverridden(for: action)
   }
 
-  func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke {
+  func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke? {
     configurationStore.shortcut(for: action, target: target)
   }
 
   func isShortcutOverridden(for action: MeetingAction, target: ActionTarget) -> Bool {
     configurationStore.isShortcutOverridden(for: action, target: target)
+  }
+
+  func supportedActionCount(for target: ActionTarget) -> Int {
+    actions.count { shortcut(for: $0.action, target: target) != nil }
   }
 
   func beginRecording(_ destination: ShortcutRecordingDestination) {

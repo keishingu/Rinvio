@@ -59,7 +59,17 @@ final class HotKeyConfigurationCoordinator {
   }
 
   func resetTrigger(for action: MeetingAction) -> String? {
-    applyTrigger(ActionCatalog.defaultTrigger(for: action), for: action)
+    guard let handler else { return "Global shortcut handler is unavailable" }
+    var nextBindings = currentBindings()
+    nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
+    do {
+      try registrar.register(bindings: nextBindings, handler: handler)
+      try store.resetTrigger(for: action)
+      return nil
+    } catch {
+      _ = resume()
+      return error.localizedDescription
+    }
   }
 
   func resetAction(_ action: MeetingAction) -> String? {
@@ -77,7 +87,10 @@ final class HotKeyConfigurationCoordinator {
   }
 
   private func currentBindings() -> [MeetingAction: KeyStroke] {
-    Dictionary(uniqueKeysWithValues: MeetingAction.allCases.map { ($0, store.trigger(for: $0)) })
+    Dictionary(
+      uniqueKeysWithValues: MeetingAction.allCases.compactMap { action in
+        store.trigger(for: action).map { (action, $0) }
+      }
+    )
   }
-
 }

@@ -11,6 +11,8 @@
 | Teams routes | Mute `⌘⇧M`, Camera `⌘⇧O`, Raise Hand `⌘⇧K` | Pass |
 | Zoom routes | Mute `⌘⇧A`, Camera `⌘⇧V`, Raise Hand `⌥Y` | Pass |
 | Meet routes | Mute `⌘D`, Camera `⌘E`, Raise Hand `⌃⌘H` on exact HTTPS `meet.google.com` | Pass |
+| Expanded Action catalog | Chat, Participants, Captions, Share Screen, Switch Camera, Picture in Picture, six Zoom reactions | Pass |
+| Partial capabilities | Missing Application × Action shortcut fails closed without key delivery; user override can add one | Pass |
 | Fail closed | fake Meet host, HTTP Meet, non-Meet tab, unsupported app, missing context | Pass |
 | Full pipeline | routing, target revalidation, delivery, and injected failures | Pass |
 | Dry Run | route is resolved without revalidation or shortcut delivery | Pass |
@@ -27,7 +29,7 @@
 | Configuration persistence | Versioned JSON round-trip and defaults-not-copied behavior | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
-| Tests | `swift test`: 34 tests, 0 failures | Pass |
+| Tests | `swift test`: 41 tests, 0 failures | Pass |
 | Idle resources | 43 seconds idle: CPU 0.0%, RSS about 20 MB | Pass (single observation) |
 
 ## Installed application identities
