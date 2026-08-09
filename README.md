@@ -19,7 +19,7 @@
 - Versioned Built-in Catalog bundled as JSON
 - Live Japanese / English display switching, persisted across launches
 - Applications and privacy-safe Diagnostics views
-- Menu bar status, non-delivery Dry Run, copied diagnostics, and redacted unified log
+- Dock app and Menu Bar status, non-delivery Dry Run, copied diagnostics, and redacted unified log
 - No general key logging, polling, profiles, UI automation, or background routing
 
 設計全体は [QuickDraw プロダクト・技術設計書](docs/quickdraw-product-design.ja.md) を参照してください。

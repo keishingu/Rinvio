@@ -22,7 +22,7 @@
 | Global Triggers | 15 unique `⌘⌥` Triggers monitored by CGEventTap; unsupported app/page outcomes pass through | Pass |
 | Generated-event suppression | QuickDraw source marker bypasses Trigger matching | Pass |
 | Shortcut conflicts | Known macOS catalog + enabled `AppleSymbolicHotKeys` best-effort detection | Pass |
-| Menu Bar process | App remains resident as `LSUIElement` | Pass |
+| App lifecycle | Dock app and Menu Bar Extra remain available after closing the settings window | Pass |
 | Native configuration window | Action-first split view, mapping inspector, Applications and Diagnostics navigation | Pass |
 | Window interactions | Sidebar navigation and Inspector show/hide verified with macOS Accessibility tree | Pass |
 | Language switching | Japanese / English updates live and the selection is persisted in UserDefaults | Pass |

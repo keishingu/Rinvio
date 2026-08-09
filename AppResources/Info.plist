@@ -24,8 +24,6 @@
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
     <string>15.0</string>
-    <key>LSUIElement</key>
-    <true/>
     <key>NSAppleEventsUsageDescription</key>
     <string>QuickDraw checks only Google Chrome's active tab URL to determine whether Google Meet is the current target.</string>
     <key>NSHumanReadableCopyright</key>

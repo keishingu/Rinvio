@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   )
 
   func applicationDidFinishLaunching(_ notification: Notification) {
-    NSApplication.shared.setActivationPolicy(.accessory)
+    NSApplication.shared.setActivationPolicy(.regular)
 
     let configurationStore = QuickDrawConfigurationStore()
     let foregroundProvider = ForegroundApplicationProvider()

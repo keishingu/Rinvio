@@ -29,8 +29,4 @@ final class ConfigurationWindowController: NSWindowController, NSWindowDelegate 
     window?.makeKeyAndOrderFront(nil)
     NSApplication.shared.activate(ignoringOtherApps: true)
   }
-
-  func windowWillClose(_ notification: Notification) {
-    NSApplication.shared.setActivationPolicy(.accessory)
-  }
 }
