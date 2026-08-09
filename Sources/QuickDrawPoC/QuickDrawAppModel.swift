@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import Combine
 import Foundation
 import QuickDrawCore
@@ -27,10 +28,6 @@ struct ApplicationMapping: Identifiable, Equatable {
   let systemImage: String
   let identity: String
   let isInstalled: Bool
-
-  func shortcut(for action: MeetingAction) -> String {
-    ActionRouter().shortcut(for: action, target: target).displayValue
-  }
 
   static func current() -> [ApplicationMapping] {
     let workspace = NSWorkspace.shared
@@ -73,13 +70,16 @@ struct ActionDefinition: Identifiable, Equatable {
   let systemImage: String
 
   var id: String { action.rawValue }
-  var trigger: String { action.triggerDisplayValue }
-
   static let all: [ActionDefinition] = [
     ActionDefinition(action: .mute, systemImage: "mic.slash.fill"),
     ActionDefinition(action: .camera, systemImage: "video.fill"),
     ActionDefinition(action: .raiseHand, systemImage: "hand.raised.fill"),
   ]
+}
+
+enum ShortcutRecordingDestination: Equatable {
+  case trigger(MeetingAction)
+  case application(MeetingAction, ActionTarget)
 }
 
 @MainActor
@@ -92,15 +92,20 @@ final class QuickDrawAppModel: ObservableObject {
   @Published private(set) var status = ActionStatus(
     action: nil,
     headline: "Starting…",
-    detail: "Preparing F6/F7/F8",
+    detail: "Preparing shortcuts",
     target: "Not detected",
     isError: false
   )
   @Published private(set) var diagnostics = "QuickDraw Diagnostics are not available yet."
   @Published private(set) var applications = ApplicationMapping.current()
+  @Published private(set) var configuration: QuickDrawConfiguration
+  @Published private(set) var recordingDestination: ShortcutRecordingDestination?
+  @Published private(set) var shortcutEditingError: String?
   let actions = ActionDefinition.all
 
   private let defaults: UserDefaults
+  private let configurationStore: QuickDrawConfigurationStore
+  private var localKeyMonitor: Any?
 
   var onSetEnabled: ((Bool) -> Void)?
   var onSetDryRun: ((Bool) -> Void)?
@@ -109,10 +114,20 @@ final class QuickDrawAppModel: ObservableObject {
   var onRefreshPermission: (() -> Bool)?
   var onRefreshDiagnostics: (() -> String)?
   var onLanguageChange: ((AppLanguage) -> Void)?
+  var onShortcutRecordingBegan: (() -> Void)?
+  var onShortcutRecordingEnded: (() -> String?)?
+  var onApplyTrigger: ((MeetingAction, KeyStroke) -> String?)?
+  var onResetTrigger: ((MeetingAction) -> String?)?
+  var onResetAction: ((MeetingAction) -> String?)?
 
-  init(defaults: UserDefaults = .standard) {
+  init(
+    defaults: UserDefaults = .standard,
+    configurationStore: QuickDrawConfigurationStore = QuickDrawConfigurationStore()
+  ) {
     self.defaults = defaults
+    self.configurationStore = configurationStore
     language = AppLanguage.preferred(defaults: defaults)
+    configuration = configurationStore.configuration
   }
 
   var copy: QuickDrawCopy {
@@ -121,6 +136,16 @@ final class QuickDrawAppModel: ObservableObject {
 
   var localizedStatus: ActionStatus {
     copy.localizedStatus(status)
+  }
+
+  var triggerSummary: String {
+    MeetingAction.allCases.map {
+      "\(trigger(for: $0).displayValue) \(copy.actionName($0))"
+    }.joined(separator: " · ")
+  }
+
+  var registeredTriggerSummary: String {
+    MeetingAction.allCases.map { trigger(for: $0).displayValue }.joined(separator: "／")
   }
 
   func setLanguage(_ language: AppLanguage) {
@@ -143,6 +168,77 @@ final class QuickDrawAppModel: ObservableObject {
     onRunDryCheck?(action)
   }
 
+  func trigger(for action: MeetingAction) -> KeyStroke {
+    configurationStore.trigger(for: action)
+  }
+
+  func isTriggerOverridden(for action: MeetingAction) -> Bool {
+    configurationStore.isTriggerOverridden(for: action)
+  }
+
+  func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke {
+    configurationStore.shortcut(for: action, target: target)
+  }
+
+  func isShortcutOverridden(for action: MeetingAction, target: ActionTarget) -> Bool {
+    configurationStore.isShortcutOverridden(for: action, target: target)
+  }
+
+  func beginRecording(_ destination: ShortcutRecordingDestination) {
+    cancelRecording()
+    shortcutEditingError = nil
+    recordingDestination = destination
+    onShortcutRecordingBegan?()
+    localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+      [weak self] event in
+      guard let self else { return event }
+      if event.keyCode == UInt16(kVK_Escape) {
+        self.cancelRecording()
+        return nil
+      }
+      guard let shortcut = ShortcutCapture.keyStroke(from: event) else {
+        self.shortcutEditingError = self.copy.shortcutCouldNotBeRead
+        return nil
+      }
+      self.capture(shortcut)
+      return nil
+    }
+  }
+
+  func cancelRecording() {
+    guard recordingDestination != nil || localKeyMonitor != nil else { return }
+    removeLocalKeyMonitor()
+    recordingDestination = nil
+    if let error = onShortcutRecordingEnded?() {
+      shortcutEditingError = error
+    }
+  }
+
+  func resetTrigger(for action: MeetingAction) {
+    shortcutEditingError = onResetTrigger?(action)
+    syncConfiguration()
+  }
+
+  func resetShortcut(for action: MeetingAction, target: ActionTarget) {
+    do {
+      try configurationStore.resetShortcut(for: action, target: target)
+      shortcutEditingError = nil
+      syncConfiguration()
+    } catch {
+      shortcutEditingError = error.localizedDescription
+    }
+  }
+
+  func resetAction(_ action: MeetingAction) {
+    shortcutEditingError = onResetAction?(action)
+    syncConfiguration()
+  }
+
+  func hasOverrides(for action: MeetingAction) -> Bool {
+    isTriggerOverridden(for: action)
+      || ActionTarget.allCases.contains { isShortcutOverridden(for: action, target: $0) }
+  }
+
   func requestAccessibility() {
     onRequestAccessibility?()
     refreshPermission()
@@ -157,6 +253,7 @@ final class QuickDrawAppModel: ObservableObject {
 
   func refreshEnvironment() {
     applications = ApplicationMapping.current()
+    syncConfiguration()
     refreshPermission()
   }
 
@@ -178,5 +275,36 @@ final class QuickDrawAppModel: ObservableObject {
 
   func setHotKeysRegistered(_ registered: Bool) {
     areHotKeysRegistered = registered
+  }
+
+  private func capture(_ shortcut: KeyStroke) {
+    guard let destination = recordingDestination else { return }
+    removeLocalKeyMonitor()
+    recordingDestination = nil
+
+    switch destination {
+    case .trigger(let action):
+      shortcutEditingError = onApplyTrigger?(action, shortcut)
+    case .application(let action, let target):
+      do {
+        try configurationStore.setShortcutOverride(shortcut, for: action, target: target)
+        shortcutEditingError = onShortcutRecordingEnded?()
+      } catch {
+        shortcutEditingError = error.localizedDescription
+        _ = onShortcutRecordingEnded?()
+      }
+    }
+    syncConfiguration()
+  }
+
+  private func syncConfiguration() {
+    configuration = configurationStore.configuration
+  }
+
+  private func removeLocalKeyMonitor() {
+    if let localKeyMonitor {
+      NSEvent.removeMonitor(localKeyMonitor)
+      self.localKeyMonitor = nil
+    }
   }
 }

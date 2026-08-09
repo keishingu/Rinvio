@@ -45,10 +45,6 @@ struct QuickDrawCopy {
   var hideInspector: String { text("インスペクタを隠す", "Hide Inspector") }
   var quickDrawEnabled: String { text("QuickDrawは有効です", "QuickDraw is enabled") }
   var quickDrawPaused: String { text("QuickDrawは停止中です", "QuickDraw is paused") }
-  var shortcutSummary: String {
-    text("F6 ミュート · F7 カメラ · F8 挙手", "F6 Mute · F7 Camera · F8 Raise Hand")
-  }
-
   var actions: String { text("アクション", "Actions") }
   var applications: String { text("アプリケーション", "Applications") }
   var diagnostics: String { text("診断", "Diagnostics") }
@@ -78,7 +74,9 @@ struct QuickDrawCopy {
   var target: String { text("対象", "Target") }
   var result: String { text("結果", "Result") }
   var globalShortcut: String { text("グローバルショートカット", "Global shortcut") }
-  var hotKeysRegistered: String { text("F6／F7／F8 登録済み", "F6/F7/F8 registered") }
+  func hotKeysRegistered(_ summary: String) -> String {
+    text("\(summary) 登録済み", "\(summary) registered")
+  }
   var unavailable: String { text("利用不可", "Unavailable") }
   var recentRoutingLog: String { text("最近のルーティングログ", "Recent routing log") }
   var refresh: String { text("更新", "Refresh") }
@@ -88,9 +86,30 @@ struct QuickDrawCopy {
   var trigger: String { text("トリガー", "Trigger") }
   var triggerEditingDescription: String {
     text(
-      "Level 1の実行経路を安定化した後に、トリガー編集へ対応します。",
-      "Trigger editing will follow after the Level 1 routes are hardened."
+      "Fキー、またはCommand・Control・Optionを含むショートカットを使用できます。",
+      "Use a function key or a shortcut containing Command, Control, or Option."
     )
+  }
+  var changeShortcut: String { text("変更…", "Change…") }
+  var pressShortcut: String { text("ショートカットを入力…", "Press shortcut…") }
+  var cancel: String { text("キャンセル", "Cancel") }
+  var modified: String { text("変更済み", "Modified") }
+  var defaultValue: String { text("デフォルト", "Default") }
+  var restoreDefault: String { text("デフォルトに戻す", "Restore Default") }
+  var restoreActionDefaults: String {
+    text("このActionをすべてデフォルトに戻す…", "Restore All Defaults for This Action…")
+  }
+  var restoreActionTitle: String {
+    text("このActionをデフォルトに戻しますか？", "Restore defaults for this Action?")
+  }
+  var restoreActionMessage: String {
+    text(
+      "Triggerとすべてのアプリ別Mappingがデフォルトに戻ります。",
+      "The Trigger and every application mapping will return to their defaults."
+    )
+  }
+  var shortcutCouldNotBeRead: String {
+    text("そのキー入力はショートカットとして認識できません。", "That key input could not be recognized as a shortcut.")
   }
   var applicationMappings: String { text("アプリごとのマッピング", "Application mappings") }
   var execution: String { text("実行", "Execution") }
@@ -140,7 +159,7 @@ struct QuickDrawCopy {
   }
 
   var menuTitle: String {
-    text("QuickDraw PoC — F6／F7／F8", "QuickDraw PoC — F6/F7/F8")
+    "QuickDraw PoC"
   }
   var openQuickDraw: String { text("QuickDrawを開く…", "Open QuickDraw…") }
   var dryRunMenu: String {
@@ -155,8 +174,8 @@ struct QuickDrawCopy {
   var requestAccessibilityMenu: String {
     text("アクセシビリティを許可…", "Request Accessibility Permission…")
   }
-  var hotKeyRegisteredMenu: String {
-    text("ホットキー: F6／F7／F8 登録済み", "Hotkeys: F6/F7/F8 Registered")
+  func hotKeyRegisteredMenu(_ summary: String) -> String {
+    text("ホットキー: \(summary) 登録済み", "Hotkeys: \(summary) Registered")
   }
   var privacyMenu: String {
     text(
@@ -208,6 +227,28 @@ struct QuickDrawCopy {
     text("\(actionName(action))のマッピング", "\(actionName(action)) mapping")
   }
 
+  func localizedShortcutError(_ value: String) -> String {
+    guard isJapanese else { return value }
+    if value == "Use a function key or a shortcut containing Command, Control, or Option" {
+      return "Fキー、またはCommand・Control・Optionを含むショートカットを使用してください。"
+    }
+    if value.hasPrefix("This trigger is already assigned to ") {
+      let englishName = String(value.dropFirst("This trigger is already assigned to ".count))
+      let localizedName: String
+      switch englishName {
+      case MeetingAction.mute.displayName: localizedName = actionName(.mute)
+      case MeetingAction.camera.displayName: localizedName = actionName(.camera)
+      case MeetingAction.raiseHand.displayName: localizedName = actionName(.raiseHand)
+      default: localizedName = englishName
+      }
+      return "このTriggerはすでに\(localizedName)へ割り当てられています。"
+    }
+    if value.contains("could not be registered") {
+      return "このショートカットはmacOSへ登録できませんでした。別の組み合わせを選んでください。"
+    }
+    return value
+  }
+
   func localizedStatus(_ status: ActionStatus) -> ActionStatus {
     guard isJapanese else { return status }
     return ActionStatus(
@@ -222,7 +263,7 @@ struct QuickDrawCopy {
   private func localizedHeadline(_ value: String) -> String {
     switch value {
     case "Starting…": "起動中…"
-    case "Enabled — F6/F7/F8 ready": "有効 — F6／F7／F8を使用できます"
+    case "Enabled — shortcuts ready": "有効 — ショートカットを使用できます"
     case "Disabled": "停止中"
     case "Dry Run enabled": "ドライランを有効化しました"
     case "Live delivery enabled": "実際のキー送信を有効化しました"
@@ -242,13 +283,14 @@ struct QuickDrawCopy {
 
   private func localizedDetail(_ value: String) -> String {
     let exact: [String: String] = [
-      "Preparing F6/F7/F8": "F6／F7／F8を準備しています",
+      "Preparing shortcuts": "ショートカットを準備しています",
       "Accessibility: Granted": "アクセシビリティ: 許可済み",
       "Accessibility: Required": "アクセシビリティ: 許可が必要",
       "Action routing is paused": "Actionのルーティングは停止中です",
-      "F6/F7/F8 will route and log without sending a shortcut": "F6／F7／F8でショートカットを送らずに経路だけを記録します",
-      "Return to Teams, Zoom, or Meet and press F6, F7, or F8":
-        "Teams、Zoom、Meetへ戻りF6、F7、F8のいずれかを押してください",
+      "Configured triggers will route and log without sending a shortcut":
+        "設定したTriggerでショートカットを送らずに経路だけを記録します",
+      "Return to Teams, Zoom, or Meet and use a configured trigger":
+        "Teams、Zoom、Meetへ戻り設定したTriggerを使用してください",
       "Enable QuickDraw PoC in System Settings, then try again":
         "システム設定でQuickDraw PoCを有効にして、もう一度お試しください",
     ]

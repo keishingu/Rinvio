@@ -1,13 +1,13 @@
 import Foundation
 
-public enum ModifierKey: String, Hashable, Sendable {
+public enum ModifierKey: String, Codable, Hashable, Sendable {
   case command
   case shift
   case control
   case option
 }
 
-public struct KeyStroke: Equatable, Sendable {
+public struct KeyStroke: Codable, Equatable, Hashable, Sendable {
   public let virtualKeyCode: UInt16
   public let modifiers: Set<ModifierKey>
   public let displayValue: String
@@ -23,7 +23,7 @@ public struct KeyStroke: Equatable, Sendable {
   }
 }
 
-public enum MeetingAction: String, CaseIterable, Equatable, Identifiable, Sendable {
+public enum MeetingAction: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
   case mute
   case camera
   case raiseHand
@@ -39,15 +39,11 @@ public enum MeetingAction: String, CaseIterable, Equatable, Identifiable, Sendab
   }
 
   public var triggerDisplayValue: String {
-    switch self {
-    case .mute: "F6"
-    case .camera: "F7"
-    case .raiseHand: "F8"
-    }
+    ActionCatalog.defaultTrigger(for: self).displayValue
   }
 }
 
-public enum ActionTarget: String, Equatable, Sendable {
+public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
   case microsoftTeams
   case zoomWorkplace
   case googleMeet
@@ -58,6 +54,57 @@ public enum ActionTarget: String, Equatable, Sendable {
     case .zoomWorkplace: "Zoom Workplace"
     case .googleMeet: "Google Meet"
     }
+  }
+}
+
+public enum ActionCatalog {
+  public static func defaultTrigger(for action: MeetingAction) -> KeyStroke {
+    switch action {
+    case .mute:
+      KeyStroke(virtualKeyCode: 97, modifiers: [], displayValue: "F6")
+    case .camera:
+      KeyStroke(virtualKeyCode: 98, modifiers: [], displayValue: "F7")
+    case .raiseHand:
+      KeyStroke(virtualKeyCode: 100, modifiers: [], displayValue: "F8")
+    }
+  }
+
+  public static func defaultShortcut(
+    for action: MeetingAction,
+    target: ActionTarget
+  ) -> KeyStroke {
+    switch (target, action) {
+    case (.microsoftTeams, .mute):
+      KeyStroke(virtualKeyCode: 46, modifiers: [.command, .shift], displayValue: "⌘⇧M")
+    case (.microsoftTeams, .camera):
+      KeyStroke(virtualKeyCode: 31, modifiers: [.command, .shift], displayValue: "⌘⇧O")
+    case (.microsoftTeams, .raiseHand):
+      KeyStroke(virtualKeyCode: 40, modifiers: [.command, .shift], displayValue: "⌘⇧K")
+    case (.zoomWorkplace, .mute):
+      KeyStroke(virtualKeyCode: 0, modifiers: [.command, .shift], displayValue: "⌘⇧A")
+    case (.zoomWorkplace, .camera):
+      KeyStroke(virtualKeyCode: 9, modifiers: [.command, .shift], displayValue: "⌘⇧V")
+    case (.zoomWorkplace, .raiseHand):
+      KeyStroke(virtualKeyCode: 16, modifiers: [.option], displayValue: "⌥Y")
+    case (.googleMeet, .mute):
+      KeyStroke(virtualKeyCode: 2, modifiers: [.command], displayValue: "⌘D")
+    case (.googleMeet, .camera):
+      KeyStroke(virtualKeyCode: 14, modifiers: [.command], displayValue: "⌘E")
+    case (.googleMeet, .raiseHand):
+      KeyStroke(virtualKeyCode: 4, modifiers: [.command, .control], displayValue: "⌃⌘H")
+    }
+  }
+}
+
+public protocol ShortcutOverrideProviding {
+  func shortcutOverride(for action: MeetingAction, target: ActionTarget) -> KeyStroke?
+}
+
+public struct NoShortcutOverrides: ShortcutOverrideProviding, Sendable {
+  public init() {}
+
+  public func shortcutOverride(for action: MeetingAction, target: ActionTarget) -> KeyStroke? {
+    nil
   }
 }
 
@@ -103,7 +150,7 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
   }
 }
 
-public struct ActionRouter: Sendable {
+public struct ActionRouter {
   public static let teamsBundleIdentifiers: Set<String> = [
     "com.microsoft.teams2",
     "com.microsoft.teams",
@@ -117,7 +164,11 @@ public struct ActionRouter: Sendable {
     "com.google.Chrome"
   ]
 
-  public init() {}
+  private let overrideProvider: any ShortcutOverrideProviding
+
+  public init(overrideProvider: any ShortcutOverrideProviding = NoShortcutOverrides()) {
+    self.overrideProvider = overrideProvider
+  }
 
   public func route(
     action: MeetingAction,
@@ -171,43 +222,7 @@ public struct ActionRouter: Sendable {
   }
 
   public func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke {
-    switch target {
-    case .microsoftTeams: teamsShortcut(for: action)
-    case .zoomWorkplace: zoomShortcut(for: action)
-    case .googleMeet: meetShortcut(for: action)
-    }
-  }
-
-  private func teamsShortcut(for action: MeetingAction) -> KeyStroke {
-    switch action {
-    case .mute:
-      KeyStroke(virtualKeyCode: 46, modifiers: [.command, .shift], displayValue: "⌘⇧M")
-    case .camera:
-      KeyStroke(virtualKeyCode: 31, modifiers: [.command, .shift], displayValue: "⌘⇧O")
-    case .raiseHand:
-      KeyStroke(virtualKeyCode: 40, modifiers: [.command, .shift], displayValue: "⌘⇧K")
-    }
-  }
-
-  private func zoomShortcut(for action: MeetingAction) -> KeyStroke {
-    switch action {
-    case .mute:
-      KeyStroke(virtualKeyCode: 0, modifiers: [.command, .shift], displayValue: "⌘⇧A")
-    case .camera:
-      KeyStroke(virtualKeyCode: 9, modifiers: [.command, .shift], displayValue: "⌘⇧V")
-    case .raiseHand:
-      KeyStroke(virtualKeyCode: 16, modifiers: [.option], displayValue: "⌥Y")
-    }
-  }
-
-  private func meetShortcut(for action: MeetingAction) -> KeyStroke {
-    switch action {
-    case .mute:
-      KeyStroke(virtualKeyCode: 2, modifiers: [.command], displayValue: "⌘D")
-    case .camera:
-      KeyStroke(virtualKeyCode: 14, modifiers: [.command], displayValue: "⌘E")
-    case .raiseHand:
-      KeyStroke(virtualKeyCode: 4, modifiers: [.command, .control], displayValue: "⌃⌘H")
-    }
+    overrideProvider.shortcutOverride(for: action, target: target)
+      ?? ActionCatalog.defaultShortcut(for: action, target: target)
   }
 }

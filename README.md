@@ -11,6 +11,8 @@ Level 1の3 ActionをForegroundのMicrosoft Teams、Zoom Workplace、Chrome上�
 - Microsoft Teams / Zoom Workplace / Google MeetでMute、Camera、Raise Handを変換
 - Foreground target only
 - Action-first native settings window with an application mapping inspector
+- Editable global Triggers and per-application shortcut overrides with one-click default restore
+- Versioned configuration persisted in Application Support
 - Live Japanese / English display switching, persisted across launches
 - Applications and privacy-safe Diagnostics views
 - Menu bar status, non-delivery Dry Run, copied diagnostics, and redacted unified log
@@ -25,15 +27,15 @@ Scripts/verify.sh
 open '.build/app/QuickDraw PoC.app'
 ```
 
-`Scripts/verify.sh` はformat lint、23件以上のunit test、app bundle生成、Info.plist、code signatureをまとめて検証します。
+`Scripts/verify.sh` はformat lint、unit test、app bundle生成、Info.plist、code signatureをまとめて検証します。
 
-再ビルド後もTCC権限を安定させたい場合は、利用可能なDeveloper IDまたはApple Development証明書名を指定します。
+再ビルド後もTCC権限を安定させるため、`Scripts/build-app.sh` は利用可能なApple Development証明書を自動選択します。明示的に指定する場合は次の環境変数を使います。
 
 ```sh
 QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/build-app.sh debug
 ```
 
-指定しない場合はローカルPoC用のad-hoc署名になります。署名が変わるとmacOSがPermissionを再要求する場合があります。
+証明書が見つからない場合だけローカルPoC用のad-hoc署名へフォールバックします。adhoc署名では、再ビルド後にmacOSがPermissionを再要求する場合があります。
 
 ## First run
 
@@ -45,6 +47,17 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 5. Google Meetを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
 6. Dry Runを無効にし、対象Application/Meet TabをForegroundにしてF6／F7／F8を押す。
 
+## Shortcut configuration
+
+Action Inspectorから次を編集できます。
+
+- `Trigger`: QuickDrawを呼び出すグローバルショートカット。Fキー、またはCommand / Control / Optionを含む組み合わせを使用する。
+- `Application mapping`: Actionを各Applicationへ配送するショートカット。Teams / Zoom / Meet側で既定値を変更した場合にOverrideする。
+- `Restore Default`: 個別のOverrideを削除してBuilt-in Catalogへ戻す。
+- `Restore All Defaults for This Action`: TriggerとそのActionの全Application Mappingを確認後にまとめて戻す。
+
+設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は保存ファイルへ複製せず、Overrideだけを保存します。
+
 MacのKeyboard設定でFunction Keyがsystem functionとして動く場合は、`fn`を併用するか「Use F1, F2, etc. keys as standard function keys」を有効にします。
 
 ## Built-in mappings
@@ -55,7 +68,7 @@ MacのKeyboard設定でFunction Keyがsystem functionとして動く場合は、
 | Camera Toggle | F7 | `⌘⇧O` | `⌘⇧V` | `⌘E` |
 | Raise Hand Toggle | F8 | `⌘⇧K` | `⌥Y` | `⌃⌘H` |
 
-既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)の公式資料に基づく。Zoom側で既定ショートカットを変更した場合、現時点ではQuickDraw側の値も一致させる必要があるが、Shortcut Override UIは未実装。
+既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)の公式資料に基づく。Application側でショートカットを変更した場合は、QuickDrawのAction Inspectorから同じ値へOverrideする。
 
 ## Manual verification matrix
 

@@ -4,14 +4,14 @@ import QuickDrawCore
 
 enum GlobalHotKeyError: LocalizedError {
   case eventHandlerInstallationFailed(OSStatus)
-  case registrationFailed(action: MeetingAction, status: OSStatus)
+  case registrationFailed(action: MeetingAction, shortcut: String, status: OSStatus)
 
   var errorDescription: String? {
     switch self {
     case .eventHandlerInstallationFailed(let status):
       "Could not install the global hotkey handler (OSStatus \(status))"
-    case .registrationFailed(let action, let status):
-      "\(action.triggerDisplayValue) could not be registered (OSStatus \(status))"
+    case .registrationFailed(let action, let shortcut, let status):
+      "\(shortcut) for \(action.displayName) could not be registered (OSStatus \(status))"
     }
   }
 }
@@ -20,26 +20,33 @@ final class GlobalHotKeyRegistrar {
   private struct HotKeyDefinition {
     let id: UInt32
     let action: MeetingAction
-    let keyCode: UInt32
+    let shortcut: KeyStroke
   }
 
   private static let signature: OSType = 0x5144_5043  // QDPC
-  private static let definitions = [
-    HotKeyDefinition(id: 1, action: .mute, keyCode: UInt32(kVK_F6)),
-    HotKeyDefinition(id: 2, action: .camera, keyCode: UInt32(kVK_F7)),
-    HotKeyDefinition(id: 3, action: .raiseHand, keyCode: UInt32(kVK_F8)),
-  ]
 
   private var eventHandlerRef: EventHandlerRef?
   private var hotKeyRefs: [EventHotKeyRef] = []
   private var handler: ((MeetingAction) -> Void)?
   private var pressGates: [UInt32: TriggerPressGate] = [:]
+  private var definitionsByID: [UInt32: HotKeyDefinition] = [:]
 
-  func registerDefaultActions(handler: @escaping (MeetingAction) -> Void) throws {
+  func register(
+    bindings: [MeetingAction: KeyStroke],
+    handler: @escaping (MeetingAction) -> Void
+  ) throws {
     unregister()
     self.handler = handler
+    let definitions = MeetingAction.allCases.enumerated().map { index, action in
+      HotKeyDefinition(
+        id: UInt32(index + 1),
+        action: action,
+        shortcut: bindings[action] ?? ActionCatalog.defaultTrigger(for: action)
+      )
+    }
+    definitionsByID = Dictionary(uniqueKeysWithValues: definitions.map { ($0.id, $0) })
     pressGates = Dictionary(
-      uniqueKeysWithValues: Self.definitions.map { ($0.id, TriggerPressGate()) }
+      uniqueKeysWithValues: definitions.map { ($0.id, TriggerPressGate()) }
     )
 
     var eventTypes = [
@@ -61,6 +68,10 @@ final class GlobalHotKeyRegistrar {
           return OSStatus(eventNotHandledErr)
         }
 
+        let registrar = Unmanaged<GlobalHotKeyRegistrar>
+          .fromOpaque(userData)
+          .takeUnretainedValue()
+
         var hotKeyID = EventHotKeyID()
         let readStatus = GetEventParameter(
           event,
@@ -73,16 +84,11 @@ final class GlobalHotKeyRegistrar {
         )
         guard readStatus == noErr,
           hotKeyID.signature == GlobalHotKeyRegistrar.signature,
-          let definition = GlobalHotKeyRegistrar.definitions.first(where: {
-            $0.id == hotKeyID.id
-          })
+          let definition = registrar.definitionsByID[hotKeyID.id]
         else {
           return OSStatus(eventNotHandledErr)
         }
 
-        let registrar = Unmanaged<GlobalHotKeyRegistrar>
-          .fromOpaque(userData)
-          .takeUnretainedValue()
         guard var gate = registrar.pressGates[definition.id] else {
           return OSStatus(eventNotHandledErr)
         }
@@ -113,12 +119,12 @@ final class GlobalHotKeyRegistrar {
       throw GlobalHotKeyError.eventHandlerInstallationFailed(installStatus)
     }
 
-    for definition in Self.definitions {
+    for definition in definitions {
       var hotKeyRef: EventHotKeyRef?
       let hotKeyID = EventHotKeyID(signature: Self.signature, id: definition.id)
       let status = RegisterEventHotKey(
-        definition.keyCode,
-        0,
+        UInt32(definition.shortcut.virtualKeyCode),
+        carbonModifiers(for: definition.shortcut.modifiers),
         hotKeyID,
         GetApplicationEventTarget(),
         0,
@@ -127,7 +133,11 @@ final class GlobalHotKeyRegistrar {
 
       guard status == noErr, let hotKeyRef else {
         unregister()
-        throw GlobalHotKeyError.registrationFailed(action: definition.action, status: status)
+        throw GlobalHotKeyError.registrationFailed(
+          action: definition.action,
+          shortcut: definition.shortcut.displayValue,
+          status: status
+        )
       }
       hotKeyRefs.append(hotKeyRef)
     }
@@ -144,6 +154,16 @@ final class GlobalHotKeyRegistrar {
     eventHandlerRef = nil
     handler = nil
     pressGates = [:]
+    definitionsByID = [:]
+  }
+
+  private func carbonModifiers(for modifiers: Set<ModifierKey>) -> UInt32 {
+    var result: UInt32 = 0
+    if modifiers.contains(.command) { result |= UInt32(cmdKey) }
+    if modifiers.contains(.shift) { result |= UInt32(shiftKey) }
+    if modifiers.contains(.control) { result |= UInt32(controlKey) }
+    if modifiers.contains(.option) { result |= UInt32(optionKey) }
+    return result
   }
 
   deinit {

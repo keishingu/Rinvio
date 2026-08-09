@@ -31,11 +31,12 @@ final class StatusMenuController: NSObject {
   private var lastStatus = ActionStatus(
     action: nil,
     headline: "Starting…",
-    detail: "Preparing F6/F7/F8",
+    detail: "Preparing shortcuts",
     target: "Not detected",
     isError: false
   )
   private var lastAccessibilityPermission = false
+  private var triggerSummary = "F6/F7/F8"
 
   override init() {
     statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -156,6 +157,11 @@ final class StatusMenuController: NSObject {
     dryRunItem.state = enabled ? .on : .off
   }
 
+  func setTriggerSummary(_ summary: String) {
+    triggerSummary = summary
+    applyLanguage()
+  }
+
   private func configureDisabledItem(_ item: NSMenuItem) {
     item.isEnabled = false
   }
@@ -170,7 +176,7 @@ final class StatusMenuController: NSObject {
     dryCheckItem.title = copy.runDryCheckMenu
     permissionActionItem.title = copy.requestAccessibilityMenu
     copyItem.title = copy.copyDiagnostics
-    hotKeyItem.title = copy.hotKeyRegisteredMenu
+    hotKeyItem.title = copy.hotKeyRegisteredMenu(triggerSummary)
     privacyItem.title = copy.privacyMenu
     quitItem.title = copy.quitQuickDraw
   }

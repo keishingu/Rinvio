@@ -99,6 +99,24 @@ final class ActionRouterTests: XCTestCase {
     assertFailure(bundleIdentifier: nil, activeTabURL: nil, expected: .missingBundleIdentifier)
   }
 
+  func testUsesApplicationShortcutOverride() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let override = KeyStroke(
+      virtualKeyCode: 11,
+      modifiers: [.command, .option],
+      displayValue: "⌥⌘B"
+    )
+    try store.setShortcutOverride(override, for: .camera, target: .zoomWorkplace)
+    let router = ActionRouter(overrideProvider: store)
+
+    let route = try router.route(
+      action: .camera,
+      context: ForegroundContext(bundleIdentifier: "us.zoom.xos")
+    ).get()
+
+    XCTAssertEqual(route.shortcut, override)
+  }
+
   private func assertRoute(
     _ action: MeetingAction,
     bundleIdentifier: String,

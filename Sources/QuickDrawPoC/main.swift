@@ -3,7 +3,7 @@ import OSLog
 import QuickDrawCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-  private var hotKeyRegistrar: GlobalHotKeyRegistrar?
+  private var hotKeyCoordinator: HotKeyConfigurationCoordinator?
   private var actionController: ActionController?
   private var statusMenuController: StatusMenuController?
   private var configurationWindowController: ConfigurationWindowController?
@@ -16,9 +16,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     NSApplication.shared.setActivationPolicy(.accessory)
 
+    let configurationStore = QuickDrawConfigurationStore()
     let foregroundProvider = ForegroundApplicationProvider()
     let shortcutExecutor = ShortcutExecutor()
     let pipeline = ActionPipeline(
+      router: ActionRouter(overrideProvider: configurationStore),
       applicationProvider: foregroundProvider,
       activeTabProvider: ChromeActiveTabProvider(),
       shortcutDeliverer: shortcutExecutor
@@ -28,9 +30,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       shortcutExecutor: shortcutExecutor
     )
     let menuController = StatusMenuController()
-    let model = QuickDrawAppModel()
+    let model = QuickDrawAppModel(configurationStore: configurationStore)
     let windowController = ConfigurationWindowController(model: model)
+    let coordinator = HotKeyConfigurationCoordinator(
+      registrar: GlobalHotKeyRegistrar(),
+      store: configurationStore
+    )
     menuController.setLanguage(model.language)
+
+    let updateTriggerPresentation = {
+      let summary = MeetingAction.allCases.map {
+        configurationStore.trigger(for: $0).displayValue
+      }.joined(separator: "/")
+      controller.triggerSummary = summary
+      menuController.setTriggerSummary(summary)
+    }
+    updateTriggerPresentation()
 
     controller.onStatusChange = { [weak controller, weak menuController, weak model] status in
       guard let controller else { return }
@@ -67,6 +82,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     model.onLanguageChange = { [weak menuController] language in
       menuController?.setLanguage(language)
     }
+    model.onShortcutRecordingBegan = { [weak coordinator, weak controller, weak model] in
+      coordinator?.suspend()
+      controller?.areHotKeysRegistered = false
+      model?.setHotKeysRegistered(false)
+    }
+    model.onShortcutRecordingEnded = { [weak coordinator, weak controller, weak model] in
+      let error = coordinator?.resume()
+      controller?.areHotKeysRegistered = error == nil
+      model?.setHotKeysRegistered(error == nil)
+      return error
+    }
+    model.onApplyTrigger = { [weak coordinator, weak controller, weak model] action, shortcut in
+      let error = coordinator?.applyTrigger(shortcut, for: action)
+      controller?.areHotKeysRegistered = error == nil
+      model?.setHotKeysRegistered(error == nil)
+      updateTriggerPresentation()
+      return error
+    }
+    model.onResetTrigger = { [weak coordinator, weak controller, weak model] action in
+      let error = coordinator?.resetTrigger(for: action)
+      controller?.areHotKeysRegistered = error == nil
+      model?.setHotKeysRegistered(error == nil)
+      updateTriggerPresentation()
+      return error
+    }
+    model.onResetAction = { [weak coordinator, weak controller, weak model] action in
+      let error = coordinator?.resetAction(action)
+      controller?.areHotKeysRegistered = error == nil
+      model?.setHotKeysRegistered(error == nil)
+      updateTriggerPresentation()
+      return error
+    }
 
     menuController.onToggleEnabled = { [weak model] enabled in
       model?.setEnabled(enabled)
@@ -88,16 +135,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       controller?.diagnosticsText() ?? "QuickDraw PoC Diagnostics unavailable"
     }
 
-    let registrar = GlobalHotKeyRegistrar()
     do {
-      try registrar.registerDefaultActions { [weak controller] action in
+      try coordinator.start { [weak controller] action in
         controller?.trigger(action)
       }
       controller.areHotKeysRegistered = true
       model.setHotKeysRegistered(true)
       let initialStatus = ActionStatus(
         action: nil,
-        headline: "Enabled — F6/F7/F8 ready",
+        headline: "Enabled — shortcuts ready",
         detail: controller.permissionSummary,
         target: "Not detected",
         isError: !shortcutExecutor.hasPostEventAccess
@@ -112,7 +158,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         diagnostics: controller.diagnosticsText()
       )
       logger.info(
-        "QuickDraw PoC started hotkeys=F6,F7,F8 postEventAccess=\(shortcutExecutor.hasPostEventAccess, privacy: .public)"
+        "QuickDraw PoC started hotkeys=\(controller.triggerSummary, privacy: .public) postEventAccess=\(shortcutExecutor.hasPostEventAccess, privacy: .public)"
       )
     } catch {
       controller.isEnabled = false
@@ -139,7 +185,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       )
     }
 
-    hotKeyRegistrar = registrar
+    hotKeyCoordinator = coordinator
     actionController = controller
     statusMenuController = menuController
     configurationWindowController = windowController
@@ -150,6 +196,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidBecomeActive(_ notification: Notification) {
     appModel?.refreshEnvironment()
+  }
+
+  func applicationDidResignActive(_ notification: Notification) {
+    appModel?.cancelRecording()
   }
 }
 

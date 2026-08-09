@@ -17,7 +17,7 @@ final class ActionController {
   var isEnabled = true {
     didSet {
       publishStateChange(
-        headline: isEnabled ? "Enabled — F6/F7/F8 ready" : "Disabled",
+        headline: isEnabled ? "Enabled — shortcuts ready" : "Disabled",
         detail: isEnabled ? permissionSummary : "Action routing is paused"
       )
     }
@@ -28,13 +28,14 @@ final class ActionController {
       publishStateChange(
         headline: isDryRunEnabled ? "Dry Run enabled" : "Live delivery enabled",
         detail: isDryRunEnabled
-          ? "F6/F7/F8 will route and log without sending a shortcut"
+          ? "Configured triggers will route and log without sending a shortcut"
           : permissionSummary
       )
     }
   }
 
   var areHotKeysRegistered = false
+  var triggerSummary = "F6/F7/F8"
 
   var permissionSummary: String {
     hasPostEventAccess ? "Accessibility: Granted" : "Accessibility: Required"
@@ -77,7 +78,7 @@ final class ActionController {
     publishStateChange(
       headline: granted ? "Accessibility granted" : "Accessibility permission requested",
       detail: granted
-        ? "Return to Teams, Zoom, or Meet and press F6, F7, or F8"
+        ? "Return to Teams, Zoom, or Meet and use a configured trigger"
         : "Enable QuickDraw PoC in System Settings, then try again",
       isError: !granted
     )
@@ -88,7 +89,7 @@ final class ActionController {
     var lines = [
       "QuickDraw PoC Diagnostics",
       "generatedAt=\(ISO8601DateFormatter().string(from: Date()))",
-      "hotkeys.F6-F8=\(areHotKeysRegistered ? "registered" : "notRegistered")",
+      "hotkeys=\(areHotKeysRegistered ? "registered" : "notRegistered") \(triggerSummary)",
       "enabled=\(isEnabled)",
       "mode=\(isDryRunEnabled ? "dryRun" : "live")",
       "postEventAccess=\(hasPostEventAccess)",

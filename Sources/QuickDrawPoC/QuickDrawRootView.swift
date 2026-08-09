@@ -96,7 +96,7 @@ struct QuickDrawRootView: View {
         .font(.caption)
         .foregroundStyle(.secondary)
 
-        Text(model.copy.shortcutSummary)
+        Text(model.triggerSummary)
           .font(.caption2)
           .foregroundStyle(.tertiary)
       }
@@ -128,8 +128,7 @@ struct QuickDrawRootView: View {
       {
         ApplicationInspector(
           application: application,
-          actions: model.actions,
-          language: model.language
+          model: model
         )
       } else {
         ContentUnavailableView(model.copy.noApplications, systemImage: "square.grid.2x2")
@@ -181,9 +180,9 @@ private struct ActionRow: View {
           Text(model.copy.actionName(definition.action))
             .font(.headline)
           KeyBadge(
-            text: definition.trigger,
+            text: model.trigger(for: definition.action).displayValue,
             accessibilityLabel:
-              "\(model.copy.shortcutAccessibilityPrefix) \(definition.trigger)"
+              "\(model.copy.shortcutAccessibilityPrefix) \(model.trigger(for: definition.action).displayValue)"
           )
         }
         Text(model.copy.actionDescription(definition.action))
@@ -195,7 +194,7 @@ private struct ActionRow: View {
 
       HStack(spacing: 18) {
         ForEach(model.applications) { application in
-          CompactMapping(application: application, action: definition.action)
+          CompactMapping(application: application, action: definition.action, model: model)
         }
       }
     }
@@ -207,6 +206,7 @@ private struct ActionRow: View {
 private struct CompactMapping: View {
   let application: ApplicationMapping
   let action: MeetingAction
+  @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
     HStack(spacing: 7) {
@@ -217,7 +217,7 @@ private struct CompactMapping: View {
         Text(application.compactName)
           .font(.caption)
           .lineLimit(1)
-        Text(application.shortcut(for: action))
+        Text(model.shortcut(for: action, target: application.target).displayValue)
           .font(.caption2.monospaced())
           .foregroundStyle(.secondary)
       }
@@ -285,7 +285,8 @@ private struct DiagnosticsView: View {
           LabeledContent(
             model.copy.globalShortcut,
             value: model.areHotKeysRegistered
-              ? model.copy.hotKeysRegistered : model.copy.unavailable
+              ? model.copy.hotKeysRegistered(model.registeredTriggerSummary)
+              : model.copy.unavailable
           )
         }
 
@@ -310,6 +311,7 @@ private struct DiagnosticsView: View {
 private struct ActionInspector: View {
   let definition: ActionDefinition
   @ObservedObject var model: QuickDrawAppModel
+  @State private var isResetConfirmationPresented = false
 
   var body: some View {
     Form {
@@ -331,15 +333,47 @@ private struct ActionInspector: View {
 
       Section(model.copy.trigger) {
         LabeledContent(model.copy.globalShortcut) {
-          KeyBadge(
-            text: definition.trigger,
-            accessibilityLabel:
-              "\(model.copy.shortcutAccessibilityPrefix) \(definition.trigger)"
-          )
+          HStack(spacing: 7) {
+            if model.isTriggerOverridden(for: definition.action) {
+              Text(model.copy.modified)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            KeyBadge(
+              text: model.trigger(for: definition.action).displayValue,
+              accessibilityLabel:
+                "\(model.copy.shortcutAccessibilityPrefix) \(model.trigger(for: definition.action).displayValue)"
+            )
+          }
+        }
+
+        if model.recordingDestination == .trigger(definition.action) {
+          ShortcutRecordingRow(model: model)
+        } else {
+          HStack {
+            Button(model.copy.changeShortcut) {
+              model.beginRecording(.trigger(definition.action))
+            }
+            if model.isTriggerOverridden(for: definition.action) {
+              Button(model.copy.restoreDefault) {
+                model.resetTrigger(for: definition.action)
+              }
+            }
+          }
         }
         Text(model.copy.triggerEditingDescription)
           .font(.caption)
           .foregroundStyle(.secondary)
+      }
+
+      if let shortcutEditingError = model.shortcutEditingError {
+        Section {
+          Label(
+            model.copy.localizedShortcutError(shortcutEditingError),
+            systemImage: "exclamationmark.triangle"
+          )
+          .foregroundStyle(.red)
+        }
       }
 
       Section(model.copy.applicationMappings) {
@@ -347,8 +381,16 @@ private struct ActionInspector: View {
           MappingRow(
             application: application,
             action: definition.action,
-            language: model.language
+            model: model
           )
+        }
+      }
+
+      if model.hasOverrides(for: definition.action) {
+        Section {
+          Button(model.copy.restoreActionDefaults) {
+            isResetConfirmationPresented = true
+          }
         }
       }
 
@@ -373,41 +415,90 @@ private struct ActionInspector: View {
       PermissionSection(model: model)
     }
     .formStyle(.grouped)
+    .confirmationDialog(
+      model.copy.restoreActionTitle,
+      isPresented: $isResetConfirmationPresented
+    ) {
+      Button(model.copy.restoreDefault) {
+        model.resetAction(definition.action)
+      }
+      Button(model.copy.cancel, role: .cancel) {}
+    } message: {
+      Text(model.copy.restoreActionMessage)
+    }
+    .onDisappear {
+      if model.recordingDestination != nil {
+        model.cancelRecording()
+      }
+    }
   }
 }
 
 private struct MappingRow: View {
   let application: ApplicationMapping
   let action: MeetingAction
-  let language: AppLanguage
-
-  private var copy: QuickDrawCopy { QuickDrawCopy(language: language) }
+  @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
-    HStack(spacing: 10) {
-      Image(systemName: application.systemImage)
-        .frame(width: 22)
-        .foregroundStyle(.secondary)
-      VStack(alignment: .leading, spacing: 2) {
-        Text(application.name)
-        Text(copy.executionDetail(for: application))
-          .font(.caption)
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 10) {
+        Image(systemName: application.systemImage)
+          .frame(width: 22)
           .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 2) {
+          Text(application.name)
+          Text(model.copy.executionDetail(for: application))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        Spacer()
+        if model.isShortcutOverridden(for: action, target: application.target) {
+          Text(model.copy.modified)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        KeyBadge(
+          text: model.shortcut(for: action, target: application.target).displayValue
+        )
       }
-      Spacer()
-      Text(application.shortcut(for: action))
-        .font(.caption.monospaced())
+
+      if model.recordingDestination == .application(action, application.target) {
+        ShortcutRecordingRow(model: model)
+      } else {
+        HStack {
+          Button(model.copy.changeShortcut) {
+            model.beginRecording(.application(action, application.target))
+          }
+          .buttonStyle(.link)
+
+          if model.isShortcutOverridden(for: action, target: application.target) {
+            Button(model.copy.restoreDefault) {
+              model.resetShortcut(for: action, target: application.target)
+            }
+            .buttonStyle(.link)
+          }
+        }
+      }
+    }
+  }
+}
+
+private struct ShortcutRecordingRow: View {
+  @ObservedObject var model: QuickDrawAppModel
+
+  var body: some View {
+    HStack {
+      Label(model.copy.pressShortcut, systemImage: "keyboard")
         .foregroundStyle(.secondary)
+      Spacer()
+      Button(model.copy.cancel) { model.cancelRecording() }
     }
   }
 }
 
 private struct ApplicationInspector: View {
   let application: ApplicationMapping
-  let actions: [ActionDefinition]
-  let language: AppLanguage
-
-  private var copy: QuickDrawCopy { QuickDrawCopy(language: language) }
+  @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
     Form {
@@ -421,35 +512,46 @@ private struct ApplicationInspector: View {
           VStack(alignment: .leading, spacing: 3) {
             Text(application.name)
               .font(.title3.weight(.semibold))
-            Text(application.isInstalled ? copy.detected : copy.notInstalled)
+            Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
               .foregroundStyle(.secondary)
           }
         }
       }
 
-      Section(copy.identity) {
+      Section(model.copy.identity) {
         Text(application.identity)
           .textSelection(.enabled)
       }
 
-      Section(copy.actionMappings) {
-        ForEach(actions) { definition in
+      Section(model.copy.actionMappings) {
+        ForEach(model.actions) { definition in
           HStack {
             Label(
-              copy.actionName(definition.action),
+              model.copy.actionName(definition.action),
               systemImage: definition.systemImage
             )
             Spacer()
-            Text(application.shortcut(for: definition.action))
-              .font(.caption.monospaced())
-              .foregroundStyle(.secondary)
+            if model.isShortcutOverridden(
+              for: definition.action,
+              target: application.target
+            ) {
+              Text(model.copy.modified)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            KeyBadge(
+              text: model.shortcut(
+                for: definition.action,
+                target: application.target
+              ).displayValue
+            )
           }
         }
       }
 
-      Section(copy.method) {
-        LabeledContent(copy.capability, value: copy.supported)
-        Text(copy.executionDetail(for: application))
+      Section(model.copy.method) {
+        LabeledContent(model.copy.capability, value: model.copy.supported)
+        Text(model.copy.executionDetail(for: application))
           .foregroundStyle(.secondary)
       }
     }
