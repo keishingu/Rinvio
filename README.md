@@ -16,6 +16,7 @@
 - Action-first native settings window with an application mapping inspector
 - Editable global Triggers and per-application shortcut overrides with one-click default restore
 - Versioned configuration persisted in Application Support
+- Versioned Built-in Catalog bundled as JSON
 - Live Japanese / English display switching, persisted across launches
 - Applications and privacy-safe Diagnostics views
 - Menu bar status, non-delivery Dry Run, copied diagnostics, and redacted unified log
@@ -59,7 +60,7 @@ Action Inspectorから次を編集できます。
 - `Restore Default`: 個別のOverrideを削除してBuilt-in Catalogへ戻す。
 - `Restore All Defaults for This Action`: TriggerとそのActionの全Application Mappingを確認後にまとめて戻す。
 
-設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は保存ファイルへ複製せず、Overrideだけを保存します。
+設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は [`built-in-catalog.json`](Sources/QuickDrawCore/Resources/built-in-catalog.json) から読み込み、ユーザー設定にはOverrideだけを保存します。Action IDを維持しているため、既存のOverrideもそのまま引き継がれます。
 
 Built-in ActionにはQuickDrawの名前空間として`⌘⌥` Triggerを割り当てています。対応アプリまたはMeetタブでだけQuickDrawがキーを消費し、対象外では元のキーイベントをそのままアプリ／macOSへ渡します。
 

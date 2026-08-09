@@ -110,9 +110,7 @@ final class ForegroundApplicationProvider: ForegroundApplicationProviding {
     guard let bundleIdentifier = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else {
       return false
     }
-    return ActionRouter.teamsBundleIdentifiers.contains(bundleIdentifier)
-      || ActionRouter.zoomBundleIdentifiers.contains(bundleIdentifier)
-      || ActionRouter.chromeBundleIdentifiers.contains(bundleIdentifier)
+    return ActionCatalog.target(forBundleIdentifier: bundleIdentifier) != nil
   }
 
   private static func snapshot(_ application: NSRunningApplication) -> ApplicationSnapshot {

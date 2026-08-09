@@ -12,6 +12,7 @@ swift test
 plutil -lint "$app_bundle/Contents/Info.plist"
 test -f "$app_bundle/Contents/Resources/AppIcon.icns"
 test -f "$app_bundle/Contents/Resources/Assets.car"
+test -f "$app_bundle/Contents/Resources/built-in-catalog.json"
 codesign --verify --deep --strict --verbose=2 "$app_bundle"
 
 echo "Verification passed: $app_bundle"

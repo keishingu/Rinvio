@@ -1,0 +1,442 @@
+{
+  "schemaVersion": 1,
+  "actions": [
+    {
+      "action": "mute",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 46,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥M"
+      }
+    },
+    {
+      "action": "camera",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 8,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥C"
+      }
+    },
+    {
+      "action": "raiseHand",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 4,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥H"
+      }
+    },
+    {
+      "action": "openChat",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 31,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥O"
+      }
+    },
+    {
+      "action": "showParticipants",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 35,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥P"
+      }
+    },
+    {
+      "action": "toggleCaptions",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 37,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥L"
+      }
+    },
+    {
+      "action": "shareScreen",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 1,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥S"
+      }
+    },
+    {
+      "action": "switchCamera",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 7,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥X"
+      }
+    },
+    {
+      "action": "pictureInPicture",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 34,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥I"
+      }
+    },
+    {
+      "action": "reactionLike",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 18,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥1"
+      }
+    },
+    {
+      "action": "reactionHeart",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 19,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥2"
+      }
+    },
+    {
+      "action": "reactionClap",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 20,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥3"
+      }
+    },
+    {
+      "action": "reactionLaugh",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 21,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥4"
+      }
+    },
+    {
+      "action": "reactionWow",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 23,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥5"
+      }
+    },
+    {
+      "action": "reactionCelebrate",
+      "domain": "meeting",
+      "defaultTrigger": {
+        "virtualKeyCode": 22,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥6"
+      }
+    },
+    {
+      "action": "newSession",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 45,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥N"
+      }
+    },
+    {
+      "action": "hardReload",
+      "domain": "browser",
+      "defaultTrigger": {
+        "virtualKeyCode": 15,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥R"
+      }
+    }
+  ],
+  "applications": [
+    {
+      "target": "microsoftTeams",
+      "domain": "meeting",
+      "bundleIdentifiers": ["com.microsoft.teams2", "com.microsoft.teams"]
+    },
+    {
+      "target": "zoomWorkplace",
+      "domain": "meeting",
+      "bundleIdentifiers": ["us.zoom.xos"]
+    },
+    {
+      "target": "googleMeet",
+      "domain": "meeting",
+      "bundleIdentifiers": [],
+      "webApplication": {
+        "browserTarget": "googleChrome",
+        "scheme": "https",
+        "host": "meet.google.com"
+      }
+    },
+    {
+      "target": "codex",
+      "domain": "development",
+      "bundleIdentifiers": ["com.openai.codex"]
+    },
+    {
+      "target": "claude",
+      "domain": "development",
+      "bundleIdentifiers": ["com.anthropic.claudefordesktop"]
+    },
+    {
+      "target": "safari",
+      "domain": "browser",
+      "bundleIdentifiers": ["com.apple.Safari"]
+    },
+    {
+      "target": "googleChrome",
+      "domain": "browser",
+      "bundleIdentifiers": ["com.google.Chrome"]
+    }
+  ],
+  "mappings": [
+    {
+      "action": "mute",
+      "target": "microsoftTeams",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 46, "modifiers": ["command", "shift"], "displayValue": "⌘⇧M"}
+      }
+    },
+    {
+      "action": "camera",
+      "target": "microsoftTeams",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 31, "modifiers": ["command", "shift"], "displayValue": "⌘⇧O"}
+      }
+    },
+    {
+      "action": "raiseHand",
+      "target": "microsoftTeams",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 40, "modifiers": ["command", "shift"], "displayValue": "⌘⇧K"}
+      }
+    },
+    {
+      "action": "toggleCaptions",
+      "target": "microsoftTeams",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 0, "modifiers": ["command", "shift"], "displayValue": "⌘⇧A"}
+      }
+    },
+    {
+      "action": "shareScreen",
+      "target": "microsoftTeams",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 14, "modifiers": ["command", "shift"], "displayValue": "⌘⇧E"}
+      }
+    },
+    {
+      "action": "mute",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 0, "modifiers": ["command", "shift"], "displayValue": "⌘⇧A"}
+      }
+    },
+    {
+      "action": "camera",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 9, "modifiers": ["command", "shift"], "displayValue": "⌘⇧V"}
+      }
+    },
+    {
+      "action": "raiseHand",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 16, "modifiers": ["option"], "displayValue": "⌥Y"}
+      }
+    },
+    {
+      "action": "openChat",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 4, "modifiers": ["command", "shift"], "displayValue": "⌘⇧H"}
+      }
+    },
+    {
+      "action": "showParticipants",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 32, "modifiers": ["command"], "displayValue": "⌘U"}
+      }
+    },
+    {
+      "action": "shareScreen",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 1, "modifiers": ["command", "shift"], "displayValue": "⌘⇧S"}
+      }
+    },
+    {
+      "action": "switchCamera",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command", "shift"], "displayValue": "⌘⇧N"}
+      }
+    },
+    {
+      "action": "reactionLike",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 23, "modifiers": ["command", "option"], "displayValue": "⌥⌘5"}
+      }
+    },
+    {
+      "action": "reactionHeart",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 22, "modifiers": ["command", "option"], "displayValue": "⌥⌘6"}
+      }
+    },
+    {
+      "action": "reactionClap",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 21, "modifiers": ["command", "option"], "displayValue": "⌥⌘4"}
+      }
+    },
+    {
+      "action": "reactionLaugh",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 26, "modifiers": ["command", "option"], "displayValue": "⌥⌘7"}
+      }
+    },
+    {
+      "action": "reactionWow",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 28, "modifiers": ["command", "option"], "displayValue": "⌥⌘8"}
+      }
+    },
+    {
+      "action": "reactionCelebrate",
+      "target": "zoomWorkplace",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 25, "modifiers": ["command", "option"], "displayValue": "⌥⌘9"}
+      }
+    },
+    {
+      "action": "mute",
+      "target": "googleMeet",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 2, "modifiers": ["command"], "displayValue": "⌘D"}
+      }
+    },
+    {
+      "action": "camera",
+      "target": "googleMeet",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 14, "modifiers": ["command"], "displayValue": "⌘E"}
+      }
+    },
+    {
+      "action": "raiseHand",
+      "target": "googleMeet",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 4, "modifiers": ["command", "control"], "displayValue": "⌃⌘H"}
+      }
+    },
+    {
+      "action": "openChat",
+      "target": "googleMeet",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 8, "modifiers": ["command", "control"], "displayValue": "⌃⌘C"}
+      }
+    },
+    {
+      "action": "showParticipants",
+      "target": "googleMeet",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 35, "modifiers": ["command", "control"], "displayValue": "⌃⌘P"}
+      }
+    },
+    {
+      "action": "toggleCaptions",
+      "target": "googleMeet",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 8, "modifiers": [], "displayValue": "C"}
+      }
+    },
+    {
+      "action": "shareScreen",
+      "target": "googleMeet",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 17, "modifiers": ["command", "control"], "displayValue": "⌃⌘T"}
+      }
+    },
+    {
+      "action": "pictureInPicture",
+      "target": "googleMeet",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 46, "modifiers": ["shift"], "displayValue": "⇧M"}
+      }
+    },
+    {
+      "action": "newSession",
+      "target": "codex",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "newSession",
+      "target": "claude",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "hardReload",
+      "target": "safari",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command", "option"], "displayValue": "⌘⌥R"}
+      }
+    },
+    {
+      "action": "hardReload",
+      "target": "googleChrome",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command", "shift"], "displayValue": "⌘⇧R"}
+      }
+    }
+  ]
+}

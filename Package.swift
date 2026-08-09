@@ -13,7 +13,10 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "QuickDrawCore"
+      name: "QuickDrawCore",
+      resources: [
+        .process("Resources")
+      ]
     ),
     .executableTarget(
       name: "QuickDrawPoC",

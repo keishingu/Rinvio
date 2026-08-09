@@ -53,11 +53,7 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   public var id: Self { self }
 
   public var domain: ActionDomain {
-    switch self {
-    case .newSession: .development
-    case .hardReload: .browser
-    default: .meeting
-    }
+    ActionCatalog.domain(for: self)
   }
 
   public var displayName: String {
@@ -101,115 +97,6 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
     case .claude: "Claude"
     case .safari: "Safari"
     case .googleChrome: "Google Chrome"
-    }
-  }
-}
-
-public enum ActionCatalog {
-  public static func defaultTrigger(for action: Action) -> KeyStroke? {
-    switch action {
-    case .mute:
-      KeyStroke(virtualKeyCode: 46, modifiers: [.command, .option], displayValue: "⌘⌥M")
-    case .camera:
-      KeyStroke(virtualKeyCode: 8, modifiers: [.command, .option], displayValue: "⌘⌥C")
-    case .raiseHand:
-      KeyStroke(virtualKeyCode: 4, modifiers: [.command, .option], displayValue: "⌘⌥H")
-    case .openChat:
-      KeyStroke(virtualKeyCode: 31, modifiers: [.command, .option], displayValue: "⌘⌥O")
-    case .showParticipants:
-      KeyStroke(virtualKeyCode: 35, modifiers: [.command, .option], displayValue: "⌘⌥P")
-    case .toggleCaptions:
-      KeyStroke(virtualKeyCode: 37, modifiers: [.command, .option], displayValue: "⌘⌥L")
-    case .shareScreen:
-      KeyStroke(virtualKeyCode: 1, modifiers: [.command, .option], displayValue: "⌘⌥S")
-    case .switchCamera:
-      KeyStroke(virtualKeyCode: 7, modifiers: [.command, .option], displayValue: "⌘⌥X")
-    case .pictureInPicture:
-      KeyStroke(virtualKeyCode: 34, modifiers: [.command, .option], displayValue: "⌘⌥I")
-    case .reactionLike:
-      KeyStroke(virtualKeyCode: 18, modifiers: [.command, .option], displayValue: "⌘⌥1")
-    case .reactionHeart:
-      KeyStroke(virtualKeyCode: 19, modifiers: [.command, .option], displayValue: "⌘⌥2")
-    case .reactionClap:
-      KeyStroke(virtualKeyCode: 20, modifiers: [.command, .option], displayValue: "⌘⌥3")
-    case .reactionLaugh:
-      KeyStroke(virtualKeyCode: 21, modifiers: [.command, .option], displayValue: "⌘⌥4")
-    case .reactionWow:
-      KeyStroke(virtualKeyCode: 23, modifiers: [.command, .option], displayValue: "⌘⌥5")
-    case .reactionCelebrate:
-      KeyStroke(virtualKeyCode: 22, modifiers: [.command, .option], displayValue: "⌘⌥6")
-    case .newSession:
-      KeyStroke(virtualKeyCode: 45, modifiers: [.command, .option], displayValue: "⌘⌥N")
-    case .hardReload:
-      KeyStroke(virtualKeyCode: 15, modifiers: [.command, .option], displayValue: "⌘⌥R")
-    }
-  }
-
-  public static func defaultShortcut(
-    for action: Action,
-    target: ActionTarget
-  ) -> KeyStroke? {
-    switch (target, action) {
-    case (.microsoftTeams, .mute):
-      KeyStroke(virtualKeyCode: 46, modifiers: [.command, .shift], displayValue: "⌘⇧M")
-    case (.microsoftTeams, .camera):
-      KeyStroke(virtualKeyCode: 31, modifiers: [.command, .shift], displayValue: "⌘⇧O")
-    case (.microsoftTeams, .raiseHand):
-      KeyStroke(virtualKeyCode: 40, modifiers: [.command, .shift], displayValue: "⌘⇧K")
-    case (.zoomWorkplace, .mute):
-      KeyStroke(virtualKeyCode: 0, modifiers: [.command, .shift], displayValue: "⌘⇧A")
-    case (.zoomWorkplace, .camera):
-      KeyStroke(virtualKeyCode: 9, modifiers: [.command, .shift], displayValue: "⌘⇧V")
-    case (.zoomWorkplace, .raiseHand):
-      KeyStroke(virtualKeyCode: 16, modifiers: [.option], displayValue: "⌥Y")
-    case (.googleMeet, .mute):
-      KeyStroke(virtualKeyCode: 2, modifiers: [.command], displayValue: "⌘D")
-    case (.googleMeet, .camera):
-      KeyStroke(virtualKeyCode: 14, modifiers: [.command], displayValue: "⌘E")
-    case (.googleMeet, .raiseHand):
-      KeyStroke(virtualKeyCode: 4, modifiers: [.command, .control], displayValue: "⌃⌘H")
-    case (.zoomWorkplace, .openChat):
-      KeyStroke(virtualKeyCode: 4, modifiers: [.command, .shift], displayValue: "⌘⇧H")
-    case (.googleMeet, .openChat):
-      KeyStroke(virtualKeyCode: 8, modifiers: [.command, .control], displayValue: "⌃⌘C")
-    case (.zoomWorkplace, .showParticipants):
-      KeyStroke(virtualKeyCode: 32, modifiers: [.command], displayValue: "⌘U")
-    case (.googleMeet, .showParticipants):
-      KeyStroke(virtualKeyCode: 35, modifiers: [.command, .control], displayValue: "⌃⌘P")
-    case (.microsoftTeams, .toggleCaptions):
-      KeyStroke(virtualKeyCode: 0, modifiers: [.command, .shift], displayValue: "⌘⇧A")
-    case (.googleMeet, .toggleCaptions):
-      KeyStroke(virtualKeyCode: 8, modifiers: [], displayValue: "C")
-    case (.microsoftTeams, .shareScreen):
-      KeyStroke(virtualKeyCode: 14, modifiers: [.command, .shift], displayValue: "⌘⇧E")
-    case (.zoomWorkplace, .shareScreen):
-      KeyStroke(virtualKeyCode: 1, modifiers: [.command, .shift], displayValue: "⌘⇧S")
-    case (.googleMeet, .shareScreen):
-      KeyStroke(virtualKeyCode: 17, modifiers: [.command, .control], displayValue: "⌃⌘T")
-    case (.zoomWorkplace, .switchCamera):
-      KeyStroke(virtualKeyCode: 45, modifiers: [.command, .shift], displayValue: "⌘⇧N")
-    case (.googleMeet, .pictureInPicture):
-      KeyStroke(virtualKeyCode: 46, modifiers: [.shift], displayValue: "⇧M")
-    case (.zoomWorkplace, .reactionLike):
-      KeyStroke(virtualKeyCode: 23, modifiers: [.command, .option], displayValue: "⌥⌘5")
-    case (.zoomWorkplace, .reactionHeart):
-      KeyStroke(virtualKeyCode: 22, modifiers: [.command, .option], displayValue: "⌥⌘6")
-    case (.zoomWorkplace, .reactionClap):
-      KeyStroke(virtualKeyCode: 21, modifiers: [.command, .option], displayValue: "⌥⌘4")
-    case (.zoomWorkplace, .reactionLaugh):
-      KeyStroke(virtualKeyCode: 26, modifiers: [.command, .option], displayValue: "⌥⌘7")
-    case (.zoomWorkplace, .reactionWow):
-      KeyStroke(virtualKeyCode: 28, modifiers: [.command, .option], displayValue: "⌥⌘8")
-    case (.zoomWorkplace, .reactionCelebrate):
-      KeyStroke(virtualKeyCode: 25, modifiers: [.command, .option], displayValue: "⌥⌘9")
-    case (.codex, .newSession), (.claude, .newSession):
-      KeyStroke(virtualKeyCode: 45, modifiers: [.command], displayValue: "⌘N")
-    case (.safari, .hardReload):
-      KeyStroke(virtualKeyCode: 15, modifiers: [.command, .option], displayValue: "⌘⌥R")
-    case (.googleChrome, .hardReload):
-      KeyStroke(virtualKeyCode: 15, modifiers: [.command, .shift], displayValue: "⌘⇧R")
-    default:
-      nil
     }
   }
 }
@@ -272,31 +159,6 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
 }
 
 public struct ActionRouter {
-  public static let teamsBundleIdentifiers: Set<String> = [
-    "com.microsoft.teams2",
-    "com.microsoft.teams",
-  ]
-
-  public static let zoomBundleIdentifiers: Set<String> = [
-    "us.zoom.xos"
-  ]
-
-  public static let chromeBundleIdentifiers: Set<String> = [
-    "com.google.Chrome"
-  ]
-
-  public static let safariBundleIdentifiers: Set<String> = [
-    "com.apple.Safari"
-  ]
-
-  public static let codexBundleIdentifiers: Set<String> = [
-    "com.openai.codex"
-  ]
-
-  public static let claudeBundleIdentifiers: Set<String> = [
-    "com.anthropic.claudefordesktop"
-  ]
-
   private let overrideProvider: any ShortcutOverrideProviding
 
   public init(overrideProvider: any ShortcutOverrideProviding = NoShortcutOverrides()) {
@@ -311,34 +173,27 @@ public struct ActionRouter {
       return .failure(.missingBundleIdentifier)
     }
 
-    let target: ActionTarget
-    if Self.teamsBundleIdentifiers.contains(bundleIdentifier) {
-      target = .microsoftTeams
-    } else if Self.zoomBundleIdentifiers.contains(bundleIdentifier) {
-      target = .zoomWorkplace
-    } else if Self.chromeBundleIdentifiers.contains(bundleIdentifier) {
-      if action.domain == .meeting {
-        guard let activeTabURL = context.activeTabURL else {
-          return .failure(.browserContextUnavailable)
-        }
-
-        let scheme = activeTabURL.scheme?.lowercased()
-        let host = activeTabURL.host?.lowercased()
-        guard scheme == "https", host == "meet.google.com" else {
-          return .failure(.unsupportedWebPage(host: host))
-        }
-        target = .googleMeet
-      } else {
-        target = .googleChrome
-      }
-    } else if Self.safariBundleIdentifiers.contains(bundleIdentifier) {
-      target = .safari
-    } else if Self.codexBundleIdentifiers.contains(bundleIdentifier) {
-      target = .codex
-    } else if Self.claudeBundleIdentifiers.contains(bundleIdentifier) {
-      target = .claude
-    } else {
+    guard let foregroundTarget = ActionCatalog.target(forBundleIdentifier: bundleIdentifier) else {
       return .failure(.unsupportedApplication(bundleIdentifier: bundleIdentifier))
+    }
+
+    let target: ActionTarget
+    if let webApplication = ActionCatalog.webApplication(
+      in: foregroundTarget,
+      domain: action.domain
+    ), let webIdentity = webApplication.webApplication {
+      guard let activeTabURL = context.activeTabURL else {
+        return .failure(.browserContextUnavailable)
+      }
+
+      let scheme = activeTabURL.scheme?.lowercased()
+      let host = activeTabURL.host?.lowercased()
+      guard scheme == webIdentity.scheme.lowercased(), host == webIdentity.host.lowercased() else {
+        return .failure(.unsupportedWebPage(host: host))
+      }
+      target = webApplication.target
+    } else {
+      target = foregroundTarget
     }
 
     guard let shortcut = shortcut(for: action, target: target) else {

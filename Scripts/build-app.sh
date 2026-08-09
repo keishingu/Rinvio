@@ -17,6 +17,9 @@ binary_path="$(swift build --package-path "$project_root" --configuration "$conf
 mkdir -p "$app_bundle/Contents/MacOS" "$app_bundle/Contents/Resources"
 cp "$binary_path" "$app_bundle/Contents/MacOS/QuickDrawPoC"
 cp "$project_root/AppResources/Info.plist" "$app_bundle/Contents/Info.plist"
+cp \
+    "$project_root/Sources/QuickDrawCore/Resources/built-in-catalog.json" \
+    "$app_bundle/Contents/Resources/built-in-catalog.json"
 
 xcrun actool \
     "$project_root/AppResources/Assets.xcassets" \

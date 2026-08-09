@@ -181,8 +181,11 @@ public final class ActionPipeline {
     var activeTabURL: URL?
     var browserClassification: BrowserClassification?
 
-    if action.domain == .meeting,
-      bundleIdentifier.map(ActionRouter.chromeBundleIdentifiers.contains) == true
+    if let bundleIdentifier,
+      ActionCatalog.requiresWebApplicationDetection(
+        bundleIdentifier: bundleIdentifier,
+        domain: action.domain
+      )
     {
       do {
         activeTabURL = try activeTabProvider.activeTabURL()

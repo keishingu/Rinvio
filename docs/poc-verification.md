@@ -29,6 +29,7 @@
 | Trigger configuration | Safe Trigger validation, duplicate rejection, dynamic HotKey registration, default restore | Pass |
 | Mapping overrides | Router uses persisted Action × Application overrides; individual and Action-level restore | Pass |
 | Configuration persistence | Versioned JSON round-trip and defaults-not-copied behavior | Pass |
+| Built-in Catalog | Bundled JSON decode, schema validation, complete Action/Application coverage | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
 | Tests | `swift test`: 43 tests, 0 failures | Pass |

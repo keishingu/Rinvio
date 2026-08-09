@@ -48,81 +48,39 @@ struct ApplicationMapping: Identifiable, Equatable {
 
   static func current() -> [ApplicationMapping] {
     let workspace = NSWorkspace.shared
-    return [
-      ApplicationMapping(
-        id: "microsoftTeams",
-        target: .microsoftTeams,
-        name: "Microsoft Teams",
-        compactName: "Teams",
-        systemImage: "person.2.fill",
-        identity: "com.microsoft.teams2",
-        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.microsoft.teams2")
-          != nil
-          || workspace.urlForApplication(withBundleIdentifier: "com.microsoft.teams") != nil,
-        domain: .meeting
-      ),
-      ApplicationMapping(
-        id: "zoomWorkplace",
-        target: .zoomWorkplace,
-        name: "Zoom Workplace",
-        compactName: "Zoom",
-        systemImage: "video.fill",
-        identity: "us.zoom.xos",
-        isInstalled: workspace.urlForApplication(withBundleIdentifier: "us.zoom.xos") != nil,
-        domain: .meeting
-      ),
-      ApplicationMapping(
-        id: "googleMeet",
-        target: .googleMeet,
-        name: "Google Meet",
-        compactName: "Meet",
-        systemImage: "globe",
-        identity: "meet.google.com in Google Chrome",
-        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.google.Chrome") != nil,
-        domain: .meeting
-      ),
-      ApplicationMapping(
-        id: "codex",
-        target: .codex,
-        name: "Codex",
-        compactName: "Codex",
-        systemImage: "chevron.left.forwardslash.chevron.right",
-        identity: "com.openai.codex",
-        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.openai.codex") != nil,
-        domain: .development
-      ),
-      ApplicationMapping(
-        id: "claude",
-        target: .claude,
-        name: "Claude",
-        compactName: "Claude",
-        systemImage: "terminal.fill",
-        identity: "com.anthropic.claudefordesktop",
-        isInstalled: workspace.urlForApplication(
-          withBundleIdentifier: "com.anthropic.claudefordesktop") != nil,
-        domain: .development
-      ),
-      ApplicationMapping(
-        id: "safari",
-        target: .safari,
-        name: "Safari",
-        compactName: "Safari",
-        systemImage: "safari.fill",
-        identity: "com.apple.Safari",
-        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.apple.Safari") != nil,
-        domain: .browser
-      ),
-      ApplicationMapping(
-        id: "googleChrome",
-        target: .googleChrome,
-        name: "Google Chrome",
-        compactName: "Chrome",
-        systemImage: "globe",
-        identity: "com.google.Chrome",
-        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.google.Chrome") != nil,
-        domain: .browser
-      ),
+    let presentations: [(ActionTarget, compactName: String, systemImage: String)] = [
+      (.microsoftTeams, "Teams", "person.2.fill"),
+      (.zoomWorkplace, "Zoom", "video.fill"),
+      (.googleMeet, "Meet", "globe"),
+      (.codex, "Codex", "chevron.left.forwardslash.chevron.right"),
+      (.claude, "Claude", "terminal.fill"),
+      (.safari, "Safari", "safari.fill"),
+      (.googleChrome, "Chrome", "globe"),
     ]
+
+    return presentations.map { target, compactName, systemImage in
+      let application = ActionCatalog.application(for: target)
+      let installationTarget = application.webApplication?.browserTarget ?? target
+      let installationBundleIdentifiers =
+        ActionCatalog.application(for: installationTarget).bundleIdentifiers
+      let identity =
+        application.webApplication.map {
+          "\($0.host) in \($0.browserTarget.displayName)"
+        } ?? application.bundleIdentifiers.first ?? target.rawValue
+
+      return ApplicationMapping(
+        id: target.rawValue,
+        target: target,
+        name: target.displayName,
+        compactName: compactName,
+        systemImage: systemImage,
+        identity: identity,
+        isInstalled: installationBundleIdentifiers.contains {
+          workspace.urlForApplication(withBundleIdentifier: $0) != nil
+        },
+        domain: application.domain
+      )
+    }
   }
 }
 
