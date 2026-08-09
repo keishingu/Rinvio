@@ -1,0 +1,65 @@
+# QuickDraw Mute PoC Verification
+
+- Date: 2026-08-08
+- Build environment: Xcode 26.3 / Swift 6.2.4 / arm64
+- App: `.build/app/QuickDraw PoC.app`
+
+## Automated evidence
+
+| Requirement | Evidence | Result |
+|---|---|---|
+| Teams route | `com.microsoft.teams2` / `com.microsoft.teams` → `⌘⇧M` unit tests | Pass |
+| Zoom route | `us.zoom.xos` → `⌘⇧A` unit test | Pass |
+| Meet route | Chrome + exact HTTPS `meet.google.com` → `⌘D` unit test | Pass |
+| Fail closed | fake Meet host, HTTP Meet, non-Meet tab, unsupported app, missing context | Pass |
+| Full pipeline | routing, target revalidation, delivery, and injected failures | Pass |
+| Dry Run | route is resolved without revalidation or shortcut delivery | Pass |
+| Event sequence | one matching key-down/key-up pair with source marker | Pass |
+| Privacy | reports retain Meet classification but not active-tab URL or non-Meet host | Pass |
+| Latency guard | 1,000 in-process Dry Runs, p95 under 25 ms | Pass |
+| Global Trigger | Launch log: `hotkey=F6` | Pass |
+| Menu Bar process | App remains resident as `LSUIElement` | Pass |
+| Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
+| Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
+| Tests | `swift test`: 27 tests, 0 failures | Pass |
+| Idle resources | 43 seconds idle: CPU 0.0%, RSS about 20 MB | Pass (single observation) |
+
+## Installed application identities
+
+| Application | Local state | Bundle identifier |
+|---|---|---|
+| Google Chrome | Installed | `com.google.Chrome` |
+| Zoom Workplace | Installed | `us.zoom.xos` |
+| Microsoft Teams | Installed and live verified | `com.microsoft.teams2`; routes also cover legacy `com.microsoft.teams` |
+
+## Permission finding
+
+The clean launch result was:
+
+```text
+QuickDraw PoC started hotkey=F6 postEventAccess=false
+```
+
+This confirms that F6 registration succeeds without granting post-event access. Shortcut delivery remains disabled until the user grants Accessibility permission. Input Monitoring was not requested.
+
+Dry Run can validate foreground detection, browser classification, routing, and expected shortcut without Accessibility permission. Chrome tab detection can still cause an Automation prompt because it uses Apple Events.
+
+## Manual evidence still required
+
+### Confirmed live
+
+- 2026-08-09: Zoom Workplace foreground meeting toggled mute through `Control+6 → Karabiner F6 → QuickDraw → ⌘⇧A`.
+- QuickDraw recorded two successful deliveries at 9.6 ms and 4.5 ms.
+- When Karabiner modifications were disabled, `Control+6` correctly did not reach QuickDraw as F6; enabling the active profile restored the route.
+- 2026-08-09: Google Meet in the active Chrome tab toggled mute through `F6 → QuickDraw → ⌘D`.
+- Normal Meet deliveries completed in 17.5–37.7 ms. The first Apple Events call took 7.3 seconds and queued three repeated F6 deliveries. After adding a pressed/released gate, a controlled two-second trigger hold produced exactly one `⌘D` delivery in live verification.
+- 2026-08-09: New Microsoft Teams foreground meeting toggled mute through `F6 → QuickDraw → ⌘⇧M`.
+- QuickDraw recorded eight successful Teams deliveries at 0.5–3.4 ms using bundle identifier `com.microsoft.teams2`.
+
+The following cannot be truthfully marked verified without user permission and active meetings:
+
+- Thirty-cycle duplicate/stuck-modifier/focus-theft matrix for each target.
+
+Follow the matrix in the root `README.md`. A delivered result appears in the menu and in Console under subsystem `dev.actionrouter.quickdraw-poc`.
+
+For a support handoff, choose `Copy Diagnostics` from the menu. The copied text is limited to the latest 20 attempts and excludes full URLs, non-Meet hosts, tab titles, meeting codes, and captured keys.
