@@ -1,171 +1,158 @@
-import Carbon
+import CoreGraphics
 import Foundation
 import QuickDrawCore
 
 enum GlobalHotKeyError: LocalizedError {
-  case eventHandlerInstallationFailed(OSStatus)
-  case registrationFailed(action: MeetingAction, shortcut: String, status: OSStatus)
+  case eventTapCreationFailed
+  case runLoopSourceCreationFailed
 
   var errorDescription: String? {
     switch self {
-    case .eventHandlerInstallationFailed(let status):
-      "Could not install the global hotkey handler (OSStatus \(status))"
-    case .registrationFailed(let action, let shortcut, let status):
-      "\(shortcut) for \(action.displayName) could not be registered (OSStatus \(status))"
+    case .eventTapCreationFailed:
+      "Could not monitor shortcuts. Accessibility or Input Monitoring permission may be required."
+    case .runLoopSourceCreationFailed:
+      "Could not attach the shortcut monitor to the application run loop."
     }
   }
 }
 
 final class GlobalHotKeyRegistrar {
-  private struct HotKeyDefinition {
-    let id: UInt32
-    let action: MeetingAction
-    let shortcut: KeyStroke
+  private struct ShortcutIdentity: Hashable {
+    let virtualKeyCode: UInt16
+    let modifiers: Set<ModifierKey>
+
+    init(_ shortcut: KeyStroke) {
+      virtualKeyCode = shortcut.virtualKeyCode
+      modifiers = shortcut.modifiers
+    }
   }
 
-  private static let signature: OSType = 0x5144_5043  // QDPC
-
-  private var eventHandlerRef: EventHandlerRef?
-  private var hotKeyRefs: [EventHotKeyRef] = []
-  private var handler: ((MeetingAction) -> Void)?
-  private var pressGates: [UInt32: TriggerPressGate] = [:]
-  private var definitionsByID: [UInt32: HotKeyDefinition] = [:]
+  private var eventTap: CFMachPort?
+  private var runLoopSource: CFRunLoopSource?
+  private var handler: ((Action) -> Bool)?
+  private var actionsByShortcut: [ShortcutIdentity: Action] = [:]
+  private var consumedKeyCodes: Set<UInt16> = []
 
   func register(
-    bindings: [MeetingAction: KeyStroke],
-    handler: @escaping (MeetingAction) -> Void
+    bindings: [Action: KeyStroke],
+    handler: @escaping (Action) -> Bool
   ) throws {
     unregister()
     self.handler = handler
-    let definitions: [HotKeyDefinition] = MeetingAction.allCases.enumerated().compactMap {
-      index, action in
-      guard let shortcut = bindings[action] else { return nil }
-      return HotKeyDefinition(
-        id: UInt32(index + 1),
-        action: action,
-        shortcut: shortcut
-      )
-    }
-    definitionsByID = Dictionary(uniqueKeysWithValues: definitions.map { ($0.id, $0) })
-    pressGates = Dictionary(
-      uniqueKeysWithValues: definitions.map { ($0.id, TriggerPressGate()) }
+    actionsByShortcut = Dictionary(
+      uniqueKeysWithValues: bindings.map { (ShortcutIdentity($0.value), $0.key) }
     )
 
-    var eventTypes = [
-      EventTypeSpec(
-        eventClass: OSType(kEventClassKeyboard),
-        eventKind: UInt32(kEventHotKeyPressed)
-      ),
-      EventTypeSpec(
-        eventClass: OSType(kEventClassKeyboard),
-        eventKind: UInt32(kEventHotKeyReleased)
-      ),
-    ]
+    let eventMask =
+      (CGEventMask(1) << CGEventType.keyDown.rawValue)
+      | (CGEventMask(1) << CGEventType.keyUp.rawValue)
 
-    let userData = Unmanaged.passUnretained(self).toOpaque()
-    let installStatus = InstallEventHandler(
-      GetApplicationEventTarget(),
-      { _, event, userData in
-        guard let event, let userData else {
-          return OSStatus(eventNotHandledErr)
-        }
-
-        let registrar = Unmanaged<GlobalHotKeyRegistrar>
-          .fromOpaque(userData)
-          .takeUnretainedValue()
-
-        var hotKeyID = EventHotKeyID()
-        let readStatus = GetEventParameter(
-          event,
-          EventParamName(kEventParamDirectObject),
-          EventParamType(typeEventHotKeyID),
-          nil,
-          MemoryLayout<EventHotKeyID>.size,
-          nil,
-          &hotKeyID
-        )
-        guard readStatus == noErr,
-          hotKeyID.signature == GlobalHotKeyRegistrar.signature,
-          let definition = registrar.definitionsByID[hotKeyID.id]
-        else {
-          return OSStatus(eventNotHandledErr)
-        }
-
-        guard var gate = registrar.pressGates[definition.id] else {
-          return OSStatus(eventNotHandledErr)
-        }
-
-        switch GetEventKind(event) {
-        case UInt32(kEventHotKeyPressed):
-          let shouldInvoke = gate.shouldInvoke(for: .pressed)
-          registrar.pressGates[definition.id] = gate
-          if shouldInvoke {
-            registrar.handler?(definition.action)
+    guard
+      let eventTap = CGEvent.tapCreate(
+        tap: .cgSessionEventTap,
+        place: .headInsertEventTap,
+        options: .defaultTap,
+        eventsOfInterest: eventMask,
+        callback: { _, eventType, event, userInfo in
+          guard let userInfo else {
+            return Unmanaged.passUnretained(event)
           }
-        case UInt32(kEventHotKeyReleased):
-          _ = gate.shouldInvoke(for: .released)
-          registrar.pressGates[definition.id] = gate
-        default:
-          return OSStatus(eventNotHandledErr)
-        }
-        return noErr
-      },
-      eventTypes.count,
-      &eventTypes,
-      userData,
-      &eventHandlerRef
-    )
-
-    guard installStatus == noErr else {
-      self.handler = nil
-      throw GlobalHotKeyError.eventHandlerInstallationFailed(installStatus)
-    }
-
-    for definition in definitions {
-      var hotKeyRef: EventHotKeyRef?
-      let hotKeyID = EventHotKeyID(signature: Self.signature, id: definition.id)
-      let status = RegisterEventHotKey(
-        UInt32(definition.shortcut.virtualKeyCode),
-        carbonModifiers(for: definition.shortcut.modifiers),
-        hotKeyID,
-        GetApplicationEventTarget(),
-        0,
-        &hotKeyRef
+          let registrar = Unmanaged<GlobalHotKeyRegistrar>
+            .fromOpaque(userInfo)
+            .takeUnretainedValue()
+          return registrar.handle(eventType: eventType, event: event)
+        },
+        userInfo: Unmanaged.passUnretained(self).toOpaque()
       )
-
-      guard status == noErr, let hotKeyRef else {
-        unregister()
-        throw GlobalHotKeyError.registrationFailed(
-          action: definition.action,
-          shortcut: definition.shortcut.displayValue,
-          status: status
-        )
-      }
-      hotKeyRefs.append(hotKeyRef)
+    else {
+      unregister()
+      throw GlobalHotKeyError.eventTapCreationFailed
     }
+
+    guard let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0) else {
+      CFMachPortInvalidate(eventTap)
+      unregister()
+      throw GlobalHotKeyError.runLoopSourceCreationFailed
+    }
+
+    self.eventTap = eventTap
+    self.runLoopSource = runLoopSource
+    CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+    CGEvent.tapEnable(tap: eventTap, enable: true)
   }
 
   func unregister() {
-    for hotKeyRef in hotKeyRefs {
-      UnregisterEventHotKey(hotKeyRef)
+    if let runLoopSource {
+      CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+      CFRunLoopSourceInvalidate(runLoopSource)
     }
-    if let eventHandlerRef {
-      RemoveEventHandler(eventHandlerRef)
+    if let eventTap {
+      CGEvent.tapEnable(tap: eventTap, enable: false)
+      CFMachPortInvalidate(eventTap)
     }
-    hotKeyRefs = []
-    eventHandlerRef = nil
+    runLoopSource = nil
+    eventTap = nil
     handler = nil
-    pressGates = [:]
-    definitionsByID = [:]
+    actionsByShortcut = [:]
+    consumedKeyCodes = []
   }
 
-  private func carbonModifiers(for modifiers: Set<ModifierKey>) -> UInt32 {
-    var result: UInt32 = 0
-    if modifiers.contains(.command) { result |= UInt32(cmdKey) }
-    if modifiers.contains(.shift) { result |= UInt32(shiftKey) }
-    if modifiers.contains(.control) { result |= UInt32(controlKey) }
-    if modifiers.contains(.option) { result |= UInt32(optionKey) }
-    return result
+  private func handle(eventType: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+    if eventType == .tapDisabledByTimeout || eventType == .tapDisabledByUserInput {
+      if let eventTap {
+        CGEvent.tapEnable(tap: eventTap, enable: true)
+      }
+      return Unmanaged.passUnretained(event)
+    }
+
+    if event.getIntegerValueField(.eventSourceUserData)
+      == ShortcutEventPlanner.quickDrawSourceMarker
+    {
+      return Unmanaged.passUnretained(event)
+    }
+
+    let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+    if eventType == .keyUp {
+      if consumedKeyCodes.remove(keyCode) != nil {
+        return nil
+      }
+      return Unmanaged.passUnretained(event)
+    }
+
+    guard eventType == .keyDown else {
+      return Unmanaged.passUnretained(event)
+    }
+
+    let shortcut = ShortcutIdentity(
+      KeyStroke(
+        virtualKeyCode: keyCode,
+        modifiers: modifiers(from: event.flags),
+        displayValue: ""
+      )
+    )
+    guard let action = actionsByShortcut[shortcut] else {
+      return Unmanaged.passUnretained(event)
+    }
+
+    if event.getIntegerValueField(.keyboardEventAutorepeat) != 0 {
+      return consumedKeyCodes.contains(keyCode) ? nil : Unmanaged.passUnretained(event)
+    }
+
+    guard handler?(action) == true else {
+      return Unmanaged.passUnretained(event)
+    }
+
+    consumedKeyCodes.insert(keyCode)
+    return nil
+  }
+
+  private func modifiers(from flags: CGEventFlags) -> Set<ModifierKey> {
+    var modifiers = Set<ModifierKey>()
+    if flags.contains(.maskCommand) { modifiers.insert(.command) }
+    if flags.contains(.maskAlternate) { modifiers.insert(.option) }
+    if flags.contains(.maskControl) { modifiers.insert(.control) }
+    if flags.contains(.maskShift) { modifiers.insert(.shift) }
+    return modifiers
   }
 
   deinit {

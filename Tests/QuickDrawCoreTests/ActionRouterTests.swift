@@ -87,6 +87,24 @@ final class ActionRouterTests: XCTestCase {
       keyCode: 46, modifiers: [.shift], display: "⇧M")
   }
 
+  func testRoutesNewSessionForDevelopmentAgents() throws {
+    try assertRoute(
+      .newSession, bundleIdentifier: "com.openai.codex", keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+    try assertRoute(
+      .newSession, bundleIdentifier: "com.anthropic.claudefordesktop", keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+  }
+
+  func testRoutesHardReloadWithoutWebApplicationDetection() throws {
+    try assertRoute(
+      .hardReload, bundleIdentifier: "com.apple.Safari", keyCode: 15,
+      modifiers: [.command, .option], display: "⌘⌥R")
+    try assertRoute(
+      .hardReload, bundleIdentifier: "com.google.Chrome", keyCode: 15,
+      modifiers: [.command, .shift], display: "⌘⇧R")
+  }
+
   func testUnsupportedActionFailsWithoutShortcut() {
     assertFailure(
       action: .reactionLike,
@@ -97,7 +115,7 @@ final class ActionRouterTests: XCTestCase {
   }
 
   func testEveryCatalogActionHasAtLeastOneBuiltInApplicationShortcut() {
-    for action in MeetingAction.allCases {
+    for action in Action.allCases {
       XCTAssertTrue(
         ActionTarget.allCases.contains {
           ActionCatalog.defaultShortcut(for: action, target: $0) != nil
@@ -108,7 +126,7 @@ final class ActionRouterTests: XCTestCase {
   }
 
   func testAllZoomReactionShortcuts() throws {
-    let expected: [(MeetingAction, UInt16, String)] = [
+    let expected: [(Action, UInt16, String)] = [
       (.reactionClap, 21, "⌥⌘4"),
       (.reactionLike, 23, "⌥⌘5"),
       (.reactionHeart, 22, "⌥⌘6"),
@@ -216,7 +234,7 @@ final class ActionRouterTests: XCTestCase {
   }
 
   private func assertRoute(
-    _ action: MeetingAction,
+    _ action: Action,
     bundleIdentifier: String,
     activeTabURL: URL? = nil,
     keyCode: UInt16,
@@ -233,7 +251,7 @@ final class ActionRouterTests: XCTestCase {
   }
 
   private func route(
-    _ action: MeetingAction,
+    _ action: Action,
     bundleIdentifier: String,
     activeTabURL: URL? = nil
   ) throws -> ActionRoute {
@@ -247,7 +265,7 @@ final class ActionRouterTests: XCTestCase {
   }
 
   private func assertFailure(
-    action: MeetingAction = .mute,
+    action: Action = .mute,
     bundleIdentifier: String?,
     activeTabURL: URL?,
     expected: ActionRoutingFailure,

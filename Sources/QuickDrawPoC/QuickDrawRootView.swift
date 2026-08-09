@@ -5,8 +5,8 @@ import SwiftUI
 struct QuickDrawRootView: View {
   @ObservedObject var model: QuickDrawAppModel
 
-  @State private var selectedSection: QuickDrawSection? = .actions
-  @State private var selectedActionID: String? = MeetingAction.mute.rawValue
+  @State private var selectedSection: QuickDrawSection? = .meeting
+  @State private var selectedActionID: String? = Action.mute.rawValue
   @State private var selectedApplicationID: String? = "microsoftTeams"
   @State private var isInspectorPresented = true
 
@@ -36,11 +36,17 @@ struct QuickDrawRootView: View {
     .frame(minWidth: 860, minHeight: 560)
     .onAppear {
       model.refreshEnvironment()
+      normalizeActionSelection(for: selectedSection ?? .meeting)
+    }
+    .onChange(of: selectedSection) { _, section in
+      normalizeActionSelection(for: section ?? .meeting)
     }
   }
 
-  private var selectedAction: ActionDefinition {
-    model.actions.first { $0.id == selectedActionID } ?? model.actions[0]
+  private var selectedAction: ActionDefinition? {
+    guard let domain = (selectedSection ?? .meeting).actionDomain else { return nil }
+    return model.actions(in: domain).first { $0.id == selectedActionID }
+      ?? model.actions(in: domain).first
   }
 
   private var languageMenu: some View {
@@ -81,9 +87,20 @@ struct QuickDrawRootView: View {
   }
 
   private var sidebar: some View {
-    List(QuickDrawSection.allCases, selection: $selectedSection) { section in
-      Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
-        .tag(section)
+    List(selection: $selectedSection) {
+      Section(model.copy.actions) {
+        ForEach(QuickDrawSection.actionSections) { section in
+          Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
+            .tag(section)
+        }
+      }
+
+      Section {
+        ForEach(QuickDrawSection.utilitySections) { section in
+          Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
+            .tag(section)
+        }
+      }
     }
     .navigationTitle("QuickDraw")
     .navigationSplitViewColumnWidth(min: 170, ideal: 200, max: 240)
@@ -107,9 +124,11 @@ struct QuickDrawRootView: View {
 
   @ViewBuilder
   private var detail: some View {
-    switch selectedSection ?? .actions {
-    case .actions:
-      ActionsView(selection: $selectedActionID, model: model)
+    switch selectedSection ?? .meeting {
+    case .meeting, .development, .browser:
+      if let domain = (selectedSection ?? .meeting).actionDomain {
+        ActionsView(domain: domain, selection: $selectedActionID, model: model)
+      }
     case .applications:
       ApplicationsView(selection: $selectedApplicationID, model: model)
     case .diagnostics:
@@ -119,9 +138,16 @@ struct QuickDrawRootView: View {
 
   @ViewBuilder
   private var inspector: some View {
-    switch selectedSection ?? .actions {
-    case .actions:
-      ActionInspector(definition: selectedAction, model: model)
+    switch selectedSection ?? .meeting {
+    case .meeting, .development, .browser:
+      if let selectedAction {
+        ActionInspector(definition: selectedAction, model: model)
+      } else {
+        ContentUnavailableView(
+          model.copy.noActionsInCategory,
+          systemImage: (selectedSection ?? .meeting).systemImage
+        )
+      }
     case .applications:
       if let application = model.applications.first(where: { $0.id == selectedApplicationID })
         ?? model.applications.first
@@ -137,21 +163,42 @@ struct QuickDrawRootView: View {
       DiagnosticsInspector(model: model)
     }
   }
+
+  private func normalizeActionSelection(for section: QuickDrawSection) {
+    guard let domain = section.actionDomain else { return }
+    let definitions = model.actions(in: domain)
+    guard !definitions.contains(where: { $0.id == selectedActionID }) else { return }
+    selectedActionID = definitions.first?.id
+  }
 }
 
 private struct ActionsView: View {
+  let domain: ActionDomain
   @Binding var selection: String?
   @ObservedObject var model: QuickDrawAppModel
 
+  private var definitions: [ActionDefinition] {
+    model.actions(in: domain)
+  }
+
+  private var categories: [ActionCategory] {
+    ActionCategory.allCases.filter { category in
+      definitions.contains { $0.category == category }
+    }
+  }
+
   var body: some View {
     VStack(spacing: 0) {
-      ContentHeader(title: model.copy.actions, subtitle: model.copy.actionsSubtitle)
+      ContentHeader(
+        title: model.copy.actionDomainName(domain),
+        subtitle: model.copy.actionDomainSubtitle(domain)
+      )
       Divider()
 
       List(selection: $selection) {
-        ForEach(ActionCategory.allCases) { category in
+        ForEach(categories) { category in
           Section(model.copy.actionCategoryName(category)) {
-            ForEach(model.actions.filter { $0.category == category }) { definition in
+            ForEach(definitions.filter { $0.category == category }) { definition in
               ActionRow(definition: definition, model: model)
                 .tag(definition.id)
             }
@@ -187,6 +234,17 @@ private struct ActionRow: View {
               accessibilityLabel:
                 "\(model.copy.shortcutAccessibilityPrefix) \(trigger.displayValue)"
             )
+            if !model.triggerConflicts(for: definition.action).isEmpty {
+              Image(systemName: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .help(
+                  model.copy.triggerConflictDescription(
+                    model.triggerConflicts(for: definition.action)
+                  )
+                )
+                .accessibilityLabel(model.copy.shortcutConflict)
+            }
           } else {
             Text(model.copy.unassigned)
               .font(.caption)
@@ -201,7 +259,7 @@ private struct ActionRow: View {
       Spacer(minLength: 18)
 
       HStack(spacing: 18) {
-        ForEach(model.applications) { application in
+        ForEach(model.applications(in: definition.domain)) { application in
           CompactMapping(application: application, action: definition.action, model: model)
         }
       }
@@ -213,7 +271,7 @@ private struct ActionRow: View {
 
 private struct CompactMapping: View {
   let application: ApplicationMapping
-  let action: MeetingAction
+  let action: Action
   @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
@@ -246,33 +304,39 @@ private struct ApplicationsView: View {
       ContentHeader(title: model.copy.applications, subtitle: model.copy.applicationsSubtitle)
       Divider()
 
-      List(model.applications, selection: $selection) { application in
-        HStack(spacing: 13) {
-          Image(systemName: application.systemImage)
-            .font(.title3)
-            .symbolRenderingMode(.hierarchical)
-            .frame(width: 36, height: 36)
-            .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+      List(selection: $selection) {
+        ForEach(ActionDomain.allCases) { domain in
+          Section(model.copy.actionDomainName(domain)) {
+            ForEach(model.applications(in: domain)) { application in
+              HStack(spacing: 13) {
+                Image(systemName: application.systemImage)
+                  .font(.title3)
+                  .symbolRenderingMode(.hierarchical)
+                  .frame(width: 36, height: 36)
+                  .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
 
-          VStack(alignment: .leading, spacing: 3) {
-            Text(application.name)
-              .font(.headline)
-            Text(application.identity)
-              .font(.caption)
-              .foregroundStyle(.secondary)
-          }
+                VStack(alignment: .leading, spacing: 3) {
+                  Text(application.name)
+                    .font(.headline)
+                  Text(application.identity)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
 
-          Spacer()
+                Spacer()
 
-          VStack(alignment: .trailing, spacing: 3) {
-            Text(model.copy.actionCount(model.supportedActionCount(for: application.target)))
-            Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
-              .font(.caption)
-              .foregroundStyle(.secondary)
+                VStack(alignment: .trailing, spacing: 3) {
+                  Text(model.copy.actionCount(model.supportedActionCount(for: application.target)))
+                  Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+              }
+              .padding(.vertical, 7)
+              .tag(application.id)
+            }
           }
         }
-        .padding(.vertical, 7)
-        .tag(application.id)
       }
       .listStyle(.inset)
     }
@@ -324,6 +388,10 @@ private struct ActionInspector: View {
   @ObservedObject var model: QuickDrawAppModel
   @State private var isResetConfirmationPresented = false
 
+  private var triggerConflicts: [TriggerConflict] {
+    model.triggerConflicts(for: definition.action)
+  }
+
   var body: some View {
     Form {
       Section {
@@ -356,6 +424,11 @@ private struct ActionInspector: View {
                 accessibilityLabel:
                   "\(model.copy.shortcutAccessibilityPrefix) \(trigger.displayValue)"
               )
+              if !triggerConflicts.isEmpty {
+                Image(systemName: "exclamationmark.triangle.fill")
+                  .foregroundStyle(.orange)
+                  .accessibilityLabel(model.copy.shortcutConflict)
+              }
             } else {
               Text(model.copy.unassigned)
                 .foregroundStyle(.secondary)
@@ -380,6 +453,15 @@ private struct ActionInspector: View {
         Text(model.copy.triggerEditingDescription)
           .font(.caption)
           .foregroundStyle(.secondary)
+
+        if !triggerConflicts.isEmpty {
+          Label(model.copy.shortcutConflict, systemImage: "exclamationmark.triangle.fill")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.orange)
+          Text(model.copy.triggerConflictDescription(triggerConflicts))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
       }
 
       if let shortcutEditingError = model.shortcutEditingError {
@@ -393,7 +475,7 @@ private struct ActionInspector: View {
       }
 
       Section(model.copy.applicationMappings) {
-        ForEach(model.applications) { application in
+        ForEach(model.applications(in: definition.domain)) { application in
           MappingRow(
             application: application,
             action: definition.action,
@@ -452,7 +534,7 @@ private struct ActionInspector: View {
 
 private struct MappingRow: View {
   let application: ApplicationMapping
-  let action: MeetingAction
+  let action: Action
   @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
@@ -520,6 +602,16 @@ private struct ApplicationInspector: View {
   let application: ApplicationMapping
   @ObservedObject var model: QuickDrawAppModel
 
+  private var definitions: [ActionDefinition] {
+    model.actions(in: application.domain)
+  }
+
+  private var categories: [ActionCategory] {
+    ActionCategory.allCases.filter { category in
+      definitions.contains { $0.category == category }
+    }
+  }
+
   var body: some View {
     Form {
       Section {
@@ -543,9 +635,9 @@ private struct ApplicationInspector: View {
           .textSelection(.enabled)
       }
 
-      ForEach(ActionCategory.allCases) { category in
+      ForEach(categories) { category in
         Section(model.copy.actionCategoryName(category)) {
-          ForEach(model.actions.filter { $0.category == category }) { definition in
+          ForEach(definitions.filter { $0.category == category }) { definition in
             HStack {
               Label(
                 model.copy.actionName(definition.action),
@@ -580,7 +672,7 @@ private struct ApplicationInspector: View {
           model.copy.capability,
           value: model.copy.shortcutCapability(
             model.supportedActionCount(for: application.target),
-            total: model.actions.count
+            total: definitions.count
           )
         )
         Text(model.copy.executionDetail(for: application))

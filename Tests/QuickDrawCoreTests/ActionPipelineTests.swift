@@ -47,6 +47,20 @@ final class ActionPipelineTests: XCTestCase {
     XCTAssertEqual(fixture.activeTabProvider.queryCount, 0)
   }
 
+  func testChromeHardReloadDoesNotQueryActiveTab() {
+    let fixture = makeFixture(
+      bundleIdentifier: "com.google.Chrome",
+      activeTabError: TestError.browserUnavailable
+    )
+
+    let report = fixture.pipeline.run(action: .hardReload, mode: .live)
+
+    XCTAssertEqual(report.outcome.route?.target, .googleChrome)
+    XCTAssertEqual(report.outcome.route?.shortcut.displayValue, "⌘⇧R")
+    XCTAssertEqual(fixture.activeTabProvider.queryCount, 0)
+    XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["⌘⇧R"])
+  }
+
   func testDryRunRoutesWithoutRevalidationOrDelivery() {
     let fixture = makeFixture(bundleIdentifier: "us.zoom.xos")
 
@@ -109,6 +123,7 @@ final class ActionPipelineTests: XCTestCase {
       .failed(.routing(.unsupportedApplication(bundleIdentifier: "com.apple.TextEdit")))
     )
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
+    XCTAssertFalse(report.outcome.consumesTrigger)
   }
 
   func testUnsupportedActionFailsWithoutDelivery() {
@@ -122,6 +137,19 @@ final class ActionPipelineTests: XCTestCase {
     )
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
     XCTAssertEqual(fixture.applicationProvider.revalidationCount, 0)
+    XCTAssertTrue(report.outcome.consumesTrigger)
+  }
+
+  func testNonMeetChromePagePassesTriggerThrough() {
+    let fixture = makeFixture(
+      bundleIdentifier: "com.google.Chrome",
+      activeTabURL: URL(string: "https://example.com")!
+    )
+
+    let report = fixture.pipeline.run(action: .mute, mode: .live)
+
+    XCTAssertFalse(report.outcome.consumesTrigger)
+    XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
   }
 
   func testMissingForegroundApplicationIsReported() {

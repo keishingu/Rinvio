@@ -6,6 +6,10 @@
     <string>QuickDraw PoC</string>
     <key>CFBundleExecutable</key>
     <string>QuickDrawPoC</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>dev.actionrouter.quickdraw-poc</string>
     <key>CFBundleInfoDictionaryVersion</key>

@@ -39,11 +39,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     menuController.setLanguage(model.language)
 
     let updateTriggerPresentation = {
-      let summary = MeetingAction.allCases.compactMap {
+      let triggers = Action.allCases.compactMap {
         configurationStore.trigger(for: $0)?.displayValue
-      }.joined(separator: "/")
-      controller.triggerSummary = summary
-      menuController.setTriggerSummary(summary)
+      }
+      controller.triggerSummary = triggers.joined(separator: "/")
+      menuController.setTriggerCount(triggers.count)
     }
     updateTriggerPresentation()
 
@@ -73,8 +73,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     model.onRequestAccessibility = { [weak controller] in
       controller?.requestPostEventAccess()
     }
-    model.onRefreshPermission = { [weak controller] in
-      controller?.hasPostEventAccess ?? false
+    model.onRefreshPermission = { [weak controller, weak coordinator, weak model] in
+      guard let controller else { return false }
+      let granted = controller.hasPostEventAccess
+      if granted, !controller.areHotKeysRegistered {
+        let error = coordinator?.resume()
+        let registered = error == nil
+        controller.areHotKeysRegistered = registered
+        model?.setHotKeysRegistered(registered)
+        if registered {
+          model?.setEnabled(true)
+        }
+      }
+      return granted
     }
     model.onRefreshDiagnostics = { [weak controller] in
       controller?.diagnosticsText() ?? "QuickDraw Diagnostics unavailable"
@@ -136,8 +147,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     do {
-      try coordinator.start { [weak controller] action in
-        controller?.trigger(action)
+      try coordinator.start { [weak controller, weak foregroundProvider] action in
+        guard foregroundProvider?.isPotentialQuickDrawTargetForeground() == true else {
+          return false
+        }
+        return controller?.trigger(action) ?? false
       }
       controller.areHotKeysRegistered = true
       model.setHotKeysRegistered(true)

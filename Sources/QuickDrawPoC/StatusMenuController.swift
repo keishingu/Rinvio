@@ -36,7 +36,7 @@ final class StatusMenuController: NSObject {
     isError: false
   )
   private var lastAccessibilityPermission = false
-  private var triggerSummary = "F6/F7/F8"
+  private var triggerCount = 0
 
   override init() {
     statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -157,8 +157,8 @@ final class StatusMenuController: NSObject {
     dryRunItem.state = enabled ? .on : .off
   }
 
-  func setTriggerSummary(_ summary: String) {
-    triggerSummary = summary
+  func setTriggerCount(_ count: Int) {
+    triggerCount = count
     applyLanguage()
   }
 
@@ -176,7 +176,7 @@ final class StatusMenuController: NSObject {
     dryCheckItem.title = copy.runDryCheckMenu
     permissionActionItem.title = copy.requestAccessibilityMenu
     copyItem.title = copy.copyDiagnostics
-    hotKeyItem.title = copy.hotKeyRegisteredMenu(triggerSummary)
+    hotKeyItem.title = copy.hotKeyRegisteredMenu(triggerCount)
     privacyItem.title = copy.privacyMenu
     quitItem.title = copy.quitQuickDraw
   }

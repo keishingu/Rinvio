@@ -49,12 +49,17 @@ struct QuickDrawCopy {
   var applications: String { text("アプリケーション", "Applications") }
   var diagnostics: String { text("診断", "Diagnostics") }
   var noApplications: String { text("アプリケーションがありません", "No Applications") }
+  var noActionsInCategory: String {
+    text("このカテゴリにはActionがありません", "No Actions in this category")
+  }
   var actionsSubtitle: String {
     text("1つの操作を、対応アプリごとの操作へ変換します。", "One action, translated for every supported application.")
   }
   var meetingControls: String { text("会議コントロール", "Meeting controls") }
   var panelsAndSharing: String { text("パネルと共有", "Panels and sharing") }
   var reactions: String { text("リアクション", "Reactions") }
+  var agentSessions: String { text("エージェントセッション", "Agent sessions") }
+  var pageLoading: String { text("ページ読み込み", "Page loading") }
   var applicationsSubtitle: String {
     text(
       "各アプリでActionがどう実行されるか確認できます。",
@@ -65,6 +70,9 @@ struct QuickDrawCopy {
   var notInstalled: String { text("未インストール", "Not installed") }
   func actionCount(_ count: Int) -> String {
     text("\(count)個のAction", "\(count) Actions")
+  }
+  func assignedTriggerCount(_ count: Int) -> String {
+    text("\(count)個のTriggerを設定", "\(count) Triggers configured")
   }
 
   var diagnosticsSubtitle: String {
@@ -116,6 +124,36 @@ struct QuickDrawCopy {
   }
   var shortcutCouldNotBeRead: String {
     text("そのキー入力はショートカットとして認識できません。", "That key input could not be recognized as a shortcut.")
+  }
+  var shortcutConflict: String { text("macOSショートカットと競合", "Conflicts with a macOS shortcut") }
+  func triggerConflictDescription(_ conflicts: [TriggerConflict]) -> String {
+    let names = conflicts.map(triggerConflictName).joined(separator: text("、", ", "))
+    return text(
+      "macOSの「\(names)」と競合します。対応アプリではQuickDrawが優先され、それ以外では元のショートカットが動作します。",
+      "Conflicts with macOS “\(names)”. QuickDraw takes priority in a supported app; elsewhere, the original shortcut continues to work."
+    )
+  }
+
+  private func triggerConflictName(_ conflict: TriggerConflict) -> String {
+    switch conflict {
+    case .configuredSystemShortcut:
+      text("システム設定で有効なキーボードショートカット", "Keyboard shortcut enabled in System Settings")
+    case .knownSystemShortcut(let shortcut):
+      switch shortcut {
+      case .copyStyle: text("スタイルをコピー", "Copy Style")
+      case .showOrHideDock: text("Dockを表示／非表示", "Show or Hide the Dock")
+      case .focusSearchField: text("検索フィールドへ移動", "Focus the Search Field")
+      case .hideOtherApplications: text("ほかのアプリケーションを隠す", "Hide Other Applications")
+      case .showInspector: text("インスペクタを表示", "Show Inspector")
+      case .openDownloads: text("ダウンロードを開く", "Open Downloads")
+      case .minimizeAllWindows: text("すべてのウインドウを最小化", "Minimize All Windows")
+      case .showOrHideToolbar: text("ツールバーを表示／非表示", "Show or Hide the Toolbar")
+      case .closeAllWindows: text("すべてのウインドウを閉じる", "Close All Windows")
+      case .forceQuit: text("アプリケーションの強制終了", "Force Quit Applications")
+      case .finderSearch: text("Finder検索", "Finder Search")
+      case .toggleZoom: text("画面ズームを切り替える", "Toggle Screen Zoom")
+      }
+    }
   }
   var applicationMappings: String { text("アプリごとのマッピング", "Application mappings") }
   var execution: String { text("実行", "Execution") }
@@ -183,8 +221,8 @@ struct QuickDrawCopy {
   var requestAccessibilityMenu: String {
     text("アクセシビリティを許可…", "Request Accessibility Permission…")
   }
-  func hotKeyRegisteredMenu(_ summary: String) -> String {
-    text("ホットキー: \(summary) 登録済み", "Hotkeys: \(summary) Registered")
+  func hotKeyRegisteredMenu(_ count: Int) -> String {
+    text("ホットキー: \(count)個のTriggerを登録済み", "Hotkeys: \(count) Triggers Registered")
   }
   var privacyMenu: String {
     text(
@@ -203,9 +241,39 @@ struct QuickDrawCopy {
 
   func sectionTitle(_ section: QuickDrawSection) -> String {
     switch section {
-    case .actions: actions
+    case .meeting: actionDomainName(.meeting)
+    case .development: actionDomainName(.development)
+    case .browser: actionDomainName(.browser)
     case .applications: applications
     case .diagnostics: diagnostics
+    }
+  }
+
+  func actionDomainName(_ domain: ActionDomain) -> String {
+    switch domain {
+    case .meeting: text("Meeting", "Meeting")
+    case .development: text("Development", "Development")
+    case .browser: text("Browser", "Browser")
+    }
+  }
+
+  func actionDomainSubtitle(_ domain: ActionDomain) -> String {
+    switch domain {
+    case .meeting:
+      text(
+        "会議アプリごとの操作差を、共通Actionへ変換します。",
+        "Translate meeting controls into the same Actions across apps."
+      )
+    case .development:
+      text(
+        "開発ツールやエージェントを、共通の操作で扱います。",
+        "Use the same Actions across development tools and agents."
+      )
+    case .browser:
+      text(
+        "ブラウザごとに異なるページ操作を統一します。",
+        "Unify page controls that differ between browsers."
+      )
     }
   }
 
@@ -218,10 +286,12 @@ struct QuickDrawCopy {
     case .meetingControls: meetingControls
     case .panelsAndSharing: panelsAndSharing
     case .reactions: reactions
+    case .agentSessions: agentSessions
+    case .pageLoading: pageLoading
     }
   }
 
-  func actionName(_ action: MeetingAction) -> String {
+  func actionName(_ action: Action) -> String {
     switch action {
     case .mute: text("ミュート切替", "Mute Toggle")
     case .camera: text("カメラ切替", "Camera Toggle")
@@ -238,10 +308,12 @@ struct QuickDrawCopy {
     case .reactionLaugh: text("リアクション：😂", "Reaction: 😂")
     case .reactionWow: text("リアクション：😮", "Reaction: 😮")
     case .reactionCelebrate: text("リアクション：🎉", "Reaction: 🎉")
+    case .newSession: text("新しいセッション", "New Session")
+    case .hardReload: text("スーパーリロード", "Hard Reload")
     }
   }
 
-  func actionDescription(_ action: MeetingAction) -> String {
+  func actionDescription(_ action: Action) -> String {
     switch action {
     case .mute:
       text("現在の会議をミュート／ミュート解除します", "Mute or unmute the active meeting")
@@ -273,10 +345,20 @@ struct QuickDrawCopy {
       text("😮リアクションを送信します", "Send a wow reaction")
     case .reactionCelebrate:
       text("🎉リアクションを送信します", "Send a celebration reaction")
+    case .newSession:
+      text(
+        "現在の開発エージェントで新しいセッションを開始します",
+        "Start a new session in the active development agent"
+      )
+    case .hardReload:
+      text(
+        "キャッシュを無視して現在のページを再読み込みします",
+        "Reload the current page while bypassing cached content"
+      )
     }
   }
 
-  func mappingTitle(_ action: MeetingAction) -> String {
+  func mappingTitle(_ action: Action) -> String {
     text("\(actionName(action))のマッピング", "\(actionName(action)) mapping")
   }
 
@@ -288,7 +370,7 @@ struct QuickDrawCopy {
     if value.hasPrefix("This trigger is already assigned to ") {
       let englishName = String(value.dropFirst("This trigger is already assigned to ".count))
       let localizedName =
-        MeetingAction.allCases.first { $0.displayName == englishName }
+        Action.allCases.first { $0.displayName == englishName }
         .map(actionName) ?? englishName
       return "このTriggerはすでに\(localizedName)へ割り当てられています。"
     }
@@ -310,7 +392,7 @@ struct QuickDrawCopy {
   }
 
   private func localizedHeadline(_ value: String) -> String {
-    for action in MeetingAction.allCases {
+    for action in Action.allCases {
       if value == "\(action.displayName) delivered" {
         return "\(actionName(action))を送信しました"
       }
@@ -332,7 +414,7 @@ struct QuickDrawCopy {
     }
   }
 
-  private func localizedDetail(_ value: String, action: MeetingAction?) -> String {
+  private func localizedDetail(_ value: String, action: Action?) -> String {
     let exact: [String: String] = [
       "Preparing shortcuts": "ショートカットを準備しています",
       "Accessibility: Granted": "アクセシビリティ: 許可済み",
@@ -340,8 +422,8 @@ struct QuickDrawCopy {
       "Action routing is paused": "Actionのルーティングは停止中です",
       "Configured triggers will route and log without sending a shortcut":
         "設定したTriggerでショートカットを送らずに経路だけを記録します",
-      "Return to Teams, Zoom, or Meet and use a configured trigger":
-        "Teams、Zoom、Meetへ戻り設定したTriggerを使用してください",
+      "Return to a supported application and use a configured trigger":
+        "対応アプリへ戻り設定したTriggerを使用してください",
       "Enable QuickDraw PoC in System Settings, then try again":
         "システム設定でQuickDraw PoCを有効にして、もう一度お試しください",
     ]
@@ -357,7 +439,7 @@ struct QuickDrawCopy {
       return "\(target)では\(actionName(action))のショートカットがありません\(suffix)"
     }
     if value.contains(" would send ") {
-      for action in MeetingAction.allCases {
+      for action in Action.allCases {
         let prefix = "\(action.displayName) would send "
         if value.hasPrefix(prefix) {
           return value.replacingOccurrences(of: prefix, with: "\(actionName(action))送信予定: ")

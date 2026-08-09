@@ -6,9 +6,9 @@ final class QuickDrawConfigurationTests: XCTestCase {
   func testDefaultsComeFromCatalogWithoutStoredOverrides() {
     let store = QuickDrawConfigurationStore(fileURL: nil)
 
-    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "F6")
+    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "⌘⌥M")
     XCTAssertEqual(store.shortcut(for: .camera, target: .zoomWorkplace)?.displayValue, "⌘⇧V")
-    XCTAssertNil(store.trigger(for: .openChat))
+    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
     XCTAssertNil(store.shortcut(for: .openChat, target: .microsoftTeams))
     XCTAssertTrue(store.configuration.triggerOverrides.isEmpty)
     XCTAssertTrue(store.configuration.shortcutOverrides.isEmpty)
@@ -24,7 +24,7 @@ final class QuickDrawConfigurationTests: XCTestCase {
 
     let defaultTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .mute))
     try store.setTriggerOverride(defaultTrigger, for: .mute)
-    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "F6")
+    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "⌘⌥M")
     XCTAssertFalse(store.isTriggerOverridden(for: .mute))
   }
 
@@ -48,21 +48,29 @@ final class QuickDrawConfigurationTests: XCTestCase {
     }
   }
 
-  func testUnassignedActionCanReceiveAndResetTrigger() throws {
+  func testActionCanReceiveAndResetTriggerOverride() throws {
     let store = QuickDrawConfigurationStore(fileURL: nil)
-    let custom = KeyStroke(
-      virtualKeyCode: 8,
-      modifiers: [.command, .option],
-      displayValue: "⌥⌘C"
-    )
+    let custom = KeyStroke(virtualKeyCode: 103, modifiers: [], displayValue: "F11")
 
     try store.setTriggerOverride(custom, for: .openChat)
     XCTAssertEqual(store.trigger(for: .openChat), custom)
     XCTAssertTrue(store.isTriggerOverridden(for: .openChat))
 
     try store.resetTrigger(for: .openChat)
-    XCTAssertNil(store.trigger(for: .openChat))
+    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
     XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
+  }
+
+  func testEveryBuiltInActionHasAUniqueCommandOptionTrigger() throws {
+    let triggers = try Action.allCases.map {
+      try XCTUnwrap(ActionCatalog.defaultTrigger(for: $0))
+    }
+
+    XCTAssertEqual(
+      Set(triggers.map { "\($0.virtualKeyCode)-\($0.modifiers)" }).count,
+      Action.allCases.count
+    )
+    XCTAssertTrue(triggers.allSatisfy { $0.modifiers == [.command, .option] })
   }
 
   func testMappingOverrideAndActionResetRemoveOnlySelectedAction() throws {

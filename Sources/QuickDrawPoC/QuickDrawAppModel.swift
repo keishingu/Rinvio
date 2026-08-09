@@ -5,7 +5,9 @@ import Foundation
 import QuickDrawCore
 
 enum QuickDrawSection: String, CaseIterable, Identifiable {
-  case actions
+  case meeting
+  case development
+  case browser
   case applications
   case diagnostics
 
@@ -13,11 +15,25 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
 
   var systemImage: String {
     switch self {
-    case .actions: "bolt"
+    case .meeting: "person.2.fill"
+    case .development: "wrench.and.screwdriver.fill"
+    case .browser: "globe"
     case .applications: "square.grid.2x2"
     case .diagnostics: "waveform.path.ecg"
     }
   }
+
+  var actionDomain: ActionDomain? {
+    switch self {
+    case .meeting: .meeting
+    case .development: .development
+    case .browser: .browser
+    case .applications, .diagnostics: nil
+    }
+  }
+
+  static let actionSections: [QuickDrawSection] = [.meeting, .development, .browser]
+  static let utilitySections: [QuickDrawSection] = [.applications, .diagnostics]
 }
 
 struct ApplicationMapping: Identifiable, Equatable {
@@ -28,6 +44,7 @@ struct ApplicationMapping: Identifiable, Equatable {
   let systemImage: String
   let identity: String
   let isInstalled: Bool
+  let domain: ActionDomain
 
   static func current() -> [ApplicationMapping] {
     let workspace = NSWorkspace.shared
@@ -41,7 +58,8 @@ struct ApplicationMapping: Identifiable, Equatable {
         identity: "com.microsoft.teams2",
         isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.microsoft.teams2")
           != nil
-          || workspace.urlForApplication(withBundleIdentifier: "com.microsoft.teams") != nil
+          || workspace.urlForApplication(withBundleIdentifier: "com.microsoft.teams") != nil,
+        domain: .meeting
       ),
       ApplicationMapping(
         id: "zoomWorkplace",
@@ -50,7 +68,8 @@ struct ApplicationMapping: Identifiable, Equatable {
         compactName: "Zoom",
         systemImage: "video.fill",
         identity: "us.zoom.xos",
-        isInstalled: workspace.urlForApplication(withBundleIdentifier: "us.zoom.xos") != nil
+        isInstalled: workspace.urlForApplication(withBundleIdentifier: "us.zoom.xos") != nil,
+        domain: .meeting
       ),
       ApplicationMapping(
         id: "googleMeet",
@@ -59,7 +78,49 @@ struct ApplicationMapping: Identifiable, Equatable {
         compactName: "Meet",
         systemImage: "globe",
         identity: "meet.google.com in Google Chrome",
-        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.google.Chrome") != nil
+        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.google.Chrome") != nil,
+        domain: .meeting
+      ),
+      ApplicationMapping(
+        id: "codex",
+        target: .codex,
+        name: "Codex",
+        compactName: "Codex",
+        systemImage: "chevron.left.forwardslash.chevron.right",
+        identity: "com.openai.codex",
+        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.openai.codex") != nil,
+        domain: .development
+      ),
+      ApplicationMapping(
+        id: "claude",
+        target: .claude,
+        name: "Claude",
+        compactName: "Claude",
+        systemImage: "terminal.fill",
+        identity: "com.anthropic.claudefordesktop",
+        isInstalled: workspace.urlForApplication(
+          withBundleIdentifier: "com.anthropic.claudefordesktop") != nil,
+        domain: .development
+      ),
+      ApplicationMapping(
+        id: "safari",
+        target: .safari,
+        name: "Safari",
+        compactName: "Safari",
+        systemImage: "safari.fill",
+        identity: "com.apple.Safari",
+        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.apple.Safari") != nil,
+        domain: .browser
+      ),
+      ApplicationMapping(
+        id: "googleChrome",
+        target: .googleChrome,
+        name: "Google Chrome",
+        compactName: "Chrome",
+        systemImage: "globe",
+        identity: "com.google.Chrome",
+        isInstalled: workspace.urlForApplication(withBundleIdentifier: "com.google.Chrome") != nil,
+        domain: .browser
       ),
     ]
   }
@@ -69,16 +130,19 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case meetingControls
   case panelsAndSharing
   case reactions
+  case agentSessions
+  case pageLoading
 
   var id: Self { self }
 }
 
 struct ActionDefinition: Identifiable, Equatable {
-  let action: MeetingAction
+  let action: Action
   let systemImage: String
   let category: ActionCategory
 
   var id: String { action.rawValue }
+  var domain: ActionDomain { action.domain }
   static let all: [ActionDefinition] = [
     ActionDefinition(action: .mute, systemImage: "mic.slash.fill", category: .meetingControls),
     ActionDefinition(action: .camera, systemImage: "video.fill", category: .meetingControls),
@@ -128,12 +192,22 @@ struct ActionDefinition: Identifiable, Equatable {
       systemImage: "party.popper.fill",
       category: .reactions
     ),
+    ActionDefinition(
+      action: .newSession,
+      systemImage: "plus.bubble.fill",
+      category: .agentSessions
+    ),
+    ActionDefinition(
+      action: .hardReload,
+      systemImage: "arrow.clockwise.circle.fill",
+      category: .pageLoading
+    ),
   ]
 }
 
 enum ShortcutRecordingDestination: Equatable {
-  case trigger(MeetingAction)
-  case application(MeetingAction, ActionTarget)
+  case trigger(Action)
+  case application(Action, ActionTarget)
 }
 
 @MainActor
@@ -159,27 +233,31 @@ final class QuickDrawAppModel: ObservableObject {
 
   private let defaults: UserDefaults
   private let configurationStore: QuickDrawConfigurationStore
+  private let configuredSystemShortcutDetector: ConfiguredSystemShortcutDetector
   private var localKeyMonitor: Any?
 
   var onSetEnabled: ((Bool) -> Void)?
   var onSetDryRun: ((Bool) -> Void)?
-  var onRunDryCheck: ((MeetingAction) -> Void)?
+  var onRunDryCheck: ((Action) -> Void)?
   var onRequestAccessibility: (() -> Void)?
   var onRefreshPermission: (() -> Bool)?
   var onRefreshDiagnostics: (() -> String)?
   var onLanguageChange: ((AppLanguage) -> Void)?
   var onShortcutRecordingBegan: (() -> Void)?
   var onShortcutRecordingEnded: (() -> String?)?
-  var onApplyTrigger: ((MeetingAction, KeyStroke) -> String?)?
-  var onResetTrigger: ((MeetingAction) -> String?)?
-  var onResetAction: ((MeetingAction) -> String?)?
+  var onApplyTrigger: ((Action, KeyStroke) -> String?)?
+  var onResetTrigger: ((Action) -> String?)?
+  var onResetAction: ((Action) -> String?)?
 
   init(
     defaults: UserDefaults = .standard,
-    configurationStore: QuickDrawConfigurationStore = QuickDrawConfigurationStore()
+    configurationStore: QuickDrawConfigurationStore = QuickDrawConfigurationStore(),
+    configuredSystemShortcutDetector: ConfiguredSystemShortcutDetector =
+      ConfiguredSystemShortcutDetector()
   ) {
     self.defaults = defaults
     self.configurationStore = configurationStore
+    self.configuredSystemShortcutDetector = configuredSystemShortcutDetector
     language = AppLanguage.preferred(defaults: defaults)
     configuration = configurationStore.configuration
   }
@@ -193,13 +271,11 @@ final class QuickDrawAppModel: ObservableObject {
   }
 
   var triggerSummary: String {
-    MeetingAction.allCases.compactMap { action in
-      trigger(for: action).map { "\($0.displayValue) \(copy.actionName(action))" }
-    }.joined(separator: " · ")
+    copy.assignedTriggerCount(Action.allCases.count { trigger(for: $0) != nil })
   }
 
   var registeredTriggerSummary: String {
-    MeetingAction.allCases.compactMap { trigger(for: $0)?.displayValue }.joined(separator: "／")
+    Action.allCases.compactMap { trigger(for: $0)?.displayValue }.joined(separator: "／")
   }
 
   func setLanguage(_ language: AppLanguage) {
@@ -218,24 +294,44 @@ final class QuickDrawAppModel: ObservableObject {
     onSetDryRun?(enabled)
   }
 
-  func runDryCheck(action: MeetingAction) {
+  func runDryCheck(action: Action) {
     onRunDryCheck?(action)
   }
 
-  func trigger(for action: MeetingAction) -> KeyStroke? {
+  func trigger(for action: Action) -> KeyStroke? {
     configurationStore.trigger(for: action)
   }
 
-  func isTriggerOverridden(for action: MeetingAction) -> Bool {
+  func isTriggerOverridden(for action: Action) -> Bool {
     configurationStore.isTriggerOverridden(for: action)
   }
 
-  func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke? {
+  func triggerConflicts(for action: Action) -> [TriggerConflict] {
+    guard let trigger = trigger(for: action) else { return [] }
+
+    if let knownConflict = SystemShortcutCatalog.knownConflict(for: trigger) {
+      return [.knownSystemShortcut(knownConflict)]
+    }
+    if configuredSystemShortcutDetector.conflicts(with: trigger) {
+      return [.configuredSystemShortcut]
+    }
+    return []
+  }
+
+  func shortcut(for action: Action, target: ActionTarget) -> KeyStroke? {
     configurationStore.shortcut(for: action, target: target)
   }
 
-  func isShortcutOverridden(for action: MeetingAction, target: ActionTarget) -> Bool {
+  func isShortcutOverridden(for action: Action, target: ActionTarget) -> Bool {
     configurationStore.isShortcutOverridden(for: action, target: target)
+  }
+
+  func actions(in domain: ActionDomain) -> [ActionDefinition] {
+    actions.filter { $0.domain == domain }
+  }
+
+  func applications(in domain: ActionDomain) -> [ApplicationMapping] {
+    applications.filter { $0.domain == domain }
   }
 
   func supportedActionCount(for target: ActionTarget) -> Int {
@@ -272,12 +368,12 @@ final class QuickDrawAppModel: ObservableObject {
     }
   }
 
-  func resetTrigger(for action: MeetingAction) {
+  func resetTrigger(for action: Action) {
     shortcutEditingError = onResetTrigger?(action)
     syncConfiguration()
   }
 
-  func resetShortcut(for action: MeetingAction, target: ActionTarget) {
+  func resetShortcut(for action: Action, target: ActionTarget) {
     do {
       try configurationStore.resetShortcut(for: action, target: target)
       shortcutEditingError = nil
@@ -287,12 +383,12 @@ final class QuickDrawAppModel: ObservableObject {
     }
   }
 
-  func resetAction(_ action: MeetingAction) {
+  func resetAction(_ action: Action) {
     shortcutEditingError = onResetAction?(action)
     syncConfiguration()
   }
 
-  func hasOverrides(for action: MeetingAction) -> Bool {
+  func hasOverrides(for action: Action) -> Bool {
     isTriggerOverridden(for: action)
       || ActionTarget.allCases.contains { isShortcutOverridden(for: action, target: $0) }
   }
@@ -311,6 +407,7 @@ final class QuickDrawAppModel: ObservableObject {
 
   func refreshEnvironment() {
     applications = ApplicationMapping.current()
+    configuredSystemShortcutDetector.refresh()
     syncConfiguration()
     refreshPermission()
   }

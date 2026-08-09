@@ -14,9 +14,17 @@ swift build \
 
 binary_path="$(swift build --package-path "$project_root" --configuration "$configuration" --show-bin-path)/QuickDrawPoC"
 
-mkdir -p "$app_bundle/Contents/MacOS"
+mkdir -p "$app_bundle/Contents/MacOS" "$app_bundle/Contents/Resources"
 cp "$binary_path" "$app_bundle/Contents/MacOS/QuickDrawPoC"
 cp "$project_root/AppResources/Info.plist" "$app_bundle/Contents/Info.plist"
+
+xcrun actool \
+    "$project_root/AppResources/Assets.xcassets" \
+    --compile "$app_bundle/Contents/Resources" \
+    --platform macosx \
+    --minimum-deployment-target 15.0 \
+    --app-icon AppIcon \
+    --output-partial-info-plist "$output_root/asset-info.plist"
 
 if [[ -n "${QUICKDRAW_CODE_SIGN_IDENTITY:-}" ]]; then
     identity="$QUICKDRAW_CODE_SIGN_IDENTITY"

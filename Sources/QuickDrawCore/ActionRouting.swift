@@ -23,7 +23,15 @@ public struct KeyStroke: Codable, Equatable, Hashable, Sendable {
   }
 }
 
-public enum MeetingAction: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
+public enum ActionDomain: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
+  case meeting
+  case development
+  case browser
+
+  public var id: Self { self }
+}
+
+public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
   case mute
   case camera
   case raiseHand
@@ -39,8 +47,18 @@ public enum MeetingAction: String, CaseIterable, Codable, Equatable, Identifiabl
   case reactionLaugh
   case reactionWow
   case reactionCelebrate
+  case newSession
+  case hardReload
 
   public var id: Self { self }
+
+  public var domain: ActionDomain {
+    switch self {
+    case .newSession: .development
+    case .hardReload: .browser
+    default: .meeting
+    }
+  }
 
   public var displayName: String {
     switch self {
@@ -59,6 +77,8 @@ public enum MeetingAction: String, CaseIterable, Codable, Equatable, Identifiabl
     case .reactionLaugh: "Laugh"
     case .reactionWow: "Wow"
     case .reactionCelebrate: "Celebrate"
+    case .newSession: "New Session"
+    case .hardReload: "Hard Reload"
     }
   }
 }
@@ -67,34 +87,66 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
   case microsoftTeams
   case zoomWorkplace
   case googleMeet
+  case codex
+  case claude
+  case safari
+  case googleChrome
 
   public var displayName: String {
     switch self {
     case .microsoftTeams: "Microsoft Teams"
     case .zoomWorkplace: "Zoom Workplace"
     case .googleMeet: "Google Meet"
+    case .codex: "Codex"
+    case .claude: "Claude"
+    case .safari: "Safari"
+    case .googleChrome: "Google Chrome"
     }
   }
 }
 
 public enum ActionCatalog {
-  public static func defaultTrigger(for action: MeetingAction) -> KeyStroke? {
+  public static func defaultTrigger(for action: Action) -> KeyStroke? {
     switch action {
     case .mute:
-      KeyStroke(virtualKeyCode: 97, modifiers: [], displayValue: "F6")
+      KeyStroke(virtualKeyCode: 46, modifiers: [.command, .option], displayValue: "⌘⌥M")
     case .camera:
-      KeyStroke(virtualKeyCode: 98, modifiers: [], displayValue: "F7")
+      KeyStroke(virtualKeyCode: 8, modifiers: [.command, .option], displayValue: "⌘⌥C")
     case .raiseHand:
-      KeyStroke(virtualKeyCode: 100, modifiers: [], displayValue: "F8")
-    case .openChat, .showParticipants, .toggleCaptions, .shareScreen, .switchCamera,
-      .pictureInPicture, .reactionLike, .reactionHeart, .reactionClap, .reactionLaugh,
-      .reactionWow, .reactionCelebrate:
-      nil
+      KeyStroke(virtualKeyCode: 4, modifiers: [.command, .option], displayValue: "⌘⌥H")
+    case .openChat:
+      KeyStroke(virtualKeyCode: 31, modifiers: [.command, .option], displayValue: "⌘⌥O")
+    case .showParticipants:
+      KeyStroke(virtualKeyCode: 35, modifiers: [.command, .option], displayValue: "⌘⌥P")
+    case .toggleCaptions:
+      KeyStroke(virtualKeyCode: 37, modifiers: [.command, .option], displayValue: "⌘⌥L")
+    case .shareScreen:
+      KeyStroke(virtualKeyCode: 1, modifiers: [.command, .option], displayValue: "⌘⌥S")
+    case .switchCamera:
+      KeyStroke(virtualKeyCode: 7, modifiers: [.command, .option], displayValue: "⌘⌥X")
+    case .pictureInPicture:
+      KeyStroke(virtualKeyCode: 34, modifiers: [.command, .option], displayValue: "⌘⌥I")
+    case .reactionLike:
+      KeyStroke(virtualKeyCode: 18, modifiers: [.command, .option], displayValue: "⌘⌥1")
+    case .reactionHeart:
+      KeyStroke(virtualKeyCode: 19, modifiers: [.command, .option], displayValue: "⌘⌥2")
+    case .reactionClap:
+      KeyStroke(virtualKeyCode: 20, modifiers: [.command, .option], displayValue: "⌘⌥3")
+    case .reactionLaugh:
+      KeyStroke(virtualKeyCode: 21, modifiers: [.command, .option], displayValue: "⌘⌥4")
+    case .reactionWow:
+      KeyStroke(virtualKeyCode: 23, modifiers: [.command, .option], displayValue: "⌘⌥5")
+    case .reactionCelebrate:
+      KeyStroke(virtualKeyCode: 22, modifiers: [.command, .option], displayValue: "⌘⌥6")
+    case .newSession:
+      KeyStroke(virtualKeyCode: 45, modifiers: [.command, .option], displayValue: "⌘⌥N")
+    case .hardReload:
+      KeyStroke(virtualKeyCode: 15, modifiers: [.command, .option], displayValue: "⌘⌥R")
     }
   }
 
   public static func defaultShortcut(
-    for action: MeetingAction,
+    for action: Action,
     target: ActionTarget
   ) -> KeyStroke? {
     switch (target, action) {
@@ -150,6 +202,12 @@ public enum ActionCatalog {
       KeyStroke(virtualKeyCode: 28, modifiers: [.command, .option], displayValue: "⌥⌘8")
     case (.zoomWorkplace, .reactionCelebrate):
       KeyStroke(virtualKeyCode: 25, modifiers: [.command, .option], displayValue: "⌥⌘9")
+    case (.codex, .newSession), (.claude, .newSession):
+      KeyStroke(virtualKeyCode: 45, modifiers: [.command], displayValue: "⌘N")
+    case (.safari, .hardReload):
+      KeyStroke(virtualKeyCode: 15, modifiers: [.command, .option], displayValue: "⌘⌥R")
+    case (.googleChrome, .hardReload):
+      KeyStroke(virtualKeyCode: 15, modifiers: [.command, .shift], displayValue: "⌘⇧R")
     default:
       nil
     }
@@ -157,23 +215,23 @@ public enum ActionCatalog {
 }
 
 public protocol ShortcutOverrideProviding {
-  func shortcutOverride(for action: MeetingAction, target: ActionTarget) -> KeyStroke?
+  func shortcutOverride(for action: Action, target: ActionTarget) -> KeyStroke?
 }
 
 public struct NoShortcutOverrides: ShortcutOverrideProviding, Sendable {
   public init() {}
 
-  public func shortcutOverride(for action: MeetingAction, target: ActionTarget) -> KeyStroke? {
+  public func shortcutOverride(for action: Action, target: ActionTarget) -> KeyStroke? {
     nil
   }
 }
 
 public struct ActionRoute: Equatable, Sendable {
-  public let action: MeetingAction
+  public let action: Action
   public let target: ActionTarget
   public let shortcut: KeyStroke
 
-  public init(action: MeetingAction, target: ActionTarget, shortcut: KeyStroke) {
+  public init(action: Action, target: ActionTarget, shortcut: KeyStroke) {
     self.action = action
     self.target = target
     self.shortcut = shortcut
@@ -195,7 +253,7 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
   case browserContextUnavailable
   case unsupportedWebPage(host: String?)
   case unsupportedApplication(bundleIdentifier: String)
-  case unsupportedAction(action: MeetingAction, target: ActionTarget)
+  case unsupportedAction(action: Action, target: ActionTarget)
 
   public var userMessage: String {
     switch self {
@@ -227,6 +285,18 @@ public struct ActionRouter {
     "com.google.Chrome"
   ]
 
+  public static let safariBundleIdentifiers: Set<String> = [
+    "com.apple.Safari"
+  ]
+
+  public static let codexBundleIdentifiers: Set<String> = [
+    "com.openai.codex"
+  ]
+
+  public static let claudeBundleIdentifiers: Set<String> = [
+    "com.anthropic.claudefordesktop"
+  ]
+
   private let overrideProvider: any ShortcutOverrideProviding
 
   public init(overrideProvider: any ShortcutOverrideProviding = NoShortcutOverrides()) {
@@ -234,7 +304,7 @@ public struct ActionRouter {
   }
 
   public func route(
-    action: MeetingAction,
+    action: Action,
     context: ForegroundContext
   ) -> Result<ActionRoute, ActionRoutingFailure> {
     guard let bundleIdentifier = context.bundleIdentifier else {
@@ -247,16 +317,26 @@ public struct ActionRouter {
     } else if Self.zoomBundleIdentifiers.contains(bundleIdentifier) {
       target = .zoomWorkplace
     } else if Self.chromeBundleIdentifiers.contains(bundleIdentifier) {
-      guard let activeTabURL = context.activeTabURL else {
-        return .failure(.browserContextUnavailable)
-      }
+      if action.domain == .meeting {
+        guard let activeTabURL = context.activeTabURL else {
+          return .failure(.browserContextUnavailable)
+        }
 
-      let scheme = activeTabURL.scheme?.lowercased()
-      let host = activeTabURL.host?.lowercased()
-      guard scheme == "https", host == "meet.google.com" else {
-        return .failure(.unsupportedWebPage(host: host))
+        let scheme = activeTabURL.scheme?.lowercased()
+        let host = activeTabURL.host?.lowercased()
+        guard scheme == "https", host == "meet.google.com" else {
+          return .failure(.unsupportedWebPage(host: host))
+        }
+        target = .googleMeet
+      } else {
+        target = .googleChrome
       }
-      target = .googleMeet
+    } else if Self.safariBundleIdentifiers.contains(bundleIdentifier) {
+      target = .safari
+    } else if Self.codexBundleIdentifiers.contains(bundleIdentifier) {
+      target = .codex
+    } else if Self.claudeBundleIdentifiers.contains(bundleIdentifier) {
+      target = .claude
     } else {
       return .failure(.unsupportedApplication(bundleIdentifier: bundleIdentifier))
     }
@@ -267,7 +347,7 @@ public struct ActionRouter {
     return .success(ActionRoute(action: action, target: target, shortcut: shortcut))
   }
 
-  public func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke? {
+  public func shortcut(for action: Action, target: ActionTarget) -> KeyStroke? {
     overrideProvider.shortcutOverride(for: action, target: target)
       ?? ActionCatalog.defaultShortcut(for: action, target: target)
   }

@@ -1,21 +1,21 @@
 import Foundation
 
 public struct TriggerOverride: Codable, Equatable, Sendable {
-  public let action: MeetingAction
+  public let action: Action
   public let shortcut: KeyStroke
 
-  public init(action: MeetingAction, shortcut: KeyStroke) {
+  public init(action: Action, shortcut: KeyStroke) {
     self.action = action
     self.shortcut = shortcut
   }
 }
 
 public struct ApplicationShortcutOverride: Codable, Equatable, Sendable {
-  public let action: MeetingAction
+  public let action: Action
   public let target: ActionTarget
   public let shortcut: KeyStroke
 
-  public init(action: MeetingAction, target: ActionTarget, shortcut: KeyStroke) {
+  public init(action: Action, target: ActionTarget, shortcut: KeyStroke) {
     self.action = action
     self.target = target
     self.shortcut = shortcut
@@ -43,7 +43,7 @@ public struct QuickDrawConfiguration: Codable, Equatable, Sendable {
 public enum QuickDrawConfigurationError: LocalizedError, Equatable {
   case unsupportedSchemaVersion(Int)
   case unsafeTrigger
-  case duplicateTrigger(MeetingAction)
+  case duplicateTrigger(Action)
 
   public var errorDescription: String? {
     switch self {
@@ -95,25 +95,25 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
     lock.withLock { storedConfiguration }
   }
 
-  public func trigger(for action: MeetingAction) -> KeyStroke? {
+  public func trigger(for action: Action) -> KeyStroke? {
     lock.withLock {
       storedConfiguration.triggerOverrides.first { $0.action == action }?.shortcut
         ?? ActionCatalog.defaultTrigger(for: action)
     }
   }
 
-  public func isTriggerOverridden(for action: MeetingAction) -> Bool {
+  public func isTriggerOverridden(for action: Action) -> Bool {
     lock.withLock {
       storedConfiguration.triggerOverrides.contains { $0.action == action }
     }
   }
 
-  public func shortcut(for action: MeetingAction, target: ActionTarget) -> KeyStroke? {
+  public func shortcut(for action: Action, target: ActionTarget) -> KeyStroke? {
     shortcutOverride(for: action, target: target)
       ?? ActionCatalog.defaultShortcut(for: action, target: target)
   }
 
-  public func shortcutOverride(for action: MeetingAction, target: ActionTarget) -> KeyStroke? {
+  public func shortcutOverride(for action: Action, target: ActionTarget) -> KeyStroke? {
     lock.withLock {
       storedConfiguration.shortcutOverrides.first {
         $0.action == action && $0.target == target
@@ -121,17 +121,17 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
     }
   }
 
-  public func isShortcutOverridden(for action: MeetingAction, target: ActionTarget) -> Bool {
+  public func isShortcutOverridden(for action: Action, target: ActionTarget) -> Bool {
     shortcutOverride(for: action, target: target) != nil
   }
 
-  public func validateTrigger(_ shortcut: KeyStroke, for action: MeetingAction) throws {
+  public func validateTrigger(_ shortcut: KeyStroke, for action: Action) throws {
     let hasSafeModifier = !shortcut.modifiers.isDisjoint(with: [.command, .control, .option])
     guard Self.functionKeyCodes.contains(shortcut.virtualKeyCode) || hasSafeModifier else {
       throw QuickDrawConfigurationError.unsafeTrigger
     }
 
-    if let duplicate = MeetingAction.allCases.first(where: { candidate in
+    if let duplicate = Action.allCases.first(where: { candidate in
       candidate != action
         && trigger(for: candidate)?.matchesPhysicalShortcut(shortcut) == true
     }) {
@@ -139,7 +139,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
     }
   }
 
-  public func setTriggerOverride(_ shortcut: KeyStroke, for action: MeetingAction) throws {
+  public func setTriggerOverride(_ shortcut: KeyStroke, for action: Action) throws {
     try validateTrigger(shortcut, for: action)
     try update { configuration in
       configuration.triggerOverrides.removeAll { $0.action == action }
@@ -149,7 +149,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
     }
   }
 
-  public func resetTrigger(for action: MeetingAction) throws {
+  public func resetTrigger(for action: Action) throws {
     try update { configuration in
       configuration.triggerOverrides.removeAll { $0.action == action }
     }
@@ -157,7 +157,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
 
   public func setShortcutOverride(
     _ shortcut: KeyStroke,
-    for action: MeetingAction,
+    for action: Action,
     target: ActionTarget
   ) throws {
     try update { configuration in
@@ -172,7 +172,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
     }
   }
 
-  public func resetShortcut(for action: MeetingAction, target: ActionTarget) throws {
+  public func resetShortcut(for action: Action, target: ActionTarget) throws {
     try update { configuration in
       configuration.shortcutOverrides.removeAll {
         $0.action == action && $0.target == target
@@ -180,7 +180,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
     }
   }
 
-  public func resetAction(_ action: MeetingAction) throws {
+  public func resetAction(_ action: Action) throws {
     try update { configuration in
       configuration.triggerOverrides.removeAll { $0.action == action }
       configuration.shortcutOverrides.removeAll { $0.action == action }

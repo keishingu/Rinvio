@@ -1,14 +1,17 @@
 # QuickDraw PoC
 
-頻出する会議ActionをForegroundのMicrosoft Teams、Zoom Workplace、Chrome上のGoogle Meetへ配送するmacOS Utilityです。
+アプリごとに異なる頻出操作を共通Actionへ変換し、Foregroundの対象アプリへ配送するmacOS Utilityです。
 
-- `F6 → Mute`
-- `F7 → Camera`
-- `F8 → Raise Hand`
+- `⌘⌥M → Mute`
+- `⌘⌥C → Camera`
+- `⌘⌥H → Raise Hand`
+- `⌘⌥N → New Session`
+- `⌘⌥R → Hard Reload`
 
 ## Scope
 
-- Microsoft Teams / Zoom Workplace / Google Meetの公式ショートカットを15のActionへ変換
+- Meeting / Development / Browserに分類した17のBuilt-in Action
+- Microsoft Teams / Zoom Workplace / Google Meet / Codex / Claude / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
 - Foreground target only
 - Action-first native settings window with an application mapping inspector
 - Editable global Triggers and per-application shortcut overrides with one-click default restore
@@ -39,48 +42,62 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 ## First run
 
-1. 起動時に表示されるQuickDraw Windowで、ActionとTeams / Zoom / MeetのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
+1. 起動時に表示されるQuickDraw Windowで、Meeting / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
    表示言語はToolbarの地球アイコンから日本語／Englishを切り替えられる。
-2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにしてF6／F7／F8を押す。Dry Runはshortcutを送信しない。
+2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
 3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
 4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。
 5. Google Meetを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
-6. Dry Runを無効にし、対象Application/Meet TabをForegroundにしてF6／F7／F8を押す。
+6. Dry Runを無効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。
 
 ## Shortcut configuration
 
 Action Inspectorから次を編集できます。
 
 - `Trigger`: QuickDrawを呼び出すグローバルショートカット。Fキー、またはCommand / Control / Optionを含む組み合わせを使用する。
-- `Application mapping`: Actionを各Applicationへ配送するショートカット。Teams / Zoom / Meet側で既定値を変更した場合にOverrideする。
+- `Application mapping`: Actionを各Applicationへ配送するショートカット。Application側で既定値を変更した場合にOverrideする。
 - `Restore Default`: 個別のOverrideを削除してBuilt-in Catalogへ戻す。
 - `Restore All Defaults for This Action`: TriggerとそのActionの全Application Mappingを確認後にまとめて戻す。
 
 設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は保存ファイルへ複製せず、Overrideだけを保存します。
 
-F6 / F7 / F8以外のBuilt-in ActionはTrigger未割り当てです。必要なActionだけにTriggerを設定するため、追加Actionの登録だけでグローバルショートカットが増えたり衝突したりすることはありません。
+Built-in ActionにはQuickDrawの名前空間として`⌘⌥` Triggerを割り当てています。対応アプリまたはMeetタブでだけQuickDrawがキーを消費し、対象外では元のキーイベントをそのままアプリ／macOSへ渡します。
 
-MacのKeyboard設定でFunction Keyがsystem functionとして動く場合は、`fn`を併用するか「Use F1, F2, etc. keys as standard function keys」を有効にします。
+macOS標準またはSystem Settingsで有効なショートカットと競合する場合、Action Inspectorに警告を表示します。これは使用禁止ではなく、対応アプリではQuickDrawが優先されることを示します。System Settingsの検出は非公開のPreference表現を読むbest-effort方式であり、既知の標準ショートカットカタログと組み合わせています。
 
 ## Built-in mappings
 
+### Meeting
+
 | Action | Trigger | Teams | Zoom | Google Meet |
 |---|---|---|---|---|
-| Mute Toggle | F6 | `⌘⇧M` | `⌘⇧A` | `⌘D` |
-| Camera Toggle | F7 | `⌘⇧O` | `⌘⇧V` | `⌘E` |
-| Raise Hand Toggle | F8 | `⌘⇧K` | `⌥Y` | `⌃⌘H` |
-| Switch Camera | — | — | `⌘⇧N` | — |
-| Show Chat | — | — | `⌘⇧H` | `⌃⌘C` |
-| Show Participants | — | — | `⌘U` | `⌃⌘P` |
-| Captions Toggle | — | `⌘⇧A` | — | `C` |
-| Share Screen | — | `⌘⇧E` | `⌘⇧S` | `⌃⌘T` |
-| Picture in Picture | — | — | — | `⇧M` |
-| Reaction: 👍 | — | — | `⌥⌘5` | — |
-| Reaction: ❤️ | — | — | `⌥⌘6` | — |
-| Reaction: 👏 | — | — | `⌥⌘4` | — |
-| Reaction: 😂 | — | — | `⌥⌘7` | — |
-| Reaction: 😮 | — | — | `⌥⌘8` | — |
-| Reaction: 🎉 | — | — | `⌥⌘9` | — |
+| Mute Toggle | `⌘⌥M` | `⌘⇧M` | `⌘⇧A` | `⌘D` |
+| Camera Toggle | `⌘⌥C` | `⌘⇧O` | `⌘⇧V` | `⌘E` |
+| Raise Hand Toggle | `⌘⌥H` | `⌘⇧K` | `⌥Y` | `⌃⌘H` |
+| Switch Camera | `⌘⌥X` | — | `⌘⇧N` | — |
+| Show Chat | `⌘⌥O` | — | `⌘⇧H` | `⌃⌘C` |
+| Show Participants | `⌘⌥P` | — | `⌘U` | `⌃⌘P` |
+| Captions Toggle | `⌘⌥L` | `⌘⇧A` | — | `C` |
+| Share Screen | `⌘⌥S` | `⌘⇧E` | `⌘⇧S` | `⌃⌘T` |
+| Picture in Picture | `⌘⌥I` | — | — | `⇧M` |
+| Reaction: 👍 | `⌘⌥1` | — | `⌥⌘5` | — |
+| Reaction: ❤️ | `⌘⌥2` | — | `⌥⌘6` | — |
+| Reaction: 👏 | `⌘⌥3` | — | `⌥⌘4` | — |
+| Reaction: 😂 | `⌘⌥4` | — | `⌥⌘7` | — |
+| Reaction: 😮 | `⌘⌥5` | — | `⌥⌘8` | — |
+| Reaction: 🎉 | `⌘⌥6` | — | `⌥⌘9` | — |
+
+### Development
+
+| Action | Trigger | Codex | Claude |
+|---|---|---|---|
+| New Session | `⌘⌥N` | `⌘N` | `⌘N` |
+
+### Browser
+
+| Action | Trigger | Safari | Google Chrome |
+|---|---|---|---|
+| Hard Reload | `⌘⌥R` | `⌘⌥R` | `⌘⇧R` |
 
 `—`はそのApplicationの公式ショートカットが確認できていない状態です。実行時はキーを送らず、未対応として安全に終了します。既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)の公式資料に基づきます。Application側でショートカットを変更した場合や独自に割り当てた場合は、QuickDrawのAction Inspectorから同じ値へOverrideできます。
 

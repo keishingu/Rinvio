@@ -4,7 +4,7 @@ import OSLog
 import QuickDrawCore
 
 struct ActionStatus {
-  let action: MeetingAction?
+  let action: Action?
   let headline: String
   let detail: String
   let target: String
@@ -49,7 +49,7 @@ final class ActionController {
   private let shortcutExecutor: ShortcutExecutor
   private var recentReports: [ActionPipelineReport] = []
   private var lastTarget = "Not detected"
-  private var lastAction: MeetingAction?
+  private var lastAction: Action?
   private let logger = Logger(
     subsystem: Bundle.main.bundleIdentifier ?? "dev.actionrouter.quickdraw-poc",
     category: "action-routing"
@@ -60,16 +60,23 @@ final class ActionController {
     self.shortcutExecutor = shortcutExecutor
   }
 
-  func trigger(_ action: MeetingAction, forceDryRun: Bool = false) {
+  @discardableResult
+  func trigger(_ action: Action, forceDryRun: Bool = false) -> Bool {
     guard isEnabled else {
       logger.debug("Action trigger ignored because QuickDraw is disabled")
-      return
+      return false
     }
 
     let mode: ActionExecutionMode = forceDryRun || isDryRunEnabled ? .dryRun : .live
     let report = pipeline.run(action: action, mode: mode)
+    let consumesTrigger = forceDryRun || report.outcome.consumesTrigger
+    guard consumesTrigger else {
+      logger.debug("Shortcut passed through because no QuickDraw target matched")
+      return false
+    }
     record(report)
     publish(report)
+    return true
   }
 
   @discardableResult
@@ -78,7 +85,7 @@ final class ActionController {
     publishStateChange(
       headline: granted ? "Accessibility granted" : "Accessibility permission requested",
       detail: granted
-        ? "Return to Teams, Zoom, or Meet and use a configured trigger"
+        ? "Return to a supported application and use a configured trigger"
         : "Enable QuickDraw PoC in System Settings, then try again",
       isError: !granted
     )
@@ -185,7 +192,7 @@ final class ActionController {
   }
 
   private func publish(
-    action: MeetingAction?,
+    action: Action?,
     headline: String,
     detail: String,
     target: String,

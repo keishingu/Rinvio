@@ -4,14 +4,14 @@ import QuickDrawCore
 final class HotKeyConfigurationCoordinator {
   private let registrar: GlobalHotKeyRegistrar
   private let store: QuickDrawConfigurationStore
-  private var handler: ((MeetingAction) -> Void)?
+  private var handler: ((Action) -> Bool)?
 
   init(registrar: GlobalHotKeyRegistrar, store: QuickDrawConfigurationStore) {
     self.registrar = registrar
     self.store = store
   }
 
-  func start(handler: @escaping (MeetingAction) -> Void) throws {
+  func start(handler: @escaping (Action) -> Bool) throws {
     self.handler = handler
     try registrar.register(bindings: currentBindings(), handler: handler)
   }
@@ -31,7 +31,7 @@ final class HotKeyConfigurationCoordinator {
     }
   }
 
-  func applyTrigger(_ shortcut: KeyStroke, for action: MeetingAction) -> String? {
+  func applyTrigger(_ shortcut: KeyStroke, for action: Action) -> String? {
     do {
       try store.validateTrigger(shortcut, for: action)
     } catch {
@@ -58,7 +58,7 @@ final class HotKeyConfigurationCoordinator {
     }
   }
 
-  func resetTrigger(for action: MeetingAction) -> String? {
+  func resetTrigger(for action: Action) -> String? {
     guard let handler else { return "Global shortcut handler is unavailable" }
     var nextBindings = currentBindings()
     nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
@@ -72,7 +72,7 @@ final class HotKeyConfigurationCoordinator {
     }
   }
 
-  func resetAction(_ action: MeetingAction) -> String? {
+  func resetAction(_ action: Action) -> String? {
     guard let handler else { return "Global shortcut handler is unavailable" }
     var nextBindings = currentBindings()
     nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
@@ -86,9 +86,9 @@ final class HotKeyConfigurationCoordinator {
     }
   }
 
-  private func currentBindings() -> [MeetingAction: KeyStroke] {
+  private func currentBindings() -> [Action: KeyStroke] {
     Dictionary(
-      uniqueKeysWithValues: MeetingAction.allCases.compactMap { action in
+      uniqueKeysWithValues: Action.allCases.compactMap { action in
         store.trigger(for: action).map { (action, $0) }
       }
     )

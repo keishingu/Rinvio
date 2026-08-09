@@ -14,9 +14,9 @@ enum ShortcutCapture {
     if flags.contains(.shift) { modifiers.insert(.shift) }
 
     let modifierDisplay = [
-      modifiers.contains(.control) ? "⌃" : "",
-      modifiers.contains(.option) ? "⌥" : "",
       modifiers.contains(.command) ? "⌘" : "",
+      modifiers.contains(.option) ? "⌥" : "",
+      modifiers.contains(.control) ? "⌃" : "",
       modifiers.contains(.shift) ? "⇧" : "",
     ].joined()
 

@@ -39,7 +39,7 @@ QuickDraw のMVPは、次の1本の経路を確実に成立させる。
 会議アプリごとに異なるキーを、ユーザーが定義した共通Actionへ揃える。
 
 ```text
-F6 → Mute → Teams: ⌘⇧M / Zoom: ⌘⇧A / Meet: ⌘D
+⌘⌥M → Mute → Teams: ⌘⇧M / Zoom: ⌘⇧A / Meet: ⌘D
 ```
 
 QuickDrawは「操作互換レイヤー」である。プロダクト思想ではIntentと説明してよいが、Domain Modelでは具体的な `Action` を使う。
@@ -98,7 +98,7 @@ Levelは実装方式そのものではなく、プロダクト上の複雑さを
 
 1. 「1つのActionを複数アプリへ変換する」と短く説明する。
 2. 3つのBuilt-in Actionと検出済みApplicationを表示する。
-3. Triggerを割り当てる。推奨初期値はF6=ミュート、F7=カメラ、F8=挙手。
+3. Triggerを割り当てる。Built-in ActionにはQuickDraw名前空間として`⌘⌥`+英字／数字を割り当てる。
 4. 必要になるPermissionと理由を事前表示する。この時点では一括要求しない。
 5. 「QuickDrawを有効にする」でLevel 1に必要なPermissionを案内し、Foregroundの対応アプリでTestする。
 6. Windowを閉じてもMenu Barで常駐する。
@@ -129,7 +129,7 @@ Trigger Recorderは以下を行う。
 Action `Mute` の詳細で次のように見せる。
 
 ```text
-Mute                                      F6  Enabled
+Mute                                      ⌘⌥M  Enabled
 ──────────────────────────────────────────────────────
 Microsoft Teams   Supported · Shortcut    ⌘⇧M  Default
 Zoom              Supported · Shortcut    ⌘⇧A  Default
@@ -334,14 +334,14 @@ flowchart LR
 
 ### Keyboard input
 
-MVPの第一候補はHIToolbox/Carbonの `RegisterEventHotKey` を薄い `HotKeyRegistrar` に隔離して使う方式。
+当初はHIToolbox/Carbonの `RegisterEventHotKey` を採用したが、対象外アプリでもTriggerを消費するため、現在の実装は `CGEventTap` を薄い `HotKeyRegistrar` に隔離して使う。
 
-- 登録した組合せだけを受け取り、一般キー入力を監視しない。
-- 常時filteringするCGEventTapを避けられる可能性が高い。
-- 登録競合を即時検出できる。
-- 古いAPIだが、任意のsystem-wide hotkeyに同等なmodern SwiftUI APIはない。
+- 設定済みのkeyCodeとmodifierだけを照合し、その他のイベントは変更せず即座に返す。
+- 対応アプリ／Meetタブでだけイベントを消費し、対象外ではmacOSと前面アプリへ素通しする。
+- QuickDraw生成イベントはsource markerで除外し、再発火を防ぐ。
+- macOS標準カタログ、System Settingsのbest-effort読取、event tap生成結果を分けて競合状態を表現する。
 
-**Requires PoC:** current macOS、Fキー単体、keyboard layout、secure input、Input Monitoring不要という前提。成立しない場合だけlisten-only CGEventTapを比較し、勝手に広いkey loggingへ移行しない。
+**Confirmed in PoC /継続検証:** current macOSでのmodifier chord、repeat、source marker、対象外passthrough。Permission、secure input、sleep/wakeは継続して実機検証する。
 
 ### Routing flow
 
@@ -497,10 +497,10 @@ Level 2:
 
 | 領域 | API | 判断 |
 |---|---|---|
-| Global Hotkey | `RegisterEventHotKey` | **Likely / PoC必須。** Narrow observationと競合検出。 |
+| Global Hotkey | `CGEventTap` | **Confirmed in PoC。** 設定済みTriggerだけを条件付きで消費し、その他は素通し。 |
 | Foreground App | `NSWorkspace.frontmostApplication`、activation notifications | **Confirmed。** event-driven。 |
 | Input monitor | `NSEvent` global monitor | 不採用。modify不可で、広いkey観測が不要。 |
-| Input interception | `CGEventTap` | fallbackのみ。Permission/privacy costが上がる。 |
+| Input interception | `CGEventTap` | Triggerのコンテキスト限定消費に必要。キー内容は保存せずsource marker付き出力を除外。 |
 | Shortcut output | `CGEvent` keyboard event / post variants | **Requires PoC。** APIはConfirmed、TCC/Target挙動は実測。 |
 | Accessibility | `AXUIElement`、`AXUIElementPerformAction`、AX notification | Level 2。APIはConfirmedだがtimeout/failure前提。 |
 | Apple Events | Apple Event Manager / ScriptingBridge | Browser active tab metadataだけに限定。 |
@@ -822,7 +822,7 @@ PoCはProduct Code開始ではなく、破棄可能なLab Targetとする。OS/A
 ### P0 — UI実装前のGo/No-Go
 
 1. **Hotkey capture permission matrix**
-   - Clean accountでF6とmodifier chordを登録。
+   - Clean accountで`⌘⌥` chordを監視。
    - Conflict、repeat、sleep/wake、secure text、layout、一般キー非観測を確認。
    - Pass: accepted trigger policyがInput Monitoringなしで安定callback。
 
@@ -1057,8 +1057,8 @@ User-facing privacy statementが真であることをArchitecture Acceptanceと�
 
 1. **Minimum OS:** macOS 15 minimum + current SDKを推奨し、macOS 26+ではsystem Liquid Glassへ自動適応する。Pre-Liquid-Glass対応のtest costを受け入れるか。
 2. **Distribution:** MVPはDeveloper ID + Notarization、Mac App Store feasibilityは後回しでよいか。
-3. **Trigger policy:** Fキー/modifier chordのみ、bare alphanumericはMVP拒否でよいか。
-4. **Input/output mechanism:** P0後に `RegisterEventHotKey` とevent posting方式、必要Permissionを確定する。
+3. **Trigger policy:** Built-inは`⌘⌥` namespace、OverrideはFキー/modifier chordのみ、bare alphanumericは拒否する。
+4. **Input/output mechanism:** `CGEventTap`で条件付き消費し、source marker付き`CGEvent`で出力する。必要Permissionは実機matrixで継続確認する。
 5. **Target policy:** MVP Foreground-onlyを受け入れ、Pinned/background targetを最優先のpost-MVP PoCとするか。
 6. **Meet browser scope:** Chrome-onlyをacceptance baseline（推奨）にするか、Chrome + Safariにするか。
 7. **Permission promise:** P0前にLevel 1 Permissionを断定せず、Input Monitoring/Screen Recordingは要求しない方針でよいか。

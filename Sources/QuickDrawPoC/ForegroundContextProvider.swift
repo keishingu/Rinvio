@@ -106,6 +106,15 @@ final class ForegroundApplicationProvider: ForegroundApplicationProviding {
       == application.processIdentifier
   }
 
+  func isPotentialQuickDrawTargetForeground() -> Bool {
+    guard let bundleIdentifier = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else {
+      return false
+    }
+    return ActionRouter.teamsBundleIdentifiers.contains(bundleIdentifier)
+      || ActionRouter.zoomBundleIdentifiers.contains(bundleIdentifier)
+      || ActionRouter.chromeBundleIdentifiers.contains(bundleIdentifier)
+  }
+
   private static func snapshot(_ application: NSRunningApplication) -> ApplicationSnapshot {
     ApplicationSnapshot(
       processIdentifier: application.processIdentifier,

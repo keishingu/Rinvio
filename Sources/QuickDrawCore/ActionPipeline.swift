@@ -89,10 +89,32 @@ public enum ActionPipelineOutcome: Equatable, Sendable {
     case .failed: nil
     }
   }
+
+  public var consumesTrigger: Bool {
+    switch self {
+    case .delivered, .dryRun:
+      true
+    case .failed(let failure):
+      switch failure {
+      case .noForegroundApplication, .browserContextUnavailable:
+        false
+      case .routing(let routingFailure):
+        switch routingFailure {
+        case .missingBundleIdentifier, .browserContextUnavailable, .unsupportedWebPage,
+          .unsupportedApplication:
+          false
+        case .unsupportedAction:
+          true
+        }
+      case .targetChanged, .shortcutDeliveryFailed:
+        true
+      }
+    }
+  }
 }
 
 public struct ActionPipelineReport: Equatable, Sendable {
-  public let action: MeetingAction
+  public let action: Action
   public let mode: ActionExecutionMode
   public let application: ApplicationSnapshot?
   public let browserClassification: BrowserClassification?
@@ -100,7 +122,7 @@ public struct ActionPipelineReport: Equatable, Sendable {
   public let latencyNanoseconds: UInt64
 
   public init(
-    action: MeetingAction,
+    action: Action,
     mode: ActionExecutionMode,
     application: ApplicationSnapshot?,
     browserClassification: BrowserClassification?,
@@ -141,7 +163,7 @@ public final class ActionPipeline {
     self.uptimeProvider = uptimeProvider
   }
 
-  public func run(action: MeetingAction, mode: ActionExecutionMode) -> ActionPipelineReport {
+  public func run(action: Action, mode: ActionExecutionMode) -> ActionPipelineReport {
     let startedAt = uptimeProvider.nowNanoseconds()
 
     guard let application = applicationProvider.foregroundApplication() else {
@@ -159,7 +181,9 @@ public final class ActionPipeline {
     var activeTabURL: URL?
     var browserClassification: BrowserClassification?
 
-    if bundleIdentifier.map(ActionRouter.chromeBundleIdentifiers.contains) == true {
+    if action.domain == .meeting,
+      bundleIdentifier.map(ActionRouter.chromeBundleIdentifiers.contains) == true
+    {
       do {
         activeTabURL = try activeTabProvider.activeTabURL()
         browserClassification = Self.classifyBrowserURL(activeTabURL)
@@ -247,7 +271,7 @@ public final class ActionPipeline {
 
   private func report(
     startedAt: UInt64,
-    action: MeetingAction,
+    action: Action,
     mode: ActionExecutionMode,
     application: ApplicationSnapshot?,
     browserClassification: BrowserClassification?,

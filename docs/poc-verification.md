@@ -19,7 +19,9 @@
 | Event sequence | one matching key-down/key-up pair with source marker | Pass |
 | Privacy | reports retain Meet classification but not active-tab URL or non-Meet host | Pass |
 | Latency guard | 1,000 in-process Dry Runs, p95 under 25 ms | Pass |
-| Global Triggers | F6 / F7 / F8 registered without Input Monitoring | Pass |
+| Global Triggers | 15 unique `⌘⌥` Triggers monitored by CGEventTap; unsupported app/page outcomes pass through | Pass |
+| Generated-event suppression | QuickDraw source marker bypasses Trigger matching | Pass |
+| Shortcut conflicts | Known macOS catalog + enabled `AppleSymbolicHotKeys` best-effort detection | Pass |
 | Menu Bar process | App remains resident as `LSUIElement` | Pass |
 | Native configuration window | Action-first split view, mapping inspector, Applications and Diagnostics navigation | Pass |
 | Window interactions | Sidebar navigation and Inspector show/hide verified with macOS Accessibility tree | Pass |
@@ -29,7 +31,7 @@
 | Configuration persistence | Versioned JSON round-trip and defaults-not-copied behavior | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
-| Tests | `swift test`: 41 tests, 0 failures | Pass |
+| Tests | `swift test`: 43 tests, 0 failures | Pass |
 | Idle resources | 43 seconds idle: CPU 0.0%, RSS about 20 MB | Pass (single observation) |
 
 ## Installed application identities
@@ -42,13 +44,13 @@
 
 ## Permission finding
 
-The clean launch result was:
+The original Carbon baseline was:
 
 ```text
 QuickDraw PoC started hotkeys=F6,F7,F8 postEventAccess=false
 ```
 
-This confirms that F6/F7/F8 registration succeeds without granting post-event access. Shortcut delivery remains disabled until the user grants Accessibility permission. Input Monitoring was not requested.
+The current implementation uses a modifying CGEventTap so unsupported applications can receive the original key event instead of having it swallowed by a global Carbon registration. The signed build successfully created the event tap with the existing Accessibility grant. A clean-account matrix must still confirm whether a separate Input Monitoring prompt appears on each supported macOS release.
 
 Dry Run can validate foreground detection, browser classification, routing, and expected shortcut without Accessibility permission. Chrome tab detection can still cause an Automation prompt because it uses Apple Events.
 
@@ -56,12 +58,16 @@ Dry Run can validate foreground detection, browser classification, routing, and 
 
 ### Confirmed live
 
-- 2026-08-09: Zoom Workplace foreground meeting toggled mute through `Control+6 → Karabiner F6 → QuickDraw → ⌘⇧A`.
+- 2026-08-09: Signed CGEventTap build started with all 15 `⌘⌥` Triggers active and displayed known conflicts for `⌘⌥M/C/H/L/I` in Japanese and English.
+- A physical `⌘⌥L` event was captured while Zoom was foreground; QuickDraw routed it to Captions, detected that Zoom has no mapping, and did not deliver an application shortcut.
+- Non-Meet/unsupported-app passthrough and generated-event suppression are covered by policy/unit tests; physical passthrough and successful `⌘⌥M` delivery still require one manual check.
+
+- 2026-08-09 (previous Carbon/F-key build): Zoom Workplace foreground meeting toggled mute through `Control+6 → Karabiner F6 → QuickDraw → ⌘⇧A`.
 - QuickDraw recorded two successful deliveries at 9.6 ms and 4.5 ms.
 - When Karabiner modifications were disabled, `Control+6` correctly did not reach QuickDraw as F6; enabling the active profile restored the route.
-- 2026-08-09: Google Meet in the active Chrome tab toggled mute through `F6 → QuickDraw → ⌘D`.
+- 2026-08-09 (previous Carbon/F-key build): Google Meet in the active Chrome tab toggled mute through `F6 → QuickDraw → ⌘D`.
 - Normal Meet deliveries completed in 17.5–37.7 ms. The first Apple Events call took 7.3 seconds and queued three repeated F6 deliveries. After adding a pressed/released gate, a controlled two-second trigger hold produced exactly one `⌘D` delivery in live verification.
-- 2026-08-09: New Microsoft Teams foreground meeting toggled mute through `F6 → QuickDraw → ⌘⇧M`.
+- 2026-08-09 (previous Carbon/F-key build): New Microsoft Teams foreground meeting toggled mute through `F6 → QuickDraw → ⌘⇧M`.
 - QuickDraw recorded eight successful Teams deliveries at 0.5–3.4 ms using bundle identifier `com.microsoft.teams2`.
 
 The following cannot be truthfully marked verified without user permission and active meetings:
