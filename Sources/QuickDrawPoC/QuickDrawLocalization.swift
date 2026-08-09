@@ -1,4 +1,5 @@
 import Foundation
+import QuickDrawCore
 
 enum AppLanguage: String, CaseIterable, Identifiable {
   case japanese = "ja"
@@ -44,7 +45,9 @@ struct QuickDrawCopy {
   var hideInspector: String { text("インスペクタを隠す", "Hide Inspector") }
   var quickDrawEnabled: String { text("QuickDrawは有効です", "QuickDraw is enabled") }
   var quickDrawPaused: String { text("QuickDrawは停止中です", "QuickDraw is paused") }
-  var f6Mute: String { text("F6 → ミュート", "F6 → Mute") }
+  var shortcutSummary: String {
+    text("F6 ミュート · F7 カメラ · F8 挙手", "F6 Mute · F7 Camera · F8 Raise Hand")
+  }
 
   var actions: String { text("アクション", "Actions") }
   var applications: String { text("アプリケーション", "Applications") }
@@ -54,15 +57,15 @@ struct QuickDrawCopy {
     text("1つの操作を、対応アプリごとの操作へ変換します。", "One action, translated for every supported application.")
   }
   var meetingControls: String { text("会議コントロール", "Meeting controls") }
-  var muteToggle: String { text("ミュート切替", "Mute Toggle") }
-  var muteDescription: String {
-    text("現在の会議をミュート／ミュート解除します", "Mute or unmute the active meeting")
-  }
   var applicationsSubtitle: String {
-    text("各アプリでミュートがどう実行されるか確認できます。", "See how Mute is executed in each target.")
+    text(
+      "各アプリでActionがどう実行されるか確認できます。",
+      "See how each Action is executed in every target."
+    )
   }
   var detected: String { text("検出済み", "Detected") }
   var notInstalled: String { text("未インストール", "Not installed") }
+  var threeActions: String { text("3つのAction", "3 Actions") }
 
   var diagnosticsSubtitle: String {
     text(
@@ -75,7 +78,7 @@ struct QuickDrawCopy {
   var target: String { text("対象", "Target") }
   var result: String { text("結果", "Result") }
   var globalShortcut: String { text("グローバルショートカット", "Global shortcut") }
-  var f6Registered: String { text("F6 登録済み", "F6 registered") }
+  var hotKeysRegistered: String { text("F6／F7／F8 登録済み", "F6/F7/F8 registered") }
   var unavailable: String { text("利用不可", "Unavailable") }
   var recentRoutingLog: String { text("最近のルーティングログ", "Recent routing log") }
   var refresh: String { text("更新", "Refresh") }
@@ -85,8 +88,8 @@ struct QuickDrawCopy {
   var trigger: String { text("トリガー", "Trigger") }
   var triggerEditingDescription: String {
     text(
-      "F6ルートの安定化後に、トリガー編集へ対応します。",
-      "Trigger editing will follow after the fixed F6 route is hardened."
+      "Level 1の実行経路を安定化した後に、トリガー編集へ対応します。",
+      "Trigger editing will follow after the Level 1 routes are hardened."
     )
   }
   var applicationMappings: String { text("アプリごとのマッピング", "Application mappings") }
@@ -102,7 +105,7 @@ struct QuickDrawCopy {
     text("最後に使ったアプリでテスト", "Test Last Active Application")
   }
   var identity: String { text("識別情報", "Identity") }
-  var muteMapping: String { text("ミュートのマッピング", "Mute mapping") }
+  var actionMappings: String { text("Actionのマッピング", "Action mappings") }
   var capability: String { text("対応状況", "Capability") }
   var supported: String { text("対応済み", "Supported") }
   var method: String { text("実行方式", "Method") }
@@ -136,18 +139,25 @@ struct QuickDrawCopy {
     )
   }
 
-  var menuTitle: String { text("QuickDraw PoC — F6でミュート", "QuickDraw PoC — F6 to Mute") }
+  var menuTitle: String {
+    text("QuickDraw PoC — F6／F7／F8", "QuickDraw PoC — F6/F7/F8")
+  }
   var openQuickDraw: String { text("QuickDrawを開く…", "Open QuickDraw…") }
   var dryRunMenu: String {
-    text("ドライラン（F6でキーを送信しない）", "Dry Run (F6 does not send keys)")
+    text("ドライラン（キーを送信しない）", "Dry Run (does not send keys)")
   }
   var runDryCheckMenu: String {
-    text("最後に使ったアプリでドライラン", "Run Dry Check on Last Active App")
+    text(
+      "最後に使ったアプリでミュートをドライラン",
+      "Run Mute Dry Check on Last Active App"
+    )
   }
   var requestAccessibilityMenu: String {
     text("アクセシビリティを許可…", "Request Accessibility Permission…")
   }
-  var hotKeyRegisteredMenu: String { text("ホットキー: F6 登録済み", "Hotkey: F6 Registered") }
+  var hotKeyRegisteredMenu: String {
+    text("ホットキー: F6／F7／F8 登録済み", "Hotkeys: F6/F7/F8 Registered")
+  }
   var privacyMenu: String {
     text(
       "プライバシー: Meet判定のみ・キー入力記録なし",
@@ -175,9 +185,33 @@ struct QuickDrawCopy {
     application.id == "googleMeet" ? activeTabAndShortcut : officialKeyboardShortcut
   }
 
-  func localizedStatus(_ status: MuteStatus) -> MuteStatus {
+  func actionName(_ action: MeetingAction) -> String {
+    switch action {
+    case .mute: text("ミュート切替", "Mute Toggle")
+    case .camera: text("カメラ切替", "Camera Toggle")
+    case .raiseHand: text("挙手切替", "Raise Hand Toggle")
+    }
+  }
+
+  func actionDescription(_ action: MeetingAction) -> String {
+    switch action {
+    case .mute:
+      text("現在の会議をミュート／ミュート解除します", "Mute or unmute the active meeting")
+    case .camera:
+      text("現在の会議でカメラをオン／オフします", "Turn the camera on or off in the active meeting")
+    case .raiseHand:
+      text("現在の会議で挙手／挙手解除します", "Raise or lower your hand in the active meeting")
+    }
+  }
+
+  func mappingTitle(_ action: MeetingAction) -> String {
+    text("\(actionName(action))のマッピング", "\(actionName(action)) mapping")
+  }
+
+  func localizedStatus(_ status: ActionStatus) -> ActionStatus {
     guard isJapanese else { return status }
-    return MuteStatus(
+    return ActionStatus(
+      action: status.action,
       headline: localizedHeadline(status.headline),
       detail: localizedDetail(status.detail),
       target: status.target == "Not detected" ? "未検出" : status.target,
@@ -188,34 +222,43 @@ struct QuickDrawCopy {
   private func localizedHeadline(_ value: String) -> String {
     switch value {
     case "Starting…": "起動中…"
-    case "Enabled — press F6": "有効 — F6を押してください"
+    case "Enabled — F6/F7/F8 ready": "有効 — F6／F7／F8を使用できます"
     case "Disabled": "停止中"
     case "Dry Run enabled": "ドライランを有効化しました"
     case "Live delivery enabled": "実際のキー送信を有効化しました"
     case "Accessibility granted": "アクセシビリティは許可済みです"
     case "Accessibility permission requested": "アクセシビリティの許可を要求しました"
-    case "Mute delivered": "ミュート操作を送信しました"
     case "Dry Run route matched": "ドライランで経路を確認しました"
+    case "Mute delivered": "ミュート操作を送信しました"
+    case "Camera delivered": "カメラ操作を送信しました"
+    case "Raise Hand delivered": "挙手操作を送信しました"
     case "Mute not delivered": "ミュート操作を送信できませんでした"
-    case "F6 registration failed": "F6を登録できませんでした"
+    case "Camera not delivered": "カメラ操作を送信できませんでした"
+    case "Raise Hand not delivered": "挙手操作を送信できませんでした"
+    case "Global shortcut registration failed": "グローバルショートカットを登録できませんでした"
     default: value
     }
   }
 
   private func localizedDetail(_ value: String) -> String {
     let exact: [String: String] = [
-      "Preparing F6": "F6を準備しています",
+      "Preparing F6/F7/F8": "F6／F7／F8を準備しています",
       "Accessibility: Granted": "アクセシビリティ: 許可済み",
       "Accessibility: Required": "アクセシビリティ: 許可が必要",
-      "Mute routing is paused": "ミュートのルーティングは停止中です",
-      "F6 will route and log without sending a shortcut": "F6でショートカットを送らずに経路だけを記録します",
-      "Return to Teams, Zoom, or Meet and press F6": "Teams、Zoom、Meetへ戻りF6を押してください",
+      "Action routing is paused": "Actionのルーティングは停止中です",
+      "F6/F7/F8 will route and log without sending a shortcut": "F6／F7／F8でショートカットを送らずに経路だけを記録します",
+      "Return to Teams, Zoom, or Meet and press F6, F7, or F8":
+        "Teams、Zoom、Meetへ戻りF6、F7、F8のいずれかを押してください",
       "Enable QuickDraw PoC in System Settings, then try again":
         "システム設定でQuickDraw PoCを有効にして、もう一度お試しください",
     ]
     if let localized = exact[value] { return localized }
-    if value.hasPrefix("Would send ") {
-      return value.replacingOccurrences(of: "Would send ", with: "送信予定: ")
+    if value.contains(" would send ") {
+      return
+        value
+        .replacingOccurrences(of: "Mute would send ", with: "ミュート送信予定: ")
+        .replacingOccurrences(of: "Camera would send ", with: "カメラ送信予定: ")
+        .replacingOccurrences(of: "Raise Hand would send ", with: "挙手送信予定: ")
     }
     return value
   }

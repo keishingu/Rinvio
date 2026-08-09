@@ -4,30 +4,43 @@ import QuickDrawCore
 
 enum GlobalHotKeyError: LocalizedError {
   case eventHandlerInstallationFailed(OSStatus)
-  case registrationFailed(OSStatus)
+  case registrationFailed(action: MeetingAction, status: OSStatus)
 
   var errorDescription: String? {
     switch self {
     case .eventHandlerInstallationFailed(let status):
-      return "Could not install the global hotkey handler (OSStatus \(status))"
-    case .registrationFailed(let status):
-      return "F6 could not be registered (OSStatus \(status))"
+      "Could not install the global hotkey handler (OSStatus \(status))"
+    case .registrationFailed(let action, let status):
+      "\(action.triggerDisplayValue) could not be registered (OSStatus \(status))"
     }
   }
 }
 
 final class GlobalHotKeyRegistrar {
+  private struct HotKeyDefinition {
+    let id: UInt32
+    let action: MeetingAction
+    let keyCode: UInt32
+  }
+
   private static let signature: OSType = 0x5144_5043  // QDPC
-  private static let muteHotKeyID: UInt32 = 1
+  private static let definitions = [
+    HotKeyDefinition(id: 1, action: .mute, keyCode: UInt32(kVK_F6)),
+    HotKeyDefinition(id: 2, action: .camera, keyCode: UInt32(kVK_F7)),
+    HotKeyDefinition(id: 3, action: .raiseHand, keyCode: UInt32(kVK_F8)),
+  ]
 
   private var eventHandlerRef: EventHandlerRef?
-  private var hotKeyRef: EventHotKeyRef?
-  private var handler: (() -> Void)?
-  private var pressGate = TriggerPressGate()
+  private var hotKeyRefs: [EventHotKeyRef] = []
+  private var handler: ((MeetingAction) -> Void)?
+  private var pressGates: [UInt32: TriggerPressGate] = [:]
 
-  func registerF6(handler: @escaping () -> Void) throws {
+  func registerDefaultActions(handler: @escaping (MeetingAction) -> Void) throws {
     unregister()
     self.handler = handler
+    pressGates = Dictionary(
+      uniqueKeysWithValues: Self.definitions.map { ($0.id, TriggerPressGate()) }
+    )
 
     var eventTypes = [
       EventTypeSpec(
@@ -60,7 +73,9 @@ final class GlobalHotKeyRegistrar {
         )
         guard readStatus == noErr,
           hotKeyID.signature == GlobalHotKeyRegistrar.signature,
-          hotKeyID.id == GlobalHotKeyRegistrar.muteHotKeyID
+          let definition = GlobalHotKeyRegistrar.definitions.first(where: {
+            $0.id == hotKeyID.id
+          })
         else {
           return OSStatus(eventNotHandledErr)
         }
@@ -68,13 +83,20 @@ final class GlobalHotKeyRegistrar {
         let registrar = Unmanaged<GlobalHotKeyRegistrar>
           .fromOpaque(userData)
           .takeUnretainedValue()
+        guard var gate = registrar.pressGates[definition.id] else {
+          return OSStatus(eventNotHandledErr)
+        }
+
         switch GetEventKind(event) {
         case UInt32(kEventHotKeyPressed):
-          if registrar.pressGate.shouldInvoke(for: .pressed) {
-            registrar.handler?()
+          let shouldInvoke = gate.shouldInvoke(for: .pressed)
+          registrar.pressGates[definition.id] = gate
+          if shouldInvoke {
+            registrar.handler?(definition.action)
           }
         case UInt32(kEventHotKeyReleased):
-          _ = registrar.pressGate.shouldInvoke(for: .released)
+          _ = gate.shouldInvoke(for: .released)
+          registrar.pressGates[definition.id] = gate
         default:
           return OSStatus(eventNotHandledErr)
         }
@@ -91,36 +113,37 @@ final class GlobalHotKeyRegistrar {
       throw GlobalHotKeyError.eventHandlerInstallationFailed(installStatus)
     }
 
-    let hotKeyID = EventHotKeyID(
-      signature: Self.signature,
-      id: Self.muteHotKeyID
-    )
-    let registrationStatus = RegisterEventHotKey(
-      UInt32(kVK_F6),
-      0,
-      hotKeyID,
-      GetApplicationEventTarget(),
-      0,
-      &hotKeyRef
-    )
+    for definition in Self.definitions {
+      var hotKeyRef: EventHotKeyRef?
+      let hotKeyID = EventHotKeyID(signature: Self.signature, id: definition.id)
+      let status = RegisterEventHotKey(
+        definition.keyCode,
+        0,
+        hotKeyID,
+        GetApplicationEventTarget(),
+        0,
+        &hotKeyRef
+      )
 
-    guard registrationStatus == noErr else {
-      unregister()
-      throw GlobalHotKeyError.registrationFailed(registrationStatus)
+      guard status == noErr, let hotKeyRef else {
+        unregister()
+        throw GlobalHotKeyError.registrationFailed(action: definition.action, status: status)
+      }
+      hotKeyRefs.append(hotKeyRef)
     }
   }
 
   func unregister() {
-    if let hotKeyRef {
+    for hotKeyRef in hotKeyRefs {
       UnregisterEventHotKey(hotKeyRef)
     }
     if let eventHandlerRef {
       RemoveEventHandler(eventHandlerRef)
     }
-    hotKeyRef = nil
+    hotKeyRefs = []
     eventHandlerRef = nil
     handler = nil
-    pressGate = TriggerPressGate()
+    pressGates = [:]
   }
 
   deinit {

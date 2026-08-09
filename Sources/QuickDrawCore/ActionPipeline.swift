@@ -36,7 +36,7 @@ public struct SystemUptimeProvider: UptimeProviding, Sendable {
   }
 }
 
-public enum MuteExecutionMode: String, Equatable, Sendable {
+public enum ActionExecutionMode: String, Equatable, Sendable {
   case live
   case dryRun
 }
@@ -48,68 +48,66 @@ public enum BrowserClassification: String, Equatable, Sendable {
 
   public var displayName: String {
     switch self {
-    case .googleMeet:
-      return "Google Meet"
-    case .other:
-      return "Other web page"
-    case .unavailable:
-      return "Unavailable"
+    case .googleMeet: "Google Meet"
+    case .other: "Other web page"
+    case .unavailable: "Unavailable"
     }
   }
 }
 
-public enum MutePipelineFailure: Error, Equatable, Sendable {
+public enum ActionPipelineFailure: Error, Equatable, Sendable {
   case noForegroundApplication
   case browserContextUnavailable(message: String)
-  case routing(MuteRoutingFailure)
+  case routing(ActionRoutingFailure)
   case targetChanged
   case shortcutDeliveryFailed(message: String)
 
   public var userMessage: String {
     switch self {
     case .noForegroundApplication:
-      return "No foreground application"
+      "No foreground application"
     case .browserContextUnavailable(let message):
-      return message
+      message
     case .routing(let failure):
-      return failure.userMessage
+      failure.userMessage
     case .targetChanged:
-      return "Target changed before shortcut delivery"
+      "Target changed before shortcut delivery"
     case .shortcutDeliveryFailed(let message):
-      return message
+      message
     }
   }
 }
 
-public enum MutePipelineOutcome: Equatable, Sendable {
-  case delivered(MuteRoute)
-  case dryRun(MuteRoute)
-  case failed(MutePipelineFailure)
+public enum ActionPipelineOutcome: Equatable, Sendable {
+  case delivered(ActionRoute)
+  case dryRun(ActionRoute)
+  case failed(ActionPipelineFailure)
 
-  public var route: MuteRoute? {
+  public var route: ActionRoute? {
     switch self {
-    case .delivered(let route), .dryRun(let route):
-      return route
-    case .failed:
-      return nil
+    case .delivered(let route), .dryRun(let route): route
+    case .failed: nil
     }
   }
 }
 
-public struct MutePipelineReport: Equatable, Sendable {
-  public let mode: MuteExecutionMode
+public struct ActionPipelineReport: Equatable, Sendable {
+  public let action: MeetingAction
+  public let mode: ActionExecutionMode
   public let application: ApplicationSnapshot?
   public let browserClassification: BrowserClassification?
-  public let outcome: MutePipelineOutcome
+  public let outcome: ActionPipelineOutcome
   public let latencyNanoseconds: UInt64
 
   public init(
-    mode: MuteExecutionMode,
+    action: MeetingAction,
+    mode: ActionExecutionMode,
     application: ApplicationSnapshot?,
     browserClassification: BrowserClassification?,
-    outcome: MutePipelineOutcome,
+    outcome: ActionPipelineOutcome,
     latencyNanoseconds: UInt64
   ) {
+    self.action = action
     self.mode = mode
     self.application = application
     self.browserClassification = browserClassification
@@ -122,15 +120,15 @@ public struct MutePipelineReport: Equatable, Sendable {
   }
 }
 
-public final class MutePipeline {
-  private let router: MuteRouter
+public final class ActionPipeline {
+  private let router: ActionRouter
   private let applicationProvider: any ForegroundApplicationProviding
   private let activeTabProvider: any ActiveTabURLProviding
   private let shortcutDeliverer: any ShortcutDelivering
   private let uptimeProvider: any UptimeProviding
 
   public init(
-    router: MuteRouter = MuteRouter(),
+    router: ActionRouter = ActionRouter(),
     applicationProvider: any ForegroundApplicationProviding,
     activeTabProvider: any ActiveTabURLProviding,
     shortcutDeliverer: any ShortcutDelivering,
@@ -143,12 +141,13 @@ public final class MutePipeline {
     self.uptimeProvider = uptimeProvider
   }
 
-  public func run(mode: MuteExecutionMode) -> MutePipelineReport {
+  public func run(action: MeetingAction, mode: ActionExecutionMode) -> ActionPipelineReport {
     let startedAt = uptimeProvider.nowNanoseconds()
 
     guard let application = applicationProvider.foregroundApplication() else {
       return report(
         startedAt: startedAt,
+        action: action,
         mode: mode,
         application: nil,
         browserClassification: nil,
@@ -160,19 +159,18 @@ public final class MutePipeline {
     var activeTabURL: URL?
     var browserClassification: BrowserClassification?
 
-    if bundleIdentifier.map(MuteRouter.chromeBundleIdentifiers.contains) == true {
+    if bundleIdentifier.map(ActionRouter.chromeBundleIdentifiers.contains) == true {
       do {
         activeTabURL = try activeTabProvider.activeTabURL()
         browserClassification = Self.classifyBrowserURL(activeTabURL)
       } catch {
         return report(
           startedAt: startedAt,
+          action: action,
           mode: mode,
           application: application,
           browserClassification: .unavailable,
-          outcome: .failed(
-            .browserContextUnavailable(message: error.localizedDescription)
-          )
+          outcome: .failed(.browserContextUnavailable(message: error.localizedDescription))
         )
       }
     }
@@ -182,10 +180,11 @@ public final class MutePipeline {
       activeTabURL: activeTabURL
     )
 
-    switch router.route(context) {
+    switch router.route(action: action, context: context) {
     case .failure(let failure):
       return report(
         startedAt: startedAt,
+        action: action,
         mode: mode,
         application: application,
         browserClassification: browserClassification,
@@ -196,6 +195,7 @@ public final class MutePipeline {
       if mode == .dryRun {
         return report(
           startedAt: startedAt,
+          action: action,
           mode: mode,
           application: application,
           browserClassification: browserClassification,
@@ -206,6 +206,7 @@ public final class MutePipeline {
       guard applicationProvider.isStillForeground(application) else {
         return report(
           startedAt: startedAt,
+          action: action,
           mode: mode,
           application: application,
           browserClassification: browserClassification,
@@ -217,6 +218,7 @@ public final class MutePipeline {
         try shortcutDeliverer.deliver(route.shortcut)
         return report(
           startedAt: startedAt,
+          action: action,
           mode: mode,
           application: application,
           browserClassification: browserClassification,
@@ -225,21 +227,18 @@ public final class MutePipeline {
       } catch {
         return report(
           startedAt: startedAt,
+          action: action,
           mode: mode,
           application: application,
           browserClassification: browserClassification,
-          outcome: .failed(
-            .shortcutDeliveryFailed(message: error.localizedDescription)
-          )
+          outcome: .failed(.shortcutDeliveryFailed(message: error.localizedDescription))
         )
       }
     }
   }
 
   private static func classifyBrowserURL(_ url: URL?) -> BrowserClassification {
-    guard let url else {
-      return .unavailable
-    }
+    guard let url else { return .unavailable }
     return url.scheme?.lowercased() == "https"
       && url.host?.lowercased() == "meet.google.com"
       ? .googleMeet
@@ -248,13 +247,15 @@ public final class MutePipeline {
 
   private func report(
     startedAt: UInt64,
-    mode: MuteExecutionMode,
+    action: MeetingAction,
+    mode: ActionExecutionMode,
     application: ApplicationSnapshot?,
     browserClassification: BrowserClassification?,
-    outcome: MutePipelineOutcome
-  ) -> MutePipelineReport {
+    outcome: ActionPipelineOutcome
+  ) -> ActionPipelineReport {
     let finishedAt = uptimeProvider.nowNanoseconds()
-    return MutePipelineReport(
+    return ActionPipelineReport(
+      action: action,
       mode: mode,
       application: application,
       browserClassification: browserClassification,

@@ -3,21 +3,22 @@ import Foundation
 import OSLog
 import QuickDrawCore
 
-struct MuteStatus {
+struct ActionStatus {
+  let action: MeetingAction?
   let headline: String
   let detail: String
   let target: String
   let isError: Bool
 }
 
-final class MuteController {
-  var onStatusChange: ((MuteStatus) -> Void)?
+final class ActionController {
+  var onStatusChange: ((ActionStatus) -> Void)?
 
   var isEnabled = true {
     didSet {
       publishStateChange(
-        headline: isEnabled ? "Enabled — press F6" : "Disabled",
-        detail: isEnabled ? permissionSummary : "Mute routing is paused"
+        headline: isEnabled ? "Enabled — F6/F7/F8 ready" : "Disabled",
+        detail: isEnabled ? permissionSummary : "Action routing is paused"
       )
     }
   }
@@ -27,46 +28,45 @@ final class MuteController {
       publishStateChange(
         headline: isDryRunEnabled ? "Dry Run enabled" : "Live delivery enabled",
         detail: isDryRunEnabled
-          ? "F6 will route and log without sending a shortcut"
+          ? "F6/F7/F8 will route and log without sending a shortcut"
           : permissionSummary
       )
     }
   }
 
-  var isHotKeyRegistered = false
+  var areHotKeysRegistered = false
 
   var permissionSummary: String {
-    hasPostEventAccess
-      ? "Accessibility: Granted"
-      : "Accessibility: Required"
+    hasPostEventAccess ? "Accessibility: Granted" : "Accessibility: Required"
   }
 
   var hasPostEventAccess: Bool {
     shortcutExecutor.hasPostEventAccess
   }
 
-  private let pipeline: MutePipeline
+  private let pipeline: ActionPipeline
   private let shortcutExecutor: ShortcutExecutor
-  private var recentReports: [MutePipelineReport] = []
+  private var recentReports: [ActionPipelineReport] = []
   private var lastTarget = "Not detected"
+  private var lastAction: MeetingAction?
   private let logger = Logger(
     subsystem: Bundle.main.bundleIdentifier ?? "dev.actionrouter.quickdraw-poc",
-    category: "mute-routing"
+    category: "action-routing"
   )
 
-  init(pipeline: MutePipeline, shortcutExecutor: ShortcutExecutor) {
+  init(pipeline: ActionPipeline, shortcutExecutor: ShortcutExecutor) {
     self.pipeline = pipeline
     self.shortcutExecutor = shortcutExecutor
   }
 
-  func triggerMute(forceDryRun: Bool = false) {
+  func trigger(_ action: MeetingAction, forceDryRun: Bool = false) {
     guard isEnabled else {
-      logger.debug("Mute trigger ignored because QuickDraw is disabled")
+      logger.debug("Action trigger ignored because QuickDraw is disabled")
       return
     }
 
-    let mode: MuteExecutionMode = forceDryRun || isDryRunEnabled ? .dryRun : .live
-    let report = pipeline.run(mode: mode)
+    let mode: ActionExecutionMode = forceDryRun || isDryRunEnabled ? .dryRun : .live
+    let report = pipeline.run(action: action, mode: mode)
     record(report)
     publish(report)
   }
@@ -77,7 +77,7 @@ final class MuteController {
     publishStateChange(
       headline: granted ? "Accessibility granted" : "Accessibility permission requested",
       detail: granted
-        ? "Return to Teams, Zoom, or Meet and press F6"
+        ? "Return to Teams, Zoom, or Meet and press F6, F7, or F8"
         : "Enable QuickDraw PoC in System Settings, then try again",
       isError: !granted
     )
@@ -88,10 +88,11 @@ final class MuteController {
     var lines = [
       "QuickDraw PoC Diagnostics",
       "generatedAt=\(ISO8601DateFormatter().string(from: Date()))",
-      "hotkey.F6=\(isHotKeyRegistered ? "registered" : "notRegistered")",
+      "hotkeys.F6-F8=\(areHotKeysRegistered ? "registered" : "notRegistered")",
       "enabled=\(isEnabled)",
       "mode=\(isDryRunEnabled ? "dryRun" : "live")",
       "postEventAccess=\(hasPostEventAccess)",
+      "lastAction=\(lastAction?.rawValue ?? "none")",
       "lastTarget=\(lastTarget)",
       "recentReports=\(recentReports.count)",
     ]
@@ -103,7 +104,7 @@ final class MuteController {
     return lines.joined(separator: "\n")
   }
 
-  private func record(_ report: MutePipelineReport) {
+  private func record(_ report: ActionPipelineReport) {
     recentReports.insert(report, at: 0)
     if recentReports.count > 20 {
       recentReports.removeLast(recentReports.count - 20)
@@ -112,31 +113,34 @@ final class MuteController {
     let application = report.application?.bundleIdentifier ?? "unknown"
     let browser = report.browserClassification?.rawValue ?? "notBrowser"
     let latency = String(format: "%.1f", report.latencyMilliseconds)
+    let action = report.action.rawValue
 
     switch report.outcome {
     case .delivered(let route):
       logger.info(
-        "Mute delivered target=\(route.target.rawValue, privacy: .public) application=\(application, privacy: .public) browser=\(browser, privacy: .public) method=shortcut shortcut=\(route.shortcut.displayValue, privacy: .public) latencyMs=\(latency, privacy: .public)"
+        "Action delivered action=\(action, privacy: .public) target=\(route.target.rawValue, privacy: .public) application=\(application, privacy: .public) browser=\(browser, privacy: .public) method=shortcut shortcut=\(route.shortcut.displayValue, privacy: .public) latencyMs=\(latency, privacy: .public)"
       )
     case .dryRun(let route):
       logger.info(
-        "Mute dry-run target=\(route.target.rawValue, privacy: .public) application=\(application, privacy: .public) browser=\(browser, privacy: .public) shortcut=\(route.shortcut.displayValue, privacy: .public) latencyMs=\(latency, privacy: .public)"
+        "Action dry-run action=\(action, privacy: .public) target=\(route.target.rawValue, privacy: .public) application=\(application, privacy: .public) browser=\(browser, privacy: .public) shortcut=\(route.shortcut.displayValue, privacy: .public) latencyMs=\(latency, privacy: .public)"
       )
     case .failed(let failure):
       logger.error(
-        "Mute failed reason=\(failure.userMessage, privacy: .public) application=\(application, privacy: .public) browser=\(browser, privacy: .public) latencyMs=\(latency, privacy: .public)"
+        "Action failed action=\(action, privacy: .public) reason=\(failure.userMessage, privacy: .public) application=\(application, privacy: .public) browser=\(browser, privacy: .public) latencyMs=\(latency, privacy: .public)"
       )
     }
   }
 
-  private func publish(_ report: MutePipelineReport) {
+  private func publish(_ report: ActionPipelineReport) {
     let latency = String(format: "%.1f ms", report.latencyMilliseconds)
+    lastAction = report.action
 
     switch report.outcome {
     case .delivered(let route):
       lastTarget = route.target.displayName
       publish(
-        headline: "Mute delivered",
+        action: report.action,
+        headline: "\(report.action.displayName) delivered",
         detail: "\(route.shortcut.displayValue) · \(latency)",
         target: route.target.displayName,
         isError: false
@@ -145,8 +149,10 @@ final class MuteController {
     case .dryRun(let route):
       lastTarget = route.target.displayName
       publish(
+        action: report.action,
         headline: "Dry Run route matched",
-        detail: "Would send \(route.shortcut.displayValue) · \(latency)",
+        detail:
+          "\(report.action.displayName) would send \(route.shortcut.displayValue) · \(latency)",
         target: route.target.displayName,
         isError: false
       )
@@ -154,7 +160,8 @@ final class MuteController {
     case .failed(let failure):
       lastTarget = targetDescription(report)
       publish(
-        headline: "Mute not delivered",
+        action: report.action,
+        headline: "\(report.action.displayName) not delivered",
         detail: "\(failure.userMessage) · \(latency)",
         target: lastTarget,
         isError: true
@@ -168,6 +175,7 @@ final class MuteController {
     isError: Bool = false
   ) {
     publish(
+      action: lastAction,
       headline: headline,
       detail: detail,
       target: lastTarget,
@@ -176,13 +184,15 @@ final class MuteController {
   }
 
   private func publish(
+    action: MeetingAction?,
     headline: String,
     detail: String,
     target: String,
     isError: Bool
   ) {
     onStatusChange?(
-      MuteStatus(
+      ActionStatus(
+        action: action,
         headline: headline,
         detail: detail,
         target: target,
@@ -191,14 +201,14 @@ final class MuteController {
     )
   }
 
-  private func targetDescription(_ report: MutePipelineReport) -> String {
+  private func targetDescription(_ report: ActionPipelineReport) -> String {
     if let browser = report.browserClassification {
       return browser.displayName
     }
     return report.application?.bundleIdentifier ?? "Not detected"
   }
 
-  private func diagnosticLine(_ report: MutePipelineReport) -> String {
+  private func diagnosticLine(_ report: ActionPipelineReport) -> String {
     let application = report.application?.bundleIdentifier ?? "unknown"
     let browser = report.browserClassification?.rawValue ?? "notBrowser"
     let latency = String(format: "%.1fms", report.latencyMilliseconds)
@@ -214,6 +224,6 @@ final class MuteController {
     }
 
     return
-      "mode=\(report.mode.rawValue) application=\(application) browser=\(browser) \(outcome) latency=\(latency)"
+      "action=\(report.action.rawValue) mode=\(report.mode.rawValue) application=\(application) browser=\(browser) \(outcome) latency=\(latency)"
   }
 }

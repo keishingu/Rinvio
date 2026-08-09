@@ -14,7 +14,7 @@ enum ShortcutExecutionError: LocalizedError {
     case .eventSourceUnavailable:
       return "A keyboard event source could not be created"
     case .eventCreationFailed:
-      return "The mute shortcut event could not be created"
+      return "The application shortcut event could not be created"
     }
   }
 }

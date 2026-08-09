@@ -18,7 +18,29 @@ mkdir -p "$app_bundle/Contents/MacOS"
 cp "$binary_path" "$app_bundle/Contents/MacOS/QuickDrawPoC"
 cp "$project_root/AppResources/Info.plist" "$app_bundle/Contents/Info.plist"
 
-identity="${QUICKDRAW_CODE_SIGN_IDENTITY:--}"
-codesign --force --sign "$identity" --identifier dev.actionrouter.quickdraw-poc "$app_bundle"
+if [[ -n "${QUICKDRAW_CODE_SIGN_IDENTITY:-}" ]]; then
+    identity="$QUICKDRAW_CODE_SIGN_IDENTITY"
+else
+    identity="$(
+        security find-identity -v -p codesigning 2>/dev/null \
+            | sed -n 's/.*"\(Apple Development:[^"]*\)"/\1/p' \
+            | head -n 1
+    )"
+    identity="${identity:--}"
+fi
+
+codesign \
+    --force \
+    --sign "$identity" \
+    --identifier dev.actionrouter.quickdraw-poc \
+    --timestamp=none \
+    "$app_bundle"
+
+if [[ "$identity" == "-" ]]; then
+    echo "Warning: no Apple Development identity found; using ad-hoc signing." >&2
+    echo "Accessibility permission may need to be granted again after rebuilding." >&2
+else
+    echo "Signed with: $identity" >&2
+fi
 
 echo "$app_bundle"

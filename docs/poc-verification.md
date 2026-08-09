@@ -1,4 +1,4 @@
-# QuickDraw Mute PoC Verification
+# QuickDraw Level 1 PoC Verification
 
 - Date: 2026-08-08
 - Build environment: Xcode 26.3 / Swift 6.2.4 / arm64
@@ -8,16 +8,16 @@
 
 | Requirement | Evidence | Result |
 |---|---|---|
-| Teams route | `com.microsoft.teams2` / `com.microsoft.teams` → `⌘⇧M` unit tests | Pass |
-| Zoom route | `us.zoom.xos` → `⌘⇧A` unit test | Pass |
-| Meet route | Chrome + exact HTTPS `meet.google.com` → `⌘D` unit test | Pass |
+| Teams routes | Mute `⌘⇧M`, Camera `⌘⇧O`, Raise Hand `⌘⇧K` | Pass |
+| Zoom routes | Mute `⌘⇧A`, Camera `⌘⇧V`, Raise Hand `⌥Y` | Pass |
+| Meet routes | Mute `⌘D`, Camera `⌘E`, Raise Hand `⌃⌘H` on exact HTTPS `meet.google.com` | Pass |
 | Fail closed | fake Meet host, HTTP Meet, non-Meet tab, unsupported app, missing context | Pass |
 | Full pipeline | routing, target revalidation, delivery, and injected failures | Pass |
 | Dry Run | route is resolved without revalidation or shortcut delivery | Pass |
 | Event sequence | one matching key-down/key-up pair with source marker | Pass |
 | Privacy | reports retain Meet classification but not active-tab URL or non-Meet host | Pass |
 | Latency guard | 1,000 in-process Dry Runs, p95 under 25 ms | Pass |
-| Global Trigger | Launch log: `hotkey=F6` | Pass |
+| Global Triggers | F6 / F7 / F8 registered without Input Monitoring | Pass |
 | Menu Bar process | App remains resident as `LSUIElement` | Pass |
 | Native configuration window | Action-first split view, mapping inspector, Applications and Diagnostics navigation | Pass |
 | Window interactions | Sidebar navigation and Inspector show/hide verified with macOS Accessibility tree | Pass |
@@ -40,10 +40,10 @@
 The clean launch result was:
 
 ```text
-QuickDraw PoC started hotkey=F6 postEventAccess=false
+QuickDraw PoC started hotkeys=F6,F7,F8 postEventAccess=false
 ```
 
-This confirms that F6 registration succeeds without granting post-event access. Shortcut delivery remains disabled until the user grants Accessibility permission. Input Monitoring was not requested.
+This confirms that F6/F7/F8 registration succeeds without granting post-event access. Shortcut delivery remains disabled until the user grants Accessibility permission. Input Monitoring was not requested.
 
 Dry Run can validate foreground detection, browser classification, routing, and expected shortcut without Accessibility permission. Chrome tab detection can still cause an Automation prompt because it uses Apple Events.
 
@@ -61,6 +61,7 @@ Dry Run can validate foreground detection, browser classification, routing, and 
 
 The following cannot be truthfully marked verified without user permission and active meetings:
 
+- Camera and Raise Hand live delivery in Teams, Zoom, and Meet.
 - Thirty-cycle duplicate/stuck-modifier/focus-theft matrix for each target.
 
 Follow the matrix in the root `README.md`. A delivered result appears in the menu and in Console under subsystem `dev.actionrouter.quickdraw-poc`.

@@ -2,45 +2,47 @@ import Foundation
 import QuickDrawCore
 import XCTest
 
-final class MutePipelineTests: XCTestCase {
-  func testTeamsLiveRunDeliversExpectedShortcut() {
+final class ActionPipelineTests: XCTestCase {
+  func testTeamsLiveRunDeliversRequestedAction() {
     let fixture = makeFixture(bundleIdentifier: "com.microsoft.teams2")
 
-    let report = fixture.pipeline.run(mode: .live)
+    let report = fixture.pipeline.run(action: .camera, mode: .live)
 
+    XCTAssertEqual(report.action, .camera)
     XCTAssertEqual(report.outcome.route?.target, .microsoftTeams)
-    XCTAssertEqual(fixture.deliverer.shortcuts, [teamsShortcut])
+    XCTAssertEqual(report.outcome.route?.shortcut.displayValue, "⌘⇧O")
+    XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["⌘⇧O"])
     XCTAssertEqual(fixture.applicationProvider.revalidationCount, 1)
     XCTAssertEqual(fixture.activeTabProvider.queryCount, 0)
   }
 
-  func testZoomLiveRunDeliversExpectedShortcut() {
+  func testZoomLiveRunDeliversRequestedAction() {
     let fixture = makeFixture(bundleIdentifier: "us.zoom.xos")
 
-    let report = fixture.pipeline.run(mode: .live)
+    let report = fixture.pipeline.run(action: .raiseHand, mode: .live)
 
     XCTAssertEqual(report.outcome.route?.target, .zoomWorkplace)
-    XCTAssertEqual(fixture.deliverer.shortcuts, [zoomShortcut])
+    XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["⌥Y"])
   }
 
-  func testMeetLiveRunQueriesTabAndDeliversExpectedShortcut() {
+  func testMeetLiveRunQueriesTabAndDeliversRequestedAction() {
     let fixture = makeFixture(
       bundleIdentifier: "com.google.Chrome",
       activeTabURL: URL(string: "https://meet.google.com/abc-defg-hij?authuser=1")!
     )
 
-    let report = fixture.pipeline.run(mode: .live)
+    let report = fixture.pipeline.run(action: .camera, mode: .live)
 
     XCTAssertEqual(report.outcome.route?.target, .googleMeet)
     XCTAssertEqual(report.browserClassification, .googleMeet)
     XCTAssertEqual(fixture.activeTabProvider.queryCount, 1)
-    XCTAssertEqual(fixture.deliverer.shortcuts, [meetShortcut])
+    XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["⌘E"])
   }
 
   func testNonBrowserTargetDoesNotQueryActiveTab() {
     let fixture = makeFixture(bundleIdentifier: "com.microsoft.teams2")
 
-    _ = fixture.pipeline.run(mode: .dryRun)
+    _ = fixture.pipeline.run(action: .mute, mode: .dryRun)
 
     XCTAssertEqual(fixture.activeTabProvider.queryCount, 0)
   }
@@ -48,10 +50,9 @@ final class MutePipelineTests: XCTestCase {
   func testDryRunRoutesWithoutRevalidationOrDelivery() {
     let fixture = makeFixture(bundleIdentifier: "us.zoom.xos")
 
-    let report = fixture.pipeline.run(mode: .dryRun)
+    let report = fixture.pipeline.run(action: .mute, mode: .dryRun)
 
-    XCTAssertEqual(
-      report.outcome, .dryRun(MuteRoute(target: .zoomWorkplace, shortcut: zoomShortcut)))
+    XCTAssertEqual(report.outcome.route?.shortcut.displayValue, "⌘⇧A")
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
     XCTAssertEqual(fixture.applicationProvider.revalidationCount, 0)
   }
@@ -62,7 +63,7 @@ final class MutePipelineTests: XCTestCase {
       isStillForeground: false
     )
 
-    let report = fixture.pipeline.run(mode: .live)
+    let report = fixture.pipeline.run(action: .mute, mode: .live)
 
     XCTAssertEqual(report.outcome, .failed(.targetChanged))
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
@@ -74,7 +75,7 @@ final class MutePipelineTests: XCTestCase {
       activeTabError: TestError.browserUnavailable
     )
 
-    let report = fixture.pipeline.run(mode: .live)
+    let report = fixture.pipeline.run(action: .raiseHand, mode: .live)
 
     XCTAssertEqual(report.browserClassification, .unavailable)
     guard case .failed(.browserContextUnavailable(let message)) = report.outcome else {
@@ -90,7 +91,7 @@ final class MutePipelineTests: XCTestCase {
       deliveryError: TestError.deliveryDenied
     )
 
-    let report = fixture.pipeline.run(mode: .live)
+    let report = fixture.pipeline.run(action: .camera, mode: .live)
 
     guard case .failed(.shortcutDeliveryFailed(let message)) = report.outcome else {
       return XCTFail("Expected shortcut delivery failure")
@@ -101,7 +102,7 @@ final class MutePipelineTests: XCTestCase {
   func testUnsupportedApplicationFailsWithoutDelivery() {
     let fixture = makeFixture(bundleIdentifier: "com.apple.TextEdit")
 
-    let report = fixture.pipeline.run(mode: .live)
+    let report = fixture.pipeline.run(action: .mute, mode: .live)
 
     XCTAssertEqual(
       report.outcome,
@@ -113,20 +114,19 @@ final class MutePipelineTests: XCTestCase {
   func testMissingForegroundApplicationIsReported() {
     let fixture = makeFixture(bundleIdentifier: nil, hasApplication: false)
 
-    let report = fixture.pipeline.run(mode: .live)
+    let report = fixture.pipeline.run(action: .mute, mode: .live)
 
     XCTAssertEqual(report.outcome, .failed(.noForegroundApplication))
     XCTAssertNil(report.application)
   }
 
   func testReportUsesInjectedClockForLatency() {
-    let clock = TestClock(values: [1_000_000, 4_500_000])
     let fixture = makeFixture(
       bundleIdentifier: "us.zoom.xos",
-      clock: clock
+      clock: TestClock(values: [1_000_000, 4_500_000])
     )
 
-    let report = fixture.pipeline.run(mode: .dryRun)
+    let report = fixture.pipeline.run(action: .mute, mode: .dryRun)
 
     XCTAssertEqual(report.latencyNanoseconds, 3_500_000)
     XCTAssertEqual(report.latencyMilliseconds, 3.5)
@@ -137,24 +137,14 @@ final class MutePipelineTests: XCTestCase {
     var latencies = [Double]()
 
     for _ in 0..<1_000 {
-      latencies.append(fixture.pipeline.run(mode: .dryRun).latencyMilliseconds)
+      latencies.append(
+        fixture.pipeline.run(action: .raiseHand, mode: .dryRun).latencyMilliseconds
+      )
     }
 
     let sorted = latencies.sorted()
     let p95 = sorted[Int(Double(sorted.count - 1) * 0.95)]
     XCTAssertLessThan(p95, 25)
-  }
-
-  private var teamsShortcut: KeyStroke {
-    KeyStroke(virtualKeyCode: 46, modifiers: [.command, .shift], displayValue: "⌘⇧M")
-  }
-
-  private var zoomShortcut: KeyStroke {
-    KeyStroke(virtualKeyCode: 0, modifiers: [.command, .shift], displayValue: "⌘⇧A")
-  }
-
-  private var meetShortcut: KeyStroke {
-    KeyStroke(virtualKeyCode: 2, modifiers: [.command], displayValue: "⌘D")
   }
 
   private func makeFixture(
@@ -174,7 +164,7 @@ final class MutePipelineTests: XCTestCase {
     )
     let activeTabProvider = TestActiveTabProvider(url: activeTabURL, error: activeTabError)
     let deliverer = TestShortcutDeliverer(error: deliveryError)
-    let pipeline = MutePipeline(
+    let pipeline = ActionPipeline(
       applicationProvider: applicationProvider,
       activeTabProvider: activeTabProvider,
       shortcutDeliverer: deliverer,
@@ -190,7 +180,7 @@ final class MutePipelineTests: XCTestCase {
 }
 
 private struct Fixture {
-  let pipeline: MutePipeline
+  let pipeline: ActionPipeline
   let applicationProvider: TestApplicationProvider
   let activeTabProvider: TestActiveTabProvider
   let deliverer: TestShortcutDeliverer
@@ -206,9 +196,7 @@ private final class TestApplicationProvider: ForegroundApplicationProviding {
     shouldRemainForeground = isStillForeground
   }
 
-  func foregroundApplication() -> ApplicationSnapshot? {
-    application
-  }
+  func foregroundApplication() -> ApplicationSnapshot? { application }
 
   func isStillForeground(_ application: ApplicationSnapshot) -> Bool {
     revalidationCount += 1
@@ -228,9 +216,7 @@ private final class TestActiveTabProvider: ActiveTabURLProviding {
 
   func activeTabURL() throws -> URL {
     queryCount += 1
-    if let error {
-      throw error
-    }
+    if let error { throw error }
     return url
   }
 }
@@ -239,28 +225,20 @@ private final class TestShortcutDeliverer: ShortcutDelivering {
   let error: Error?
   private(set) var shortcuts: [KeyStroke] = []
 
-  init(error: Error?) {
-    self.error = error
-  }
+  init(error: Error?) { self.error = error }
 
   func deliver(_ shortcut: KeyStroke) throws {
     shortcuts.append(shortcut)
-    if let error {
-      throw error
-    }
+    if let error { throw error }
   }
 }
 
 private final class TestClock: UptimeProviding {
   private var values: [UInt64]
 
-  init(values: [UInt64]) {
-    self.values = values
-  }
+  init(values: [UInt64]) { self.values = values }
 
-  func nowNanoseconds() -> UInt64 {
-    values.removeFirst()
-  }
+  func nowNanoseconds() -> UInt64 { values.removeFirst() }
 }
 
 private enum TestError: LocalizedError {
@@ -269,10 +247,8 @@ private enum TestError: LocalizedError {
 
   var errorDescription: String? {
     switch self {
-    case .browserUnavailable:
-      return "Browser unavailable"
-    case .deliveryDenied:
-      return "Delivery denied"
+    case .browserUnavailable: "Browser unavailable"
+    case .deliveryDenied: "Delivery denied"
     }
   }
 }

@@ -1,11 +1,12 @@
 import AppKit
+import QuickDrawCore
 import SwiftUI
 
 struct QuickDrawRootView: View {
   @ObservedObject var model: QuickDrawAppModel
 
   @State private var selectedSection: QuickDrawSection? = .actions
-  @State private var selectedActionID: String? = "meeting.mute"
+  @State private var selectedActionID: String? = MeetingAction.mute.rawValue
   @State private var selectedApplicationID: String? = "microsoftTeams"
   @State private var isInspectorPresented = true
 
@@ -21,38 +22,8 @@ struct QuickDrawRootView: View {
     }
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
-        Menu {
-          Picker(
-            model.copy.languageLabel,
-            selection: Binding(
-              get: { model.language },
-              set: model.setLanguage
-            )
-          ) {
-            ForEach(AppLanguage.allCases) { language in
-              Text(language.displayName)
-                .tag(language)
-            }
-          }
-        } label: {
-          Label(model.copy.languageLabel, systemImage: "globe")
-        }
-        .help(model.copy.chooseLanguage)
-
-        HStack(spacing: 7) {
-          Text(model.isEnabled ? model.copy.enabled : model.copy.paused)
-            .foregroundStyle(.secondary)
-          Toggle(
-            "QuickDraw",
-            isOn: Binding(
-              get: { model.isEnabled },
-              set: model.setEnabled
-            )
-          )
-          .labelsHidden()
-          .toggleStyle(.switch)
-        }
-        .help(model.isEnabled ? model.copy.pauseQuickDraw : model.copy.enableQuickDraw)
+        languageMenu
+        enabledToggle
 
         Button {
           isInspectorPresented.toggle()
@@ -66,6 +37,47 @@ struct QuickDrawRootView: View {
     .onAppear {
       model.refreshEnvironment()
     }
+  }
+
+  private var selectedAction: ActionDefinition {
+    model.actions.first { $0.id == selectedActionID } ?? model.actions[0]
+  }
+
+  private var languageMenu: some View {
+    Menu {
+      Picker(
+        model.copy.languageLabel,
+        selection: Binding(
+          get: { model.language },
+          set: model.setLanguage
+        )
+      ) {
+        ForEach(AppLanguage.allCases) { language in
+          Text(language.displayName)
+            .tag(language)
+        }
+      }
+    } label: {
+      Label(model.copy.languageLabel, systemImage: "globe")
+    }
+    .help(model.copy.chooseLanguage)
+  }
+
+  private var enabledToggle: some View {
+    HStack(spacing: 7) {
+      Text(model.isEnabled ? model.copy.enabled : model.copy.paused)
+        .foregroundStyle(.secondary)
+      Toggle(
+        "QuickDraw",
+        isOn: Binding(
+          get: { model.isEnabled },
+          set: model.setEnabled
+        )
+      )
+      .labelsHidden()
+      .toggleStyle(.switch)
+    }
+    .help(model.isEnabled ? model.copy.pauseQuickDraw : model.copy.enableQuickDraw)
   }
 
   private var sidebar: some View {
@@ -84,7 +96,7 @@ struct QuickDrawRootView: View {
         .font(.caption)
         .foregroundStyle(.secondary)
 
-        Text(model.copy.f6Mute)
+        Text(model.copy.shortcutSummary)
           .font(.caption2)
           .foregroundStyle(.tertiary)
       }
@@ -109,12 +121,16 @@ struct QuickDrawRootView: View {
   private var inspector: some View {
     switch selectedSection ?? .actions {
     case .actions:
-      MuteActionInspector(model: model)
+      ActionInspector(definition: selectedAction, model: model)
     case .applications:
       if let application = model.applications.first(where: { $0.id == selectedApplicationID })
         ?? model.applications.first
       {
-        ApplicationInspector(application: application, language: model.language)
+        ApplicationInspector(
+          application: application,
+          actions: model.actions,
+          language: model.language
+        )
       } else {
         ContentUnavailableView(model.copy.noApplications, systemImage: "square.grid.2x2")
       }
@@ -130,17 +146,15 @@ private struct ActionsView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      ContentHeader(
-        title: model.copy.actions,
-        subtitle: model.copy.actionsSubtitle
-      )
-
+      ContentHeader(title: model.copy.actions, subtitle: model.copy.actionsSubtitle)
       Divider()
 
       List(selection: $selection) {
         Section(model.copy.meetingControls) {
-          ActionRow(model: model)
-            .tag("meeting.mute")
+          ForEach(model.actions) { definition in
+            ActionRow(definition: definition, model: model)
+              .tag(definition.id)
+          }
         }
       }
       .listStyle(.inset)
@@ -150,11 +164,12 @@ private struct ActionsView: View {
 }
 
 private struct ActionRow: View {
+  let definition: ActionDefinition
   @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
     HStack(spacing: 14) {
-      Image(systemName: "mic.slash.fill")
+      Image(systemName: definition.systemImage)
         .font(.title2)
         .symbolRenderingMode(.hierarchical)
         .frame(width: 38, height: 38)
@@ -163,14 +178,15 @@ private struct ActionRow: View {
 
       VStack(alignment: .leading, spacing: 4) {
         HStack(spacing: 8) {
-          Text(model.copy.muteToggle)
+          Text(model.copy.actionName(definition.action))
             .font(.headline)
           KeyBadge(
-            text: "F6",
-            accessibilityLabel: "\(model.copy.shortcutAccessibilityPrefix) F6"
+            text: definition.trigger,
+            accessibilityLabel:
+              "\(model.copy.shortcutAccessibilityPrefix) \(definition.trigger)"
           )
         }
-        Text(model.copy.muteDescription)
+        Text(model.copy.actionDescription(definition.action))
           .font(.subheadline)
           .foregroundStyle(.secondary)
       }
@@ -179,7 +195,7 @@ private struct ActionRow: View {
 
       HStack(spacing: 18) {
         ForEach(model.applications) { application in
-          CompactMapping(application: application)
+          CompactMapping(application: application, action: definition.action)
         }
       }
     }
@@ -190,6 +206,7 @@ private struct ActionRow: View {
 
 private struct CompactMapping: View {
   let application: ApplicationMapping
+  let action: MeetingAction
 
   var body: some View {
     HStack(spacing: 7) {
@@ -200,7 +217,7 @@ private struct CompactMapping: View {
         Text(application.compactName)
           .font(.caption)
           .lineLimit(1)
-        Text(application.shortcut)
+        Text(application.shortcut(for: action))
           .font(.caption2.monospaced())
           .foregroundStyle(.secondary)
       }
@@ -215,11 +232,7 @@ private struct ApplicationsView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      ContentHeader(
-        title: model.copy.applications,
-        subtitle: model.copy.applicationsSubtitle
-      )
-
+      ContentHeader(title: model.copy.applications, subtitle: model.copy.applicationsSubtitle)
       Divider()
 
       List(model.applications, selection: $selection) { application in
@@ -241,8 +254,7 @@ private struct ApplicationsView: View {
           Spacer()
 
           VStack(alignment: .trailing, spacing: 3) {
-            Text(application.shortcut)
-              .font(.body.monospaced())
+            Text(model.copy.threeActions)
             Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
               .font(.caption)
               .foregroundStyle(.secondary)
@@ -262,11 +274,7 @@ private struct DiagnosticsView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      ContentHeader(
-        title: model.copy.diagnostics,
-        subtitle: model.copy.diagnosticsSubtitle
-      )
-
+      ContentHeader(title: model.copy.diagnostics, subtitle: model.copy.diagnosticsSubtitle)
       Divider()
 
       Form {
@@ -276,7 +284,8 @@ private struct DiagnosticsView: View {
           LabeledContent(model.copy.result, value: model.localizedStatus.detail)
           LabeledContent(
             model.copy.globalShortcut,
-            value: model.isHotKeyRegistered ? model.copy.f6Registered : model.copy.unavailable
+            value: model.areHotKeysRegistered
+              ? model.copy.hotKeysRegistered : model.copy.unavailable
           )
         }
 
@@ -287,12 +296,8 @@ private struct DiagnosticsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
           HStack {
-            Button(model.copy.refresh) {
-              model.refreshDiagnostics()
-            }
-            Button(model.copy.copyDiagnostics) {
-              copyToPasteboard(model.diagnostics)
-            }
+            Button(model.copy.refresh) { model.refreshDiagnostics() }
+            Button(model.copy.copyDiagnostics) { copyToPasteboard(model.diagnostics) }
           }
         }
       }
@@ -302,20 +307,21 @@ private struct DiagnosticsView: View {
   }
 }
 
-private struct MuteActionInspector: View {
+private struct ActionInspector: View {
+  let definition: ActionDefinition
   @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
     Form {
       Section {
         HStack(spacing: 12) {
-          Image(systemName: "mic.slash.fill")
+          Image(systemName: definition.systemImage)
             .font(.title)
             .symbolRenderingMode(.hierarchical)
             .frame(width: 46, height: 46)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
           VStack(alignment: .leading, spacing: 3) {
-            Text(model.copy.muteToggle)
+            Text(model.copy.actionName(definition.action))
               .font(.title3.weight(.semibold))
             Text(model.copy.meetingControl)
               .foregroundStyle(.secondary)
@@ -326,8 +332,9 @@ private struct MuteActionInspector: View {
       Section(model.copy.trigger) {
         LabeledContent(model.copy.globalShortcut) {
           KeyBadge(
-            text: "F6",
-            accessibilityLabel: "\(model.copy.shortcutAccessibilityPrefix) F6"
+            text: definition.trigger,
+            accessibilityLabel:
+              "\(model.copy.shortcutAccessibilityPrefix) \(definition.trigger)"
           )
         }
         Text(model.copy.triggerEditingDescription)
@@ -337,7 +344,11 @@ private struct MuteActionInspector: View {
 
       Section(model.copy.applicationMappings) {
         ForEach(model.applications) { application in
-          MappingRow(application: application, language: model.language)
+          MappingRow(
+            application: application,
+            action: definition.action,
+            language: model.language
+          )
         }
       }
 
@@ -354,7 +365,7 @@ private struct MuteActionInspector: View {
           .foregroundStyle(.secondary)
 
         Button(model.copy.testLastActiveApplication) {
-          model.runDryCheck()
+          model.runDryCheck(action: definition.action)
         }
         .disabled(!model.isEnabled)
       }
@@ -367,6 +378,7 @@ private struct MuteActionInspector: View {
 
 private struct MappingRow: View {
   let application: ApplicationMapping
+  let action: MeetingAction
   let language: AppLanguage
 
   private var copy: QuickDrawCopy { QuickDrawCopy(language: language) }
@@ -383,7 +395,7 @@ private struct MappingRow: View {
           .foregroundStyle(.secondary)
       }
       Spacer()
-      Text(application.shortcut)
+      Text(application.shortcut(for: action))
         .font(.caption.monospaced())
         .foregroundStyle(.secondary)
     }
@@ -392,6 +404,7 @@ private struct MappingRow: View {
 
 private struct ApplicationInspector: View {
   let application: ApplicationMapping
+  let actions: [ActionDefinition]
   let language: AppLanguage
 
   private var copy: QuickDrawCopy { QuickDrawCopy(language: language) }
@@ -419,10 +432,25 @@ private struct ApplicationInspector: View {
           .textSelection(.enabled)
       }
 
-      Section(copy.muteMapping) {
+      Section(copy.actionMappings) {
+        ForEach(actions) { definition in
+          HStack {
+            Label(
+              copy.actionName(definition.action),
+              systemImage: definition.systemImage
+            )
+            Spacer()
+            Text(application.shortcut(for: definition.action))
+              .font(.caption.monospaced())
+              .foregroundStyle(.secondary)
+          }
+        }
+      }
+
+      Section(copy.method) {
         LabeledContent(copy.capability, value: copy.supported)
-        LabeledContent(copy.method, value: copy.executionDetail(for: application))
-        LabeledContent(copy.shortcut, value: application.shortcut)
+        Text(copy.executionDetail(for: application))
+          .foregroundStyle(.secondary)
       }
     }
     .formStyle(.grouped)
@@ -463,14 +491,10 @@ private struct PermissionSection: View {
         Text(model.copy.permissionDescription)
           .font(.caption)
           .foregroundStyle(.secondary)
-        Button(model.copy.requestPermission) {
-          model.requestAccessibility()
-        }
+        Button(model.copy.requestPermission) { model.requestAccessibility() }
       }
 
-      Button(model.copy.checkAgain) {
-        model.refreshPermission()
-      }
+      Button(model.copy.checkAgain) { model.refreshPermission() }
     }
   }
 }

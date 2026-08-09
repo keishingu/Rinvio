@@ -1,12 +1,14 @@
 # QuickDraw PoC
 
-`F6 → Mute` をForegroundのMicrosoft Teams、Zoom Workplace、Chrome上のGoogle Meetへ配送する縦切りPoCです。
+Level 1の3 ActionをForegroundのMicrosoft Teams、Zoom Workplace、Chrome上のGoogle Meetへ配送する縦切りPoCです。
+
+- `F6 → Mute`
+- `F7 → Camera`
+- `F8 → Raise Hand`
 
 ## Scope
 
-- Microsoft Teams: `⌘⇧M`
-- Zoom Workplace: `⌘⇧A`
-- Google Meet in Google Chrome: `⌘D`
+- Microsoft Teams / Zoom Workplace / Google MeetでMute、Camera、Raise Handを変換
 - Foreground target only
 - Action-first native settings window with an application mapping inspector
 - Live Japanese / English display switching, persisted across launches
@@ -35,25 +37,35 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 ## First run
 
-1. 起動時に表示されるQuickDraw Windowで、Mute ActionとTeams / Zoom / MeetのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
+1. 起動時に表示されるQuickDraw Windowで、3 ActionとTeams / Zoom / MeetのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
    表示言語はToolbarの地球アイコンから日本語／Englishを切り替えられる。
-2. 権限を与える前に確認する場合はMute Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにしてF6を押す。Dry Runはshortcutを送信しない。
+2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにしてF6／F7／F8を押す。Dry Runはshortcutを送信しない。
 3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
 4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。
 5. Google Meetを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
-6. Dry Runを無効にし、対象Application/Meet TabをForegroundにしてF6を押す。
+6. Dry Runを無効にし、対象Application/Meet TabをForegroundにしてF6／F7／F8を押す。
 
-MacのKeyboard設定でF6がsystem functionとして動く場合は、`fn` + `F6`を使うか「Use F1, F2, etc. keys as standard function keys」を有効にします。
+MacのKeyboard設定でFunction Keyがsystem functionとして動く場合は、`fn`を併用するか「Use F1, F2, etc. keys as standard function keys」を有効にします。
+
+## Built-in mappings
+
+| Action | Trigger | Teams | Zoom | Google Meet |
+|---|---|---|---|---|
+| Mute Toggle | F6 | `⌘⇧M` | `⌘⇧A` | `⌘D` |
+| Camera Toggle | F7 | `⌘⇧O` | `⌘⇧V` | `⌘E` |
+| Raise Hand Toggle | F8 | `⌘⇧K` | `⌥Y` | `⌃⌘H` |
+
+既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)の公式資料に基づく。Zoom側で既定ショートカットを変更した場合、現時点ではQuickDraw側の値も一致させる必要があるが、Shortcut Override UIは未実装。
 
 ## Manual verification matrix
 
-各Targetで会議に参加し、unmutedから30回実行して以下を記録します。
+各Targetで会議に参加し、各Actionを30回実行して以下を記録します。
 
-| Target | Foreground condition | Expected | 30 cycles | Focus stolen | Duplicate/stuck key |
+| Target | Foreground condition | Actions | 30 cycles each | Focus stolen | Duplicate/stuck key |
 |---|---|---|---|---|---|
-| Teams | Teams meeting window | `⌘⇧M`相当でtoggle |  |  |  |
-| Zoom | Zoom meeting window | `⌘⇧A`相当でtoggle |  |  |  |
-| Meet | Chrome active tab host = `meet.google.com` | `⌘D`相当でtoggle |  |  |  |
+| Teams | Teams meeting window | Mute / Camera / Raise Hand |  |  |  |
+| Zoom | Zoom meeting window | Mute / Camera / Raise Hand |  |  |  |
+| Meet | Chrome active tab host = `meet.google.com` | Mute / Camera / Raise Hand |  |  |  |
 
 追加のfailure checks:
 
@@ -65,6 +77,6 @@ MacのKeyboard設定でF6がsystem functionとして動く場合は、`fn` + `F6
 
 ## Diagnostics
 
-通常の成功/失敗とlatencyはMenu Barに表示されます。`Copy Diagnostics`で直近20件の判定結果、F6登録、権限状態をコピーできます。詳細はConsole.appでsubsystem `dev.actionrouter.quickdraw-poc` を絞り込みます。
+通常の成功/失敗とlatencyはMenu Barに表示されます。`Copy Diagnostics`で直近20件の判定結果、F6／F7／F8登録、権限状態をコピーできます。詳細はConsole.appでsubsystem `dev.actionrouter.quickdraw-poc` を絞り込みます。
 
 記録対象はAction route、Application bundle ID、Meetか否かの分類、Execution Method、Result、Latencyです。Full URL、Meet以外のhost、Tab title、Meeting code、入力内容は記録しません。

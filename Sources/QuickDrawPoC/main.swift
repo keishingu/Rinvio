@@ -4,7 +4,7 @@ import QuickDrawCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
   private var hotKeyRegistrar: GlobalHotKeyRegistrar?
-  private var muteController: MuteController?
+  private var actionController: ActionController?
   private var statusMenuController: StatusMenuController?
   private var configurationWindowController: ConfigurationWindowController?
   private var appModel: QuickDrawAppModel?
@@ -18,12 +18,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     let foregroundProvider = ForegroundApplicationProvider()
     let shortcutExecutor = ShortcutExecutor()
-    let pipeline = MutePipeline(
+    let pipeline = ActionPipeline(
       applicationProvider: foregroundProvider,
       activeTabProvider: ChromeActiveTabProvider(),
       shortcutDeliverer: shortcutExecutor
     )
-    let controller = MuteController(
+    let controller = ActionController(
       pipeline: pipeline,
       shortcutExecutor: shortcutExecutor
     )
@@ -52,8 +52,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       controller?.isDryRunEnabled = enabled
       menuController?.setDryRun(enabled)
     }
-    model.onRunDryCheck = { [weak controller] in
-      controller?.triggerMute(forceDryRun: true)
+    model.onRunDryCheck = { [weak controller] action in
+      controller?.trigger(action, forceDryRun: true)
     }
     model.onRequestAccessibility = { [weak controller] in
       controller?.requestPostEventAccess()
@@ -79,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       windowController?.present()
     }
     menuController.onRunDryCheck = { [weak controller] in
-      controller?.triggerMute(forceDryRun: true)
+      controller?.trigger(.mute, forceDryRun: true)
     }
     menuController.onRequestAccessibility = { [weak controller] in
       controller?.requestPostEventAccess()
@@ -90,13 +90,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     let registrar = GlobalHotKeyRegistrar()
     do {
-      try registrar.registerF6 { [weak controller] in
-        controller?.triggerMute()
+      try registrar.registerDefaultActions { [weak controller] action in
+        controller?.trigger(action)
       }
-      controller.isHotKeyRegistered = true
-      model.setHotKeyRegistered(true)
-      let initialStatus = MuteStatus(
-        headline: "Enabled — press F6",
+      controller.areHotKeysRegistered = true
+      model.setHotKeysRegistered(true)
+      let initialStatus = ActionStatus(
+        action: nil,
+        headline: "Enabled — F6/F7/F8 ready",
         detail: controller.permissionSummary,
         target: "Not detected",
         isError: !shortcutExecutor.hasPostEventAccess
@@ -111,14 +112,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         diagnostics: controller.diagnosticsText()
       )
       logger.info(
-        "QuickDraw PoC started hotkey=F6 postEventAccess=\(shortcutExecutor.hasPostEventAccess, privacy: .public)"
+        "QuickDraw PoC started hotkeys=F6,F7,F8 postEventAccess=\(shortcutExecutor.hasPostEventAccess, privacy: .public)"
       )
     } catch {
       controller.isEnabled = false
-      model.setHotKeyRegistered(false)
+      model.setHotKeysRegistered(false)
       model.setEnabled(false)
-      let failureStatus = MuteStatus(
-        headline: "F6 registration failed",
+      let failureStatus = ActionStatus(
+        action: nil,
+        headline: "Global shortcut registration failed",
         detail: error.localizedDescription,
         target: "Not detected",
         isError: true
@@ -138,7 +140,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     hotKeyRegistrar = registrar
-    muteController = controller
+    actionController = controller
     statusMenuController = menuController
     configurationWindowController = windowController
     appModel = model

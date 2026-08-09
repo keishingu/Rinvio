@@ -28,9 +28,10 @@ final class StatusMenuController: NSObject {
   private let feedbackDetail = NSTextField(labelWithString: "")
   private let feedbackTarget = NSTextField(labelWithString: "")
   private var language: AppLanguage = .english
-  private var lastStatus = MuteStatus(
+  private var lastStatus = ActionStatus(
+    action: nil,
     headline: "Starting…",
-    detail: "Preparing F6",
+    detail: "Preparing F6/F7/F8",
     target: "Not detected",
     isError: false
   )
@@ -114,7 +115,7 @@ final class StatusMenuController: NSObject {
     applyLanguage()
   }
 
-  func update(status: MuteStatus, hasAccessibilityPermission: Bool) {
+  func update(status: ActionStatus, hasAccessibilityPermission: Bool) {
     lastStatus = status
     lastAccessibilityPermission = hasAccessibilityPermission
     let copy = QuickDrawCopy(language: language)
