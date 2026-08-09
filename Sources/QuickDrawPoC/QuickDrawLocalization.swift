@@ -59,7 +59,11 @@ struct QuickDrawCopy {
   var panelsAndSharing: String { text("パネルと共有", "Panels and sharing") }
   var reactions: String { text("リアクション", "Reactions") }
   var agentSessions: String { text("エージェントセッション", "Agent sessions") }
+  var terminals: String { text("ターミナル", "Terminal") }
+  var commandsAndNavigation: String { text("コマンドと移動", "Commands and navigation") }
   var pageLoading: String { text("ページ読み込み", "Page loading") }
+  var tabs: String { text("タブ", "Tabs") }
+  var browserTools: String { text("ブラウザツール", "Browser tools") }
   var applicationsSubtitle: String {
     text(
       "各アプリでActionがどう実行されるか確認できます。",
@@ -287,7 +291,11 @@ struct QuickDrawCopy {
     case .panelsAndSharing: panelsAndSharing
     case .reactions: reactions
     case .agentSessions: agentSessions
+    case .terminals: terminals
+    case .commandsAndNavigation: commandsAndNavigation
     case .pageLoading: pageLoading
+    case .tabs: tabs
+    case .browserTools: browserTools
     }
   }
 
@@ -302,6 +310,7 @@ struct QuickDrawCopy {
     case .shareScreen: text("画面共有", "Share Screen")
     case .switchCamera: text("カメラを切り替える", "Switch Camera")
     case .pictureInPicture: text("ピクチャ・イン・ピクチャ", "Picture in Picture")
+    case .leaveMeeting: text("会議から退室", "Leave Meeting")
     case .reactionLike: text("リアクション：👍", "Reaction: 👍")
     case .reactionHeart: text("リアクション：❤️", "Reaction: ❤️")
     case .reactionClap: text("リアクション：👏", "Reaction: 👏")
@@ -309,7 +318,23 @@ struct QuickDrawCopy {
     case .reactionWow: text("リアクション：😮", "Reaction: 😮")
     case .reactionCelebrate: text("リアクション：🎉", "Reaction: 🎉")
     case .newSession: text("新しいセッション", "New Session")
+    case .toggleTerminal: text("ターミナル表示切替", "Toggle Terminal")
+    case .newTerminal: text("新しいターミナル", "New Terminal")
+    case .nextTerminal: text("次のターミナル", "Next Terminal")
+    case .previousTerminal: text("前のターミナル", "Previous Terminal")
+    case .splitTerminal: text("ターミナルを分割", "Split Terminal")
+    case .focusSidebar: text("サイドバーにフォーカス", "Focus Sidebar")
+    case .focusMainColumn: text("メインカラムにフォーカス", "Focus Main Column")
+    case .focusTerminal: text("ターミナルにフォーカス", "Focus Terminal")
+    case .commandPalette: text("コマンドパレット", "Command Palette")
+    case .quickOpen: text("クイックオープン", "Quick Open")
+    case .showKeyboardShortcuts: text("ショートカット一覧", "Keyboard Shortcuts")
     case .hardReload: text("スーパーリロード", "Hard Reload")
+    case .nextTab: text("次のタブ", "Next Tab")
+    case .previousTab: text("前のタブ", "Previous Tab")
+    case .openDownloads: text("ダウンロードを表示", "Open Downloads")
+    case .openDeveloperTools: text("開発者ツールを表示", "Open Developer Tools")
+    case .reopenClosedTab: text("閉じたタブを開き直す", "Reopen Closed Tab")
     }
   }
 
@@ -333,6 +358,11 @@ struct QuickDrawCopy {
       text("利用するカメラを切り替えます", "Switch to the next available camera")
     case .pictureInPicture:
       text("会議をピクチャ・イン・ピクチャで表示します", "Open the meeting in picture-in-picture")
+    case .leaveMeeting:
+      text(
+        "現在の会議でアプリ側の退室操作を実行します。確認の有無はアプリによって異なります",
+        "Run the application's leave action for the active meeting. Confirmation behavior depends on the application"
+      )
     case .reactionLike:
       text("👍リアクションを送信します", "Send a thumbs-up reaction")
     case .reactionHeart:
@@ -350,11 +380,79 @@ struct QuickDrawCopy {
         "現在の開発エージェントで新しいセッションを開始します",
         "Start a new session in the active development agent"
       )
+    case .toggleTerminal:
+      text(
+        "現在の開発ツールで統合ターミナルの表示を切り替えます",
+        "Toggle the integrated terminal in the active development tool"
+      )
+    case .newTerminal:
+      text(
+        "現在の開発ツールで新しい統合ターミナルを作成します",
+        "Create a new integrated terminal in the active development tool"
+      )
+    case .nextTerminal:
+      text(
+        "次のターミナルセッションへ移動します",
+        "Move to the next terminal session"
+      )
+    case .previousTerminal:
+      text(
+        "前のターミナルセッションへ移動します",
+        "Move to the previous terminal session"
+      )
+    case .splitTerminal:
+      text(
+        "現在のターミナルを標準の方向に分割します",
+        "Split the current terminal in the application's default direction"
+      )
+    case .focusSidebar:
+      text(
+        "開発アプリのサイドバーへキーボードフォーカスを移します",
+        "Move keyboard focus to the development application's sidebar"
+      )
+    case .focusMainColumn:
+      text(
+        "開発アプリのメインカラムへキーボードフォーカスを移します",
+        "Move keyboard focus to the development application's main column"
+      )
+    case .focusTerminal:
+      text(
+        "開発アプリのターミナルへキーボードフォーカスを移します",
+        "Move keyboard focus to the development application's terminal"
+      )
+    case .commandPalette:
+      text(
+        "現在の開発ツールでコマンドパレットを開きます",
+        "Open the command palette in the active development tool"
+      )
+    case .quickOpen:
+      text(
+        "ファイル名からファイルを検索して開きます",
+        "Find and open a file by name"
+      )
+    case .showKeyboardShortcuts:
+      text(
+        "現在の開発ツールのショートカット一覧を開きます",
+        "Open the keyboard shortcut reference for the active development tool"
+      )
     case .hardReload:
       text(
         "キャッシュを無視して現在のページを再読み込みします",
         "Reload the current page while bypassing cached content"
       )
+    case .nextTab:
+      text("ブラウザの次のタブへ移動します", "Move to the next browser tab")
+    case .previousTab:
+      text("ブラウザの前のタブへ移動します", "Move to the previous browser tab")
+    case .openDownloads:
+      text("ブラウザのダウンロード一覧を開きます", "Open the browser downloads list")
+    case .openDeveloperTools:
+      text(
+        "現在のページの開発者ツールを開きます",
+        "Open developer tools for the current page"
+      )
+    case .reopenClosedTab:
+      text("最後に閉じたタブを開き直します", "Reopen the most recently closed tab")
     }
   }
 

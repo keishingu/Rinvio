@@ -54,6 +54,10 @@ struct ApplicationMapping: Identifiable, Equatable {
       (.googleMeet, "Meet", "globe"),
       (.codex, "Codex", "chevron.left.forwardslash.chevron.right"),
       (.claude, "Claude", "terminal.fill"),
+      (.visualStudioCode, "VS Code", "chevron.left.forwardslash.chevron.right"),
+      (.cursor, "Cursor", "cursorarrow.rays"),
+      (.terminal, "Terminal", "terminal.fill"),
+      (.iTerm2, "iTerm2", "terminal"),
       (.safari, "Safari", "safari.fill"),
       (.googleChrome, "Chrome", "globe"),
     ]
@@ -89,7 +93,11 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case panelsAndSharing
   case reactions
   case agentSessions
+  case terminals
+  case commandsAndNavigation
   case pageLoading
+  case tabs
+  case browserTools
 
   var id: Self { self }
 }
@@ -137,6 +145,11 @@ struct ActionDefinition: Identifiable, Equatable {
       category: .panelsAndSharing
     ),
     ActionDefinition(
+      action: .leaveMeeting,
+      systemImage: "rectangle.portrait.and.arrow.right",
+      category: .meetingControls
+    ),
+    ActionDefinition(
       action: .reactionLike,
       systemImage: "hand.thumbsup.fill",
       category: .reactions
@@ -156,9 +169,89 @@ struct ActionDefinition: Identifiable, Equatable {
       category: .agentSessions
     ),
     ActionDefinition(
+      action: .toggleTerminal,
+      systemImage: "terminal.fill",
+      category: .terminals
+    ),
+    ActionDefinition(
+      action: .newTerminal,
+      systemImage: "plus.rectangle.on.rectangle",
+      category: .terminals
+    ),
+    ActionDefinition(
+      action: .nextTerminal,
+      systemImage: "arrow.right.to.line",
+      category: .terminals
+    ),
+    ActionDefinition(
+      action: .previousTerminal,
+      systemImage: "arrow.left.to.line",
+      category: .terminals
+    ),
+    ActionDefinition(
+      action: .splitTerminal,
+      systemImage: "rectangle.split.2x1",
+      category: .terminals
+    ),
+    ActionDefinition(
+      action: .focusSidebar,
+      systemImage: "sidebar.left",
+      category: .commandsAndNavigation
+    ),
+    ActionDefinition(
+      action: .focusMainColumn,
+      systemImage: "rectangle.fill",
+      category: .commandsAndNavigation
+    ),
+    ActionDefinition(
+      action: .focusTerminal,
+      systemImage: "terminal.fill",
+      category: .commandsAndNavigation
+    ),
+    ActionDefinition(
+      action: .commandPalette,
+      systemImage: "command",
+      category: .commandsAndNavigation
+    ),
+    ActionDefinition(
+      action: .quickOpen,
+      systemImage: "doc.text.magnifyingglass",
+      category: .commandsAndNavigation
+    ),
+    ActionDefinition(
+      action: .showKeyboardShortcuts,
+      systemImage: "keyboard",
+      category: .commandsAndNavigation
+    ),
+    ActionDefinition(
       action: .hardReload,
       systemImage: "arrow.clockwise.circle.fill",
       category: .pageLoading
+    ),
+    ActionDefinition(
+      action: .nextTab,
+      systemImage: "arrow.right.to.line",
+      category: .tabs
+    ),
+    ActionDefinition(
+      action: .previousTab,
+      systemImage: "arrow.left.to.line",
+      category: .tabs
+    ),
+    ActionDefinition(
+      action: .reopenClosedTab,
+      systemImage: "arrow.uturn.backward.circle.fill",
+      category: .tabs
+    ),
+    ActionDefinition(
+      action: .openDownloads,
+      systemImage: "arrow.down.circle.fill",
+      category: .browserTools
+    ),
+    ActionDefinition(
+      action: .openDeveloperTools,
+      systemImage: "hammer.fill",
+      category: .browserTools
     ),
   ]
 }

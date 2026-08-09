@@ -41,6 +41,7 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case shareScreen
   case switchCamera
   case pictureInPicture
+  case leaveMeeting
   case reactionLike
   case reactionHeart
   case reactionClap
@@ -48,7 +49,23 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case reactionWow
   case reactionCelebrate
   case newSession
+  case toggleTerminal
+  case newTerminal
+  case nextTerminal
+  case previousTerminal
+  case splitTerminal
+  case focusSidebar
+  case focusMainColumn
+  case focusTerminal
+  case commandPalette
+  case quickOpen
+  case showKeyboardShortcuts
   case hardReload
+  case nextTab
+  case previousTab
+  case openDownloads
+  case openDeveloperTools
+  case reopenClosedTab
 
   public var id: Self { self }
 
@@ -67,6 +84,7 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .shareScreen: "Share Screen"
     case .switchCamera: "Switch Camera"
     case .pictureInPicture: "Picture in Picture"
+    case .leaveMeeting: "Leave Meeting"
     case .reactionLike: "Thumbs Up"
     case .reactionHeart: "Heart"
     case .reactionClap: "Clap"
@@ -74,7 +92,23 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .reactionWow: "Wow"
     case .reactionCelebrate: "Celebrate"
     case .newSession: "New Session"
+    case .toggleTerminal: "Toggle Terminal"
+    case .newTerminal: "New Terminal"
+    case .nextTerminal: "Next Terminal"
+    case .previousTerminal: "Previous Terminal"
+    case .splitTerminal: "Split Terminal"
+    case .focusSidebar: "Focus Sidebar"
+    case .focusMainColumn: "Focus Main Column"
+    case .focusTerminal: "Focus Terminal"
+    case .commandPalette: "Command Palette"
+    case .quickOpen: "Quick Open"
+    case .showKeyboardShortcuts: "Keyboard Shortcuts"
     case .hardReload: "Hard Reload"
+    case .nextTab: "Next Tab"
+    case .previousTab: "Previous Tab"
+    case .openDownloads: "Open Downloads"
+    case .openDeveloperTools: "Developer Tools"
+    case .reopenClosedTab: "Reopen Closed Tab"
     }
   }
 }
@@ -85,6 +119,10 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
   case googleMeet
   case codex
   case claude
+  case visualStudioCode
+  case cursor
+  case terminal
+  case iTerm2
   case safari
   case googleChrome
 
@@ -95,6 +133,10 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
     case .googleMeet: "Google Meet"
     case .codex: "Codex"
     case .claude: "Claude"
+    case .visualStudioCode: "Visual Studio Code"
+    case .cursor: "Cursor"
+    case .terminal: "Terminal"
+    case .iTerm2: "iTerm2"
     case .safari: "Safari"
     case .googleChrome: "Google Chrome"
     }

@@ -55,6 +55,9 @@ final class ActionRouterTests: XCTestCase {
     try assertRoute(
       .shareScreen, bundleIdentifier: "com.microsoft.teams2", keyCode: 14,
       modifiers: [.command, .shift], display: "⌘⇧E")
+    try assertRoute(
+      .leaveMeeting, bundleIdentifier: "com.microsoft.teams2", keyCode: 4,
+      modifiers: [.command, .shift], display: "⌘⇧H")
 
     try assertRoute(
       .openChat, bundleIdentifier: "us.zoom.xos", keyCode: 4,
@@ -65,6 +68,9 @@ final class ActionRouterTests: XCTestCase {
     try assertRoute(
       .switchCamera, bundleIdentifier: "us.zoom.xos", keyCode: 45,
       modifiers: [.command, .shift], display: "⌘⇧N")
+    try assertRoute(
+      .leaveMeeting, bundleIdentifier: "us.zoom.xos", keyCode: 13,
+      modifiers: [.command], display: "⌘W")
     try assertRoute(
       .reactionLike, bundleIdentifier: "us.zoom.xos", keyCode: 23,
       modifiers: [.command, .option], display: "⌥⌘5")
@@ -85,6 +91,9 @@ final class ActionRouterTests: XCTestCase {
     try assertRoute(
       .pictureInPicture, bundleIdentifier: "com.google.Chrome", activeTabURL: meetURL,
       keyCode: 46, modifiers: [.shift], display: "⇧M")
+    try assertRoute(
+      .leaveMeeting, bundleIdentifier: "com.google.Chrome", activeTabURL: meetURL,
+      keyCode: 33, modifiers: [.command], display: "⌘[")
   }
 
   func testRoutesNewSessionForDevelopmentAgents() throws {
@@ -96,6 +105,70 @@ final class ActionRouterTests: XCTestCase {
       modifiers: [.command], display: "⌘N")
   }
 
+  func testRoutesDevelopmentToolActions() throws {
+    try assertRoute(
+      .toggleTerminal, bundleIdentifier: "com.openai.codex", keyCode: 50,
+      modifiers: [.control], display: "⌃`")
+    try assertRoute(
+      .commandPalette, bundleIdentifier: "com.openai.codex", keyCode: 40,
+      modifiers: [.command], display: "⌘K")
+    try assertRoute(
+      .quickOpen, bundleIdentifier: "com.openai.codex", keyCode: 35,
+      modifiers: [.command], display: "⌘P")
+    try assertRoute(
+      .showKeyboardShortcuts, bundleIdentifier: "com.openai.codex", keyCode: 44,
+      modifiers: [.command], display: "⌘/")
+    try assertRoute(
+      .focusTerminal, bundleIdentifier: "com.openai.codex", keyCode: 50,
+      modifiers: [.control], display: "⌃`")
+
+    for bundleIdentifier in ["com.microsoft.VSCode", "com.todesktop.230313mzl4w4u92"] {
+      try assertRoute(
+        .toggleTerminal, bundleIdentifier: bundleIdentifier, keyCode: 50,
+        modifiers: [.control], display: "⌃`")
+      try assertRoute(
+        .newTerminal, bundleIdentifier: bundleIdentifier, keyCode: 50,
+        modifiers: [.control, .shift], display: "⌃⇧`")
+      try assertRoute(
+        .commandPalette, bundleIdentifier: bundleIdentifier, keyCode: 35,
+        modifiers: [.command, .shift], display: "⌘⇧P")
+      try assertRoute(
+        .quickOpen, bundleIdentifier: bundleIdentifier, keyCode: 35,
+        modifiers: [.command], display: "⌘P")
+      try assertRoute(
+        .nextTerminal, bundleIdentifier: bundleIdentifier, keyCode: 30,
+        modifiers: [.command, .shift], display: "⇧⌘]")
+      try assertRoute(
+        .previousTerminal, bundleIdentifier: bundleIdentifier, keyCode: 33,
+        modifiers: [.command, .shift], display: "⇧⌘[")
+      try assertRoute(
+        .splitTerminal, bundleIdentifier: bundleIdentifier, keyCode: 42,
+        modifiers: [.command], display: "⌘\\")
+      try assertRoute(
+        .focusSidebar, bundleIdentifier: bundleIdentifier, keyCode: 29,
+        modifiers: [.command], display: "⌘0")
+      try assertRoute(
+        .focusMainColumn, bundleIdentifier: bundleIdentifier, keyCode: 18,
+        modifiers: [.command], display: "⌘1")
+      try assertRoute(
+        .focusTerminal, bundleIdentifier: bundleIdentifier, keyCode: 50,
+        modifiers: [.control], display: "⌃`")
+    }
+
+    try assertRoute(
+      .nextTerminal, bundleIdentifier: "com.apple.Terminal", keyCode: 48,
+      modifiers: [.control], display: "⌃Tab")
+    try assertRoute(
+      .previousTerminal, bundleIdentifier: "com.apple.Terminal", keyCode: 48,
+      modifiers: [.control, .shift], display: "⌃⇧Tab")
+    try assertRoute(
+      .splitTerminal, bundleIdentifier: "com.apple.Terminal", keyCode: 2,
+      modifiers: [.command], display: "⌘D")
+    try assertRoute(
+      .splitTerminal, bundleIdentifier: "com.googlecode.iterm2", keyCode: 2,
+      modifiers: [.command], display: "⌘D")
+  }
+
   func testRoutesHardReloadWithoutWebApplicationDetection() throws {
     try assertRoute(
       .hardReload, bundleIdentifier: "com.apple.Safari", keyCode: 15,
@@ -103,6 +176,39 @@ final class ActionRouterTests: XCTestCase {
     try assertRoute(
       .hardReload, bundleIdentifier: "com.google.Chrome", keyCode: 15,
       modifiers: [.command, .shift], display: "⌘⇧R")
+  }
+
+  func testRoutesBrowserNavigationAndTools() throws {
+    try assertRoute(
+      .nextTab, bundleIdentifier: "com.apple.Safari", keyCode: 48,
+      modifiers: [.control], display: "⌃Tab")
+    try assertRoute(
+      .nextTab, bundleIdentifier: "com.google.Chrome", keyCode: 124,
+      modifiers: [.command, .option], display: "⌘⌥→")
+    try assertRoute(
+      .previousTab, bundleIdentifier: "com.apple.Safari", keyCode: 48,
+      modifiers: [.control, .shift], display: "⌃⇧Tab")
+    try assertRoute(
+      .previousTab, bundleIdentifier: "com.google.Chrome", keyCode: 123,
+      modifiers: [.command, .option], display: "⌘⌥←")
+    try assertRoute(
+      .openDownloads, bundleIdentifier: "com.apple.Safari", keyCode: 37,
+      modifiers: [.command, .option], display: "⌘⌥L")
+    try assertRoute(
+      .openDownloads, bundleIdentifier: "com.google.Chrome", keyCode: 38,
+      modifiers: [.command, .shift], display: "⌘⇧J")
+    try assertRoute(
+      .openDeveloperTools, bundleIdentifier: "com.apple.Safari", keyCode: 34,
+      modifiers: [.command, .option], display: "⌘⌥I")
+    try assertRoute(
+      .openDeveloperTools, bundleIdentifier: "com.google.Chrome", keyCode: 34,
+      modifiers: [.command, .option], display: "⌘⌥I")
+    try assertRoute(
+      .reopenClosedTab, bundleIdentifier: "com.apple.Safari", keyCode: 17,
+      modifiers: [.command, .shift], display: "⌘⇧T")
+    try assertRoute(
+      .reopenClosedTab, bundleIdentifier: "com.google.Chrome", keyCode: 17,
+      modifiers: [.command, .shift], display: "⌘⇧T")
   }
 
   func testUnsupportedActionFailsWithoutShortcut() {

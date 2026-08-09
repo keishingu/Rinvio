@@ -10,8 +10,8 @@
 
 ## Scope
 
-- Meeting / Development / Browserに分類した17のBuilt-in Action
-- Microsoft Teams / Zoom Workplace / Google Meet / Codex / Claude / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
+- Meeting / Development / Browserに分類した34のBuilt-in Action
+- Microsoft Teams / Zoom Workplace / Google Meet / Codex / Claude / Visual Studio Code / Cursor / Terminal / iTerm2 / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
 - Foreground target only
 - Action-first native settings window with an application mapping inspector
 - Editable global Triggers and per-application shortcut overrides with one-click default restore
@@ -81,6 +81,7 @@ macOS標準またはSystem Settingsで有効なショートカットと競合す
 | Captions Toggle | `⌘⌥L` | `⌘⇧A` | — | `C` |
 | Share Screen | `⌘⌥S` | `⌘⇧E` | `⌘⇧S` | `⌃⌘T` |
 | Picture in Picture | `⌘⌥I` | — | — | `⇧M` |
+| Leave Meeting | `⌘⌥G` | `⌘⇧H` | `⌘W` | `⌘[` |
 | Reaction: 👍 | `⌘⌥1` | — | `⌥⌘5` | — |
 | Reaction: ❤️ | `⌘⌥2` | — | `⌥⌘6` | — |
 | Reaction: 👏 | `⌘⌥3` | — | `⌥⌘4` | — |
@@ -90,17 +91,35 @@ macOS標準またはSystem Settingsで有効なショートカットと競合す
 
 ### Development
 
-| Action | Trigger | Codex | Claude |
-|---|---|---|---|
-| New Session | `⌘⌥N` | `⌘N` | `⌘N` |
+| Action | Trigger | Codex | Claude | VS Code | Cursor | Terminal | iTerm2 |
+|---|---|---|---|---|---|---|---|
+| New Session | `⌘⌥N` | `⌘N` | `⌘N` | — | — | — | — |
+| Toggle Terminal | `⌘⌥T` | `⌃\`` | — | `⌃\`` | `⌃\`` | — | — |
+| New Terminal | `⌘⌥A` | — | — | `⌃⇧\`` | `⌃⇧\`` | — | — |
+| Next Terminal | `⌘⌥.` | — | — | `⇧⌘]` | `⇧⌘]` | `⌃Tab` | — |
+| Previous Terminal | `⌘⌥,` | — | — | `⇧⌘[` | `⇧⌘[` | `⌃⇧Tab` | — |
+| Split Terminal | `⌘⌥\` | — | — | `⌘\` | `⌘\` | `⌘D` | `⌘D` |
+| Focus Sidebar | `⌘⌥←` | — | — | `⌘0` | `⌘0` | — | — |
+| Focus Main Column | `⌘⌥→` | — | — | `⌘1` | `⌘1` | — | — |
+| Focus Terminal | `⌘⌥↓` | `⌃\`` | — | `⌃\`` | `⌃\`` | — | — |
+| Command Palette | `⌘⌥K` | `⌘K` | — | `⌘⇧P` | `⌘⇧P` | — | — |
+| Quick Open | `⌘⌥Q` | `⌘P` | — | `⌘P` | `⌘P` | — | — |
+| Keyboard Shortcuts | `⌘⌥B` | `⌘/` | — | — | — | — | — |
 
 ### Browser
 
 | Action | Trigger | Safari | Google Chrome |
 |---|---|---|---|
 | Hard Reload | `⌘⌥R` | `⌘⌥R` | `⌘⇧R` |
+| Next Tab | `⌘⌥]` | `⌃Tab` | `⌘⌥→` |
+| Previous Tab | `⌘⌥[` | `⌃⇧Tab` | `⌘⌥←` |
+| Reopen Closed Tab | `⌘⌥Z` | `⌘⇧T` | `⌘⇧T` |
+| Open Downloads | `⌘⌥D` | `⌘⌥L` | `⌘⇧J` |
+| Open Developer Tools | `⌘⌥E` | `⌘⌥I` | `⌘⌥I` |
 
-`—`はそのApplicationの公式ショートカットが確認できていない状態です。実行時はキーを送らず、未対応として安全に終了します。既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)の公式資料に基づきます。Application側でショートカットを変更した場合や独自に割り当てた場合は、QuickDrawのAction Inspectorから同じ値へOverrideできます。
+`—`はそのApplicationのショートカットが確認できていない状態です。実行時はキーを送らず、未対応として安全に終了します。既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)、[Visual Studio Code](https://code.visualstudio.com/docs/getstarted/keybindings)、[Terminal](https://support.apple.com/guide/terminal/keyboard-shortcuts-trmlshtcts/mac)、[iTerm2](https://iterm2.com/documentation/2.1/documentation-highlights.html)、[Safari](https://support.apple.com/guide/safari/keyboard-and-other-shortcuts-cpsh003/mac)、[Google Chrome](https://support.google.com/chrome/answer/157179)の資料と、インストール済みCodexのCommand定義に基づきます。Application側でショートカットを変更した場合や独自に割り当てた場合は、QuickDrawのAction Inspectorから同じ値へOverrideできます。
+
+SafariのDeveloper Toolsは、Safari設定の「Webデベロッパ用の機能を表示」が有効な場合に利用できます。VS CodeのKeyboard Shortcutsは既定値が2段階のChord (`⌘K` → `⌘S`) のため、単一Shortcutのみを配送する現在のCatalogでは未対応です。Application側で単一Shortcutを割り当てればQuickDrawからOverrideできます。
 
 ## Manual verification matrix
 

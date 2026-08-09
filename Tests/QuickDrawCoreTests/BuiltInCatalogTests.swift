@@ -32,6 +32,16 @@ final class BuiltInCatalogTests: XCTestCase {
       ActionCatalog.target(forBundleIdentifier: "com.anthropic.claudefordesktop"),
       .claude
     )
+    XCTAssertEqual(
+      ActionCatalog.target(forBundleIdentifier: "com.microsoft.VSCode"),
+      .visualStudioCode
+    )
+    XCTAssertEqual(
+      ActionCatalog.target(forBundleIdentifier: "com.todesktop.230313mzl4w4u92"),
+      .cursor
+    )
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.Terminal"), .terminal)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.googlecode.iterm2"), .iTerm2)
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.Safari"), .safari)
     XCTAssertNil(ActionCatalog.target(forBundleIdentifier: "com.apple.TextEdit"))
   }

@@ -216,53 +216,60 @@ private struct ActionRow: View {
   @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
-    HStack(spacing: 14) {
-      Image(systemName: definition.systemImage)
-        .font(.title2)
-        .symbolRenderingMode(.hierarchical)
-        .frame(width: 38, height: 38)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: 9))
-        .accessibilityHidden(true)
+    VStack(alignment: .leading, spacing: 10) {
+      HStack(spacing: 14) {
+        Image(systemName: definition.systemImage)
+          .font(.title2)
+          .symbolRenderingMode(.hierarchical)
+          .frame(width: 38, height: 38)
+          .background(.quaternary, in: RoundedRectangle(cornerRadius: 9))
+          .accessibilityHidden(true)
 
-      VStack(alignment: .leading, spacing: 4) {
-        HStack(spacing: 8) {
-          Text(model.copy.actionName(definition.action))
-            .font(.headline)
-          if let trigger = model.trigger(for: definition.action) {
-            KeyBadge(
-              text: trigger.displayValue,
-              accessibilityLabel:
-                "\(model.copy.shortcutAccessibilityPrefix) \(trigger.displayValue)"
-            )
-            if !model.triggerConflicts(for: definition.action).isEmpty {
-              Image(systemName: "exclamationmark.triangle.fill")
-                .font(.caption)
-                .foregroundStyle(.orange)
-                .help(
-                  model.copy.triggerConflictDescription(
-                    model.triggerConflicts(for: definition.action)
+        VStack(alignment: .leading, spacing: 4) {
+          HStack(spacing: 8) {
+            Text(model.copy.actionName(definition.action))
+              .font(.headline)
+            if let trigger = model.trigger(for: definition.action) {
+              KeyBadge(
+                text: trigger.displayValue,
+                accessibilityLabel:
+                  "\(model.copy.shortcutAccessibilityPrefix) \(trigger.displayValue)"
+              )
+              if !model.triggerConflicts(for: definition.action).isEmpty {
+                Image(systemName: "exclamationmark.triangle.fill")
+                  .font(.caption)
+                  .foregroundStyle(.orange)
+                  .help(
+                    model.copy.triggerConflictDescription(
+                      model.triggerConflicts(for: definition.action)
+                    )
                   )
-                )
-                .accessibilityLabel(model.copy.shortcutConflict)
+                  .accessibilityLabel(model.copy.shortcutConflict)
+              }
+            } else {
+              Text(model.copy.unassigned)
+                .font(.caption)
+                .foregroundStyle(.tertiary)
             }
-          } else {
-            Text(model.copy.unassigned)
-              .font(.caption)
-              .foregroundStyle(.tertiary)
           }
+          Text(model.copy.actionDescription(definition.action))
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
         }
-        Text(model.copy.actionDescription(definition.action))
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
+
+        Spacer(minLength: 8)
       }
 
-      Spacer(minLength: 18)
-
-      HStack(spacing: 18) {
+      LazyVGrid(
+        columns: [GridItem(.adaptive(minimum: 88), spacing: 14)],
+        alignment: .leading,
+        spacing: 7
+      ) {
         ForEach(model.applications(in: definition.domain)) { application in
           CompactMapping(application: application, action: definition.action, model: model)
         }
       }
+      .padding(.leading, 52)
     }
     .padding(.vertical, 9)
     .contentShape(Rectangle())
@@ -291,7 +298,7 @@ private struct CompactMapping: View {
           )
       }
     }
-    .frame(minWidth: 88, alignment: .leading)
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 
