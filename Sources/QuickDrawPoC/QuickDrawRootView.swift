@@ -21,8 +21,26 @@ struct QuickDrawRootView: View {
     }
     .toolbar {
       ToolbarItemGroup(placement: .primaryAction) {
+        Menu {
+          Picker(
+            model.copy.languageLabel,
+            selection: Binding(
+              get: { model.language },
+              set: model.setLanguage
+            )
+          ) {
+            ForEach(AppLanguage.allCases) { language in
+              Text(language.displayName)
+                .tag(language)
+            }
+          }
+        } label: {
+          Label(model.copy.languageLabel, systemImage: "globe")
+        }
+        .help(model.copy.chooseLanguage)
+
         HStack(spacing: 7) {
-          Text(model.isEnabled ? "Enabled" : "Paused")
+          Text(model.isEnabled ? model.copy.enabled : model.copy.paused)
             .foregroundStyle(.secondary)
           Toggle(
             "QuickDraw",
@@ -34,14 +52,14 @@ struct QuickDrawRootView: View {
           .labelsHidden()
           .toggleStyle(.switch)
         }
-        .help(model.isEnabled ? "Pause QuickDraw" : "Enable QuickDraw")
+        .help(model.isEnabled ? model.copy.pauseQuickDraw : model.copy.enableQuickDraw)
 
         Button {
           isInspectorPresented.toggle()
         } label: {
-          Label("Inspector", systemImage: "sidebar.trailing")
+          Label(model.copy.inspector, systemImage: "sidebar.trailing")
         }
-        .help(isInspectorPresented ? "Hide Inspector" : "Show Inspector")
+        .help(isInspectorPresented ? model.copy.hideInspector : model.copy.showInspector)
       }
     }
     .frame(minWidth: 860, minHeight: 560)
@@ -52,7 +70,7 @@ struct QuickDrawRootView: View {
 
   private var sidebar: some View {
     List(QuickDrawSection.allCases, selection: $selectedSection) { section in
-      Label(section.title, systemImage: section.systemImage)
+      Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
         .tag(section)
     }
     .navigationTitle("QuickDraw")
@@ -60,13 +78,13 @@ struct QuickDrawRootView: View {
     .safeAreaInset(edge: .bottom) {
       VStack(alignment: .leading, spacing: 5) {
         Label(
-          model.isEnabled ? "QuickDraw is enabled" : "QuickDraw is paused",
+          model.isEnabled ? model.copy.quickDrawEnabled : model.copy.quickDrawPaused,
           systemImage: model.isEnabled ? "checkmark.circle.fill" : "pause.circle"
         )
         .font(.caption)
         .foregroundStyle(.secondary)
 
-        Text("F6 → Mute")
+        Text(model.copy.f6Mute)
           .font(.caption2)
           .foregroundStyle(.tertiary)
       }
@@ -96,9 +114,9 @@ struct QuickDrawRootView: View {
       if let application = model.applications.first(where: { $0.id == selectedApplicationID })
         ?? model.applications.first
       {
-        ApplicationInspector(application: application)
+        ApplicationInspector(application: application, language: model.language)
       } else {
-        ContentUnavailableView("No Applications", systemImage: "square.grid.2x2")
+        ContentUnavailableView(model.copy.noApplications, systemImage: "square.grid.2x2")
       }
     case .diagnostics:
       DiagnosticsInspector(model: model)
@@ -113,14 +131,14 @@ private struct ActionsView: View {
   var body: some View {
     VStack(spacing: 0) {
       ContentHeader(
-        title: "Actions",
-        subtitle: "One action, translated for every supported application."
+        title: model.copy.actions,
+        subtitle: model.copy.actionsSubtitle
       )
 
       Divider()
 
       List(selection: $selection) {
-        Section("Meeting controls") {
+        Section(model.copy.meetingControls) {
           ActionRow(model: model)
             .tag("meeting.mute")
         }
@@ -145,11 +163,14 @@ private struct ActionRow: View {
 
       VStack(alignment: .leading, spacing: 4) {
         HStack(spacing: 8) {
-          Text("Mute Toggle")
+          Text(model.copy.muteToggle)
             .font(.headline)
-          KeyBadge(text: "F6")
+          KeyBadge(
+            text: "F6",
+            accessibilityLabel: "\(model.copy.shortcutAccessibilityPrefix) F6"
+          )
         }
-        Text("Mute or unmute the active meeting")
+        Text(model.copy.muteDescription)
           .font(.subheadline)
           .foregroundStyle(.secondary)
       }
@@ -195,8 +216,8 @@ private struct ApplicationsView: View {
   var body: some View {
     VStack(spacing: 0) {
       ContentHeader(
-        title: "Applications",
-        subtitle: "See how Mute is executed in each target."
+        title: model.copy.applications,
+        subtitle: model.copy.applicationsSubtitle
       )
 
       Divider()
@@ -222,7 +243,7 @@ private struct ApplicationsView: View {
           VStack(alignment: .trailing, spacing: 3) {
             Text(application.shortcut)
               .font(.body.monospaced())
-            Text(application.isInstalled ? "Detected" : "Not installed")
+            Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
               .font(.caption)
               .foregroundStyle(.secondary)
           }
@@ -242,33 +263,34 @@ private struct DiagnosticsView: View {
   var body: some View {
     VStack(spacing: 0) {
       ContentHeader(
-        title: "Diagnostics",
-        subtitle:
-          "Routing metadata only. QuickDraw does not record your keystrokes or meeting URLs."
+        title: model.copy.diagnostics,
+        subtitle: model.copy.diagnosticsSubtitle
       )
 
       Divider()
 
       Form {
-        Section("Current status") {
-          LabeledContent("State", value: model.status.headline)
-          LabeledContent("Target", value: model.status.target)
-          LabeledContent("Result", value: model.status.detail)
+        Section(model.copy.currentStatus) {
+          LabeledContent(model.copy.state, value: model.localizedStatus.headline)
+          LabeledContent(model.copy.target, value: model.localizedStatus.target)
+          LabeledContent(model.copy.result, value: model.localizedStatus.detail)
           LabeledContent(
-            "Global shortcut", value: model.isHotKeyRegistered ? "F6 registered" : "Unavailable")
+            model.copy.globalShortcut,
+            value: model.isHotKeyRegistered ? model.copy.f6Registered : model.copy.unavailable
+          )
         }
 
-        Section("Recent routing log") {
+        Section(model.copy.recentRoutingLog) {
           Text(model.diagnostics)
             .font(.caption.monospaced())
             .textSelection(.enabled)
             .frame(maxWidth: .infinity, alignment: .leading)
 
           HStack {
-            Button("Refresh") {
+            Button(model.copy.refresh) {
               model.refreshDiagnostics()
             }
-            Button("Copy Diagnostics") {
+            Button(model.copy.copyDiagnostics) {
               copyToPasteboard(model.diagnostics)
             }
           }
@@ -293,42 +315,45 @@ private struct MuteActionInspector: View {
             .frame(width: 46, height: 46)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
           VStack(alignment: .leading, spacing: 3) {
-            Text("Mute Toggle")
+            Text(model.copy.muteToggle)
               .font(.title3.weight(.semibold))
-            Text("Meeting control")
+            Text(model.copy.meetingControl)
               .foregroundStyle(.secondary)
           }
         }
       }
 
-      Section("Trigger") {
-        LabeledContent("Global shortcut") {
-          KeyBadge(text: "F6")
+      Section(model.copy.trigger) {
+        LabeledContent(model.copy.globalShortcut) {
+          KeyBadge(
+            text: "F6",
+            accessibilityLabel: "\(model.copy.shortcutAccessibilityPrefix) F6"
+          )
         }
-        Text("Trigger editing will follow after the fixed F6 route is hardened.")
+        Text(model.copy.triggerEditingDescription)
           .font(.caption)
           .foregroundStyle(.secondary)
       }
 
-      Section("Application mappings") {
+      Section(model.copy.applicationMappings) {
         ForEach(model.applications) { application in
-          MappingRow(application: application)
+          MappingRow(application: application, language: model.language)
         }
       }
 
-      Section("Execution") {
+      Section(model.copy.execution) {
         Toggle(
-          "Dry Run",
+          model.copy.dryRun,
           isOn: Binding(
             get: { model.isDryRunEnabled },
             set: model.setDryRunEnabled
           )
         )
-        Text("Dry Run resolves the target without sending a shortcut.")
+        Text(model.copy.dryRunDescription)
           .font(.caption)
           .foregroundStyle(.secondary)
 
-        Button("Test Last Active Application") {
+        Button(model.copy.testLastActiveApplication) {
           model.runDryCheck()
         }
         .disabled(!model.isEnabled)
@@ -342,6 +367,9 @@ private struct MuteActionInspector: View {
 
 private struct MappingRow: View {
   let application: ApplicationMapping
+  let language: AppLanguage
+
+  private var copy: QuickDrawCopy { QuickDrawCopy(language: language) }
 
   var body: some View {
     HStack(spacing: 10) {
@@ -350,7 +378,7 @@ private struct MappingRow: View {
         .foregroundStyle(.secondary)
       VStack(alignment: .leading, spacing: 2) {
         Text(application.name)
-        Text(application.executionDetail)
+        Text(copy.executionDetail(for: application))
           .font(.caption)
           .foregroundStyle(.secondary)
       }
@@ -364,6 +392,9 @@ private struct MappingRow: View {
 
 private struct ApplicationInspector: View {
   let application: ApplicationMapping
+  let language: AppLanguage
+
+  private var copy: QuickDrawCopy { QuickDrawCopy(language: language) }
 
   var body: some View {
     Form {
@@ -377,21 +408,21 @@ private struct ApplicationInspector: View {
           VStack(alignment: .leading, spacing: 3) {
             Text(application.name)
               .font(.title3.weight(.semibold))
-            Text(application.isInstalled ? "Detected" : "Not installed")
+            Text(application.isInstalled ? copy.detected : copy.notInstalled)
               .foregroundStyle(.secondary)
           }
         }
       }
 
-      Section("Identity") {
+      Section(copy.identity) {
         Text(application.identity)
           .textSelection(.enabled)
       }
 
-      Section("Mute mapping") {
-        LabeledContent("Capability", value: "Supported")
-        LabeledContent("Method", value: application.executionDetail)
-        LabeledContent("Shortcut", value: application.shortcut)
+      Section(copy.muteMapping) {
+        LabeledContent(copy.capability, value: copy.supported)
+        LabeledContent(copy.method, value: copy.executionDetail(for: application))
+        LabeledContent(copy.shortcut, value: application.shortcut)
       }
     }
     .formStyle(.grouped)
@@ -405,10 +436,10 @@ private struct DiagnosticsInspector: View {
     Form {
       PermissionSection(model: model)
 
-      Section("Privacy") {
-        Label("No key logging", systemImage: "checkmark.shield")
-        Label("No full URL storage", systemImage: "checkmark.shield")
-        Label("No telemetry", systemImage: "checkmark.shield")
+      Section(model.copy.privacy) {
+        Label(model.copy.noKeyLogging, systemImage: "checkmark.shield")
+        Label(model.copy.noFullURLStorage, systemImage: "checkmark.shield")
+        Label(model.copy.noTelemetry, systemImage: "checkmark.shield")
       }
     }
     .formStyle(.grouped)
@@ -419,24 +450,25 @@ private struct PermissionSection: View {
   @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
-    Section("Accessibility") {
+    Section(model.copy.accessibility) {
       Label(
-        model.hasAccessibilityPermission ? "Permission granted" : "Permission required",
+        model.hasAccessibilityPermission
+          ? model.copy.permissionGranted : model.copy.permissionRequired,
         systemImage: model.hasAccessibilityPermission
           ? "checkmark.circle.fill" : "exclamationmark.circle"
       )
       .foregroundStyle(model.hasAccessibilityPermission ? .secondary : .primary)
 
       if !model.hasAccessibilityPermission {
-        Text("Required only to send the application shortcut after routing.")
+        Text(model.copy.permissionDescription)
           .font(.caption)
           .foregroundStyle(.secondary)
-        Button("Request Permission…") {
+        Button(model.copy.requestPermission) {
           model.requestAccessibility()
         }
       }
 
-      Button("Check Again") {
+      Button(model.copy.checkAgain) {
         model.refreshPermission()
       }
     }
@@ -462,6 +494,7 @@ private struct ContentHeader: View {
 
 private struct KeyBadge: View {
   let text: String
+  var accessibilityLabel: String? = nil
 
   var body: some View {
     Text(text)
@@ -469,7 +502,7 @@ private struct KeyBadge: View {
       .padding(.horizontal, 7)
       .padding(.vertical, 3)
       .background(.quaternary, in: RoundedRectangle(cornerRadius: 5))
-      .accessibilityLabel("Shortcut \(text)")
+      .accessibilityLabel(accessibilityLabel ?? "Shortcut \(text)")
   }
 }
 

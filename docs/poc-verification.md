@@ -21,6 +21,7 @@
 | Menu Bar process | App remains resident as `LSUIElement` | Pass |
 | Native configuration window | Action-first split view, mapping inspector, Applications and Diagnostics navigation | Pass |
 | Window interactions | Sidebar navigation and Inspector show/hide verified with macOS Accessibility tree | Pass |
+| Language switching | Japanese / English updates live and the selection is persisted in UserDefaults | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
 | Tests | `swift test`: 27 tests, 0 failures | Pass |

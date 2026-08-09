@@ -9,6 +9,7 @@
 - Google Meet in Google Chrome: `⌘D`
 - Foreground target only
 - Action-first native settings window with an application mapping inspector
+- Live Japanese / English display switching, persisted across launches
 - Applications and privacy-safe Diagnostics views
 - Menu bar status, non-delivery Dry Run, copied diagnostics, and redacted unified log
 - No general key logging, polling, persistence, profiles, reactions, or background routing
@@ -35,6 +36,7 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 ## First run
 
 1. 起動時に表示されるQuickDraw Windowで、Mute ActionとTeams / Zoom / MeetのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
+   表示言語はToolbarの地球アイコンから日本語／Englishを切り替えられる。
 2. 権限を与える前に確認する場合はMute Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにしてF6を押す。Dry Runはshortcutを送信しない。
 3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
 4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。

@@ -9,14 +9,6 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
 
   var id: Self { self }
 
-  var title: String {
-    switch self {
-    case .actions: "Actions"
-    case .applications: "Applications"
-    case .diagnostics: "Diagnostics"
-    }
-  }
-
   var systemImage: String {
     switch self {
     case .actions: "bolt"
@@ -77,6 +69,7 @@ struct ApplicationMapping: Identifiable, Equatable {
 
 @MainActor
 final class QuickDrawAppModel: ObservableObject {
+  @Published private(set) var language: AppLanguage
   @Published private(set) var isEnabled = true
   @Published private(set) var isDryRunEnabled = false
   @Published private(set) var hasAccessibilityPermission = false
@@ -90,12 +83,34 @@ final class QuickDrawAppModel: ObservableObject {
   @Published private(set) var diagnostics = "QuickDraw Diagnostics are not available yet."
   @Published private(set) var applications = ApplicationMapping.current()
 
+  private let defaults: UserDefaults
+
   var onSetEnabled: ((Bool) -> Void)?
   var onSetDryRun: ((Bool) -> Void)?
   var onRunDryCheck: (() -> Void)?
   var onRequestAccessibility: (() -> Void)?
   var onRefreshPermission: (() -> Bool)?
   var onRefreshDiagnostics: (() -> String)?
+  var onLanguageChange: ((AppLanguage) -> Void)?
+
+  init(defaults: UserDefaults = .standard) {
+    self.defaults = defaults
+    language = AppLanguage.preferred(defaults: defaults)
+  }
+
+  var copy: QuickDrawCopy {
+    QuickDrawCopy(language: language)
+  }
+
+  var localizedStatus: MuteStatus {
+    copy.localizedStatus(status)
+  }
+
+  func setLanguage(_ language: AppLanguage) {
+    self.language = language
+    defaults.set(language.rawValue, forKey: AppLanguage.defaultsKey)
+    onLanguageChange?(language)
+  }
 
   func setEnabled(_ enabled: Bool) {
     isEnabled = enabled

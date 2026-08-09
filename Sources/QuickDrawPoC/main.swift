@@ -30,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let menuController = StatusMenuController()
     let model = QuickDrawAppModel()
     let windowController = ConfigurationWindowController(model: model)
+    menuController.setLanguage(model.language)
 
     controller.onStatusChange = { [weak controller, weak menuController, weak model] status in
       guard let controller else { return }
@@ -62,6 +63,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     model.onRefreshDiagnostics = { [weak controller] in
       controller?.diagnosticsText() ?? "QuickDraw Diagnostics unavailable"
+    }
+    model.onLanguageChange = { [weak menuController] language in
+      menuController?.setLanguage(language)
     }
 
     menuController.onToggleEnabled = { [weak model] enabled in

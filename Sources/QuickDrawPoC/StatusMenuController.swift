@@ -16,10 +16,25 @@ final class StatusMenuController: NSObject {
   private let targetItem = NSMenuItem()
   private let permissionStatusItem = NSMenuItem()
   private let permissionActionItem = NSMenuItem()
+  private let appTitleItem = NSMenuItem()
+  private let openItem = NSMenuItem()
+  private let dryCheckItem = NSMenuItem()
+  private let copyItem = NSMenuItem()
+  private let hotKeyItem = NSMenuItem()
+  private let privacyItem = NSMenuItem()
+  private let quitItem = NSMenuItem()
   private let feedbackPopover = NSPopover()
   private let feedbackHeadline = NSTextField(labelWithString: "")
   private let feedbackDetail = NSTextField(labelWithString: "")
   private let feedbackTarget = NSTextField(labelWithString: "")
+  private var language: AppLanguage = .english
+  private var lastStatus = MuteStatus(
+    headline: "Starting…",
+    detail: "Preparing F6",
+    target: "Not detected",
+    isError: false
+  )
+  private var lastAccessibilityPermission = false
 
   override init() {
     statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -32,106 +47,103 @@ final class StatusMenuController: NSObject {
         systemSymbolName: "speaker.slash.circle",
         accessibilityDescription: "QuickDraw PoC"
       )
-      button.toolTip = "QuickDraw PoC — F6 to Mute"
     }
 
     let menu = NSMenu()
-    addDisabledItem("QuickDraw PoC — F6 to Mute", to: menu)
+    configureDisabledItem(appTitleItem)
+    menu.addItem(appTitleItem)
 
-    headlineItem.title = "Starting…"
     headlineItem.isEnabled = false
     menu.addItem(headlineItem)
 
     detailItem.isEnabled = false
     menu.addItem(detailItem)
 
-    targetItem.title = "Target: Not detected"
     targetItem.isEnabled = false
     menu.addItem(targetItem)
 
-    permissionStatusItem.title = "Accessibility: Checking…"
     permissionStatusItem.isEnabled = false
     menu.addItem(permissionStatusItem)
 
     menu.addItem(.separator())
 
-    let openItem = NSMenuItem(
-      title: "Open QuickDraw…",
-      action: #selector(openWindow),
-      keyEquivalent: ","
-    )
+    openItem.action = #selector(openWindow)
+    openItem.keyEquivalent = ","
     openItem.target = self
     menu.addItem(openItem)
 
     menu.addItem(.separator())
 
-    enabledItem.title = "Enabled"
     enabledItem.state = .on
     enabledItem.target = self
     enabledItem.action = #selector(toggleEnabled(_:))
     menu.addItem(enabledItem)
 
-    dryRunItem.title = "Dry Run (F6 does not send keys)"
     dryRunItem.state = .off
     dryRunItem.target = self
     dryRunItem.action = #selector(toggleDryRun(_:))
     menu.addItem(dryRunItem)
 
-    let dryCheckItem = NSMenuItem(
-      title: "Run Dry Check on Last Active App",
-      action: #selector(runDryCheck),
-      keyEquivalent: ""
-    )
+    dryCheckItem.action = #selector(runDryCheck)
     dryCheckItem.target = self
     menu.addItem(dryCheckItem)
 
-    permissionActionItem.title = "Request Accessibility Permission…"
     permissionActionItem.target = self
     permissionActionItem.action = #selector(requestAccessibility)
     menu.addItem(permissionActionItem)
 
     menu.addItem(.separator())
 
-    let copyItem = NSMenuItem(
-      title: "Copy Diagnostics",
-      action: #selector(copyDiagnostics),
-      keyEquivalent: ""
-    )
+    copyItem.action = #selector(copyDiagnostics)
     copyItem.target = self
     menu.addItem(copyItem)
 
-    addDisabledItem("Hotkey: F6 Registered", to: menu)
-    addDisabledItem("Privacy: Meet classification only; no key logging", to: menu)
+    configureDisabledItem(hotKeyItem)
+    menu.addItem(hotKeyItem)
+    configureDisabledItem(privacyItem)
+    menu.addItem(privacyItem)
 
     menu.addItem(.separator())
 
-    let quitItem = NSMenuItem(
-      title: "Quit QuickDraw PoC",
-      action: #selector(quit),
-      keyEquivalent: "q"
-    )
+    quitItem.action = #selector(quit)
+    quitItem.keyEquivalent = "q"
     quitItem.target = self
     menu.addItem(quitItem)
 
     statusItem.menu = menu
+    applyLanguage()
   }
 
   func update(status: MuteStatus, hasAccessibilityPermission: Bool) {
-    headlineItem.title = status.headline
-    detailItem.title = status.detail
-    targetItem.title = "Target: \(status.target)"
+    lastStatus = status
+    lastAccessibilityPermission = hasAccessibilityPermission
+    let copy = QuickDrawCopy(language: language)
+    let localizedStatus = copy.localizedStatus(status)
+
+    headlineItem.title = localizedStatus.headline
+    detailItem.title = localizedStatus.detail
+    targetItem.title = "\(copy.targetPrefix): \(localizedStatus.target)"
     permissionStatusItem.title =
       hasAccessibilityPermission
-      ? "Accessibility: Granted"
-      : "Accessibility: Required"
+      ? copy.accessibilityGrantedMenu
+      : copy.accessibilityRequiredMenu
     permissionActionItem.isHidden = hasAccessibilityPermission
-    feedbackHeadline.stringValue = status.headline
-    feedbackDetail.stringValue = status.detail
-    feedbackTarget.stringValue = "Target: \(status.target)"
+    feedbackHeadline.stringValue = localizedStatus.headline
+    feedbackDetail.stringValue = localizedStatus.detail
+    feedbackTarget.stringValue = "\(copy.targetPrefix): \(localizedStatus.target)"
 
     statusItem.button?.image = NSImage(
       systemSymbolName: status.isError ? "exclamationmark.circle" : "speaker.slash.circle",
-      accessibilityDescription: status.headline
+      accessibilityDescription: localizedStatus.headline
+    )
+  }
+
+  func setLanguage(_ language: AppLanguage) {
+    self.language = language
+    applyLanguage()
+    update(
+      status: lastStatus,
+      hasAccessibilityPermission: lastAccessibilityPermission
     )
   }
 
@@ -143,10 +155,23 @@ final class StatusMenuController: NSObject {
     dryRunItem.state = enabled ? .on : .off
   }
 
-  private func addDisabledItem(_ title: String, to menu: NSMenu) {
-    let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+  private func configureDisabledItem(_ item: NSMenuItem) {
     item.isEnabled = false
-    menu.addItem(item)
+  }
+
+  private func applyLanguage() {
+    let copy = QuickDrawCopy(language: language)
+    statusItem.button?.toolTip = copy.menuTitle
+    appTitleItem.title = copy.menuTitle
+    openItem.title = copy.openQuickDraw
+    enabledItem.title = copy.enabled
+    dryRunItem.title = copy.dryRunMenu
+    dryCheckItem.title = copy.runDryCheckMenu
+    permissionActionItem.title = copy.requestAccessibilityMenu
+    copyItem.title = copy.copyDiagnostics
+    hotKeyItem.title = copy.hotKeyRegisteredMenu
+    privacyItem.title = copy.privacyMenu
+    quitItem.title = copy.quitQuickDraw
   }
 
   private func configureFeedbackPopover() {
