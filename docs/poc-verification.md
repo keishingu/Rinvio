@@ -19,6 +19,8 @@
 | Latency guard | 1,000 in-process Dry Runs, p95 under 25 ms | Pass |
 | Global Trigger | Launch log: `hotkey=F6` | Pass |
 | Menu Bar process | App remains resident as `LSUIElement` | Pass |
+| Native configuration window | Action-first split view, mapping inspector, Applications and Diagnostics navigation | Pass |
+| Window interactions | Sidebar navigation and Inspector show/hide verified with macOS Accessibility tree | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
 | Tests | `swift test`: 27 tests, 0 failures | Pass |

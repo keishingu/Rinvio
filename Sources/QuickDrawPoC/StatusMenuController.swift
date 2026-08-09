@@ -3,6 +3,7 @@ import AppKit
 final class StatusMenuController: NSObject {
   var onToggleEnabled: ((Bool) -> Void)?
   var onToggleDryRun: ((Bool) -> Void)?
+  var onOpenWindow: (() -> Void)?
   var onRunDryCheck: (() -> Void)?
   var onRequestAccessibility: (() -> Void)?
   var onCopyDiagnostics: (() -> String)?
@@ -51,6 +52,16 @@ final class StatusMenuController: NSObject {
     permissionStatusItem.title = "Accessibility: Checking…"
     permissionStatusItem.isEnabled = false
     menu.addItem(permissionStatusItem)
+
+    menu.addItem(.separator())
+
+    let openItem = NSMenuItem(
+      title: "Open QuickDraw…",
+      action: #selector(openWindow),
+      keyEquivalent: ","
+    )
+    openItem.target = self
+    menu.addItem(openItem)
 
     menu.addItem(.separator())
 
@@ -182,6 +193,10 @@ final class StatusMenuController: NSObject {
     let enabled = sender.state != .on
     sender.state = enabled ? .on : .off
     onToggleEnabled?(enabled)
+  }
+
+  @objc private func openWindow() {
+    onOpenWindow?()
   }
 
   @objc private func toggleDryRun(_ sender: NSMenuItem) {

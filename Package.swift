@@ -22,6 +22,7 @@ let package = Package(
         .linkedFramework("AppKit"),
         .linkedFramework("Carbon"),
         .linkedFramework("CoreGraphics"),
+        .linkedFramework("SwiftUI"),
       ]
     ),
     .testTarget(

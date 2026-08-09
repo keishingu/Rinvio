@@ -6,6 +6,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var hotKeyRegistrar: GlobalHotKeyRegistrar?
   private var muteController: MuteController?
   private var statusMenuController: StatusMenuController?
+  private var configurationWindowController: ConfigurationWindowController?
+  private var appModel: QuickDrawAppModel?
   private let logger = Logger(
     subsystem: Bundle.main.bundleIdentifier ?? "dev.actionrouter.quickdraw-poc",
     category: "lifecycle"
@@ -26,19 +28,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       shortcutExecutor: shortcutExecutor
     )
     let menuController = StatusMenuController()
+    let model = QuickDrawAppModel()
+    let windowController = ConfigurationWindowController(model: model)
 
-    controller.onStatusChange = { [weak controller, weak menuController] status in
+    controller.onStatusChange = { [weak controller, weak menuController, weak model] status in
       guard let controller else { return }
       menuController?.update(
         status: status,
         hasAccessibilityPermission: controller.hasPostEventAccess
       )
+      model?.update(
+        status: status,
+        hasAccessibilityPermission: controller.hasPostEventAccess,
+        diagnostics: controller.diagnosticsText()
+      )
     }
-    menuController.onToggleEnabled = { [weak controller] enabled in
+    model.onSetEnabled = { [weak controller, weak menuController] enabled in
       controller?.isEnabled = enabled
+      menuController?.setEnabled(enabled)
     }
-    menuController.onToggleDryRun = { [weak controller] enabled in
+    model.onSetDryRun = { [weak controller, weak menuController] enabled in
       controller?.isDryRunEnabled = enabled
+      menuController?.setDryRun(enabled)
+    }
+    model.onRunDryCheck = { [weak controller] in
+      controller?.triggerMute(forceDryRun: true)
+    }
+    model.onRequestAccessibility = { [weak controller] in
+      controller?.requestPostEventAccess()
+    }
+    model.onRefreshPermission = { [weak controller] in
+      controller?.hasPostEventAccess ?? false
+    }
+    model.onRefreshDiagnostics = { [weak controller] in
+      controller?.diagnosticsText() ?? "QuickDraw Diagnostics unavailable"
+    }
+
+    menuController.onToggleEnabled = { [weak model] enabled in
+      model?.setEnabled(enabled)
+    }
+    menuController.onToggleDryRun = { [weak model] enabled in
+      model?.setDryRunEnabled(enabled)
+    }
+    menuController.onOpenWindow = { [weak windowController, weak model] in
+      model?.refreshEnvironment()
+      windowController?.present()
     }
     menuController.onRunDryCheck = { [weak controller] in
       controller?.triggerMute(forceDryRun: true)
@@ -56,29 +90,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller?.triggerMute()
       }
       controller.isHotKeyRegistered = true
+      model.setHotKeyRegistered(true)
+      let initialStatus = MuteStatus(
+        headline: "Enabled — press F6",
+        detail: controller.permissionSummary,
+        target: "Not detected",
+        isError: !shortcutExecutor.hasPostEventAccess
+      )
       menuController.update(
-        status: MuteStatus(
-          headline: "Enabled — press F6",
-          detail: controller.permissionSummary,
-          target: "Not detected",
-          isError: !shortcutExecutor.hasPostEventAccess
-        ),
+        status: initialStatus,
         hasAccessibilityPermission: shortcutExecutor.hasPostEventAccess
+      )
+      model.update(
+        status: initialStatus,
+        hasAccessibilityPermission: shortcutExecutor.hasPostEventAccess,
+        diagnostics: controller.diagnosticsText()
       )
       logger.info(
         "QuickDraw PoC started hotkey=F6 postEventAccess=\(shortcutExecutor.hasPostEventAccess, privacy: .public)"
       )
     } catch {
       controller.isEnabled = false
-      menuController.setEnabled(false)
+      model.setHotKeyRegistered(false)
+      model.setEnabled(false)
+      let failureStatus = MuteStatus(
+        headline: "F6 registration failed",
+        detail: error.localizedDescription,
+        target: "Not detected",
+        isError: true
+      )
       menuController.update(
-        status: MuteStatus(
-          headline: "F6 registration failed",
-          detail: error.localizedDescription,
-          target: "Not detected",
-          isError: true
-        ),
+        status: failureStatus,
         hasAccessibilityPermission: shortcutExecutor.hasPostEventAccess
+      )
+      model.update(
+        status: failureStatus,
+        hasAccessibilityPermission: shortcutExecutor.hasPostEventAccess,
+        diagnostics: controller.diagnosticsText()
       )
       logger.error(
         "QuickDraw PoC started without hotkey reason=\(error.localizedDescription, privacy: .public)"
@@ -88,6 +136,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     hotKeyRegistrar = registrar
     muteController = controller
     statusMenuController = menuController
+    configurationWindowController = windowController
+    appModel = model
+
+    windowController.present()
+  }
+
+  func applicationDidBecomeActive(_ notification: Notification) {
+    appModel?.refreshEnvironment()
   }
 }
 

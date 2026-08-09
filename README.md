@@ -8,6 +8,8 @@
 - Zoom Workplace: `⌘⇧A`
 - Google Meet in Google Chrome: `⌘D`
 - Foreground target only
+- Action-first native settings window with an application mapping inspector
+- Applications and privacy-safe Diagnostics views
 - Menu bar status, non-delivery Dry Run, copied diagnostics, and redacted unified log
 - No general key logging, polling, persistence, profiles, reactions, or background routing
 
@@ -32,9 +34,9 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 ## First run
 
-1. Menu barのQuickDraw iconを開く。
-2. 権限を与える前に確認する場合は`Dry Run`を有効にし、対象Application/Meet TabをForegroundにしてF6を押す。Dry Runはshortcutを送信しない。
-3. 実配送を試す場合は`Request Accessibility Permission…`を選ぶ。
+1. 起動時に表示されるQuickDraw Windowで、Mute ActionとTeams / Zoom / MeetのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
+2. 権限を与える前に確認する場合はMute Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにしてF6を押す。Dry Runはshortcutを送信しない。
+3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
 4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。
 5. Google Meetを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
 6. Dry Runを無効にし、対象Application/Meet TabをForegroundにしてF6を押す。
