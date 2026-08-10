@@ -61,7 +61,9 @@ struct QuickDrawCopy {
   var reactions: String { text("リアクション", "Reactions") }
   var agentSessions: String { text("エージェントセッション", "Agent sessions") }
   var terminals: String { text("ターミナル", "Terminal") }
-  var commandsAndNavigation: String { text("コマンドと移動", "Commands and navigation") }
+  var regions: String { text("UI領域", "UI regions") }
+  var codeNavigation: String { text("コード移動", "Code navigation") }
+  var commands: String { text("コマンド", "Commands") }
   var pageLoading: String { text("ページ読み込み", "Page loading") }
   var tabs: String { text("タブ", "Tabs") }
   var browserTools: String { text("ブラウザツール", "Browser tools") }
@@ -343,7 +345,9 @@ struct QuickDrawCopy {
     case .reactions: reactions
     case .agentSessions: agentSessions
     case .terminals: terminals
-    case .commandsAndNavigation: commandsAndNavigation
+    case .regions: regions
+    case .codeNavigation: codeNavigation
+    case .commands: commands
     case .pageLoading: pageLoading
     case .tabs: tabs
     case .browserTools: browserTools
@@ -379,6 +383,11 @@ struct QuickDrawCopy {
     case .focusSidebar: text("サイドバーにフォーカス", "Focus Sidebar")
     case .focusMainColumn: text("メインカラムにフォーカス", "Focus Main Column")
     case .focusTerminal: text("ターミナルにフォーカス", "Focus Terminal")
+    case .focusPreviousRegion: text("前のUI領域にフォーカス", "Focus Previous Region")
+    case .focusNextRegion: text("次のUI領域にフォーカス", "Focus Next Region")
+    case .goToDefinition: text("定義へ移動", "Go to Definition")
+    case .navigateBack: text("前の場所へ戻る", "Navigate Back")
+    case .navigateForward: text("次の場所へ進む", "Navigate Forward")
     case .commandPalette: text("コマンドパレット", "Command Palette")
     case .quickOpen: text("クイックオープン", "Quick Open")
     case .showKeyboardShortcuts: text("ショートカット一覧", "Keyboard Shortcuts")
@@ -479,6 +488,22 @@ struct QuickDrawCopy {
         "開発アプリのターミナルへキーボードフォーカスを移します",
         "Move keyboard focus to the development application's terminal"
       )
+    case .focusPreviousRegion:
+      text(
+        "開発アプリ内の前のUI領域へフォーカスを移します",
+        "Move focus to the previous UI region in the development application"
+      )
+    case .focusNextRegion:
+      text(
+        "開発アプリ内の次のUI領域へフォーカスを移します",
+        "Move focus to the next UI region in the development application"
+      )
+    case .goToDefinition:
+      text("カーソル位置のシンボル定義へ移動します", "Go to the definition of the symbol at the cursor")
+    case .navigateBack:
+      text("コード移動履歴の前の場所へ戻ります", "Go back in code navigation history")
+    case .navigateForward:
+      text("コード移動履歴の次の場所へ進みます", "Go forward in code navigation history")
     case .commandPalette:
       text(
         "現在の開発ツールでコマンドパレットを開きます",

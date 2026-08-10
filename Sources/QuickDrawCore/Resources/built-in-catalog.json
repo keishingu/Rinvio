@@ -203,27 +203,72 @@
       "action": "focusSidebar",
       "domain": "development",
       "defaultTrigger": {
-        "virtualKeyCode": 123,
+        "virtualKeyCode": 122,
         "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥←"
+        "displayValue": "⌘⌥F1"
       }
     },
     {
       "action": "focusMainColumn",
       "domain": "development",
       "defaultTrigger": {
-        "virtualKeyCode": 124,
+        "virtualKeyCode": 120,
         "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥→"
+        "displayValue": "⌘⌥F2"
       }
     },
     {
       "action": "focusTerminal",
       "domain": "development",
       "defaultTrigger": {
-        "virtualKeyCode": 125,
+        "virtualKeyCode": 99,
         "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥↓"
+        "displayValue": "⌘⌥F3"
+      }
+    },
+    {
+      "action": "focusPreviousRegion",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 97,
+        "modifiers": ["shift"],
+        "displayValue": "⇧F6"
+      }
+    },
+    {
+      "action": "focusNextRegion",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 97,
+        "modifiers": [],
+        "displayValue": "F6"
+      }
+    },
+    {
+      "action": "goToDefinition",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 26,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥7"
+      }
+    },
+    {
+      "action": "navigateBack",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 28,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥8"
+      }
+    },
+    {
+      "action": "navigateForward",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 25,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥9"
       }
     },
     {
@@ -411,6 +456,67 @@
       "officialURL": "https://cursor.com/downloads"
     },
     {
+      "target": "xcode",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.apple.dt.Xcode"],
+      "officialURL": "https://developer.apple.com/xcode/"
+    },
+    {
+      "target": "intellijIdea",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.jetbrains.intellij", "com.jetbrains.intellij.ce"],
+      "officialURL": "https://www.jetbrains.com/idea/"
+    },
+    {
+      "target": "webStorm",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.jetbrains.WebStorm"],
+      "inheritsMappingsFrom": "intellijIdea",
+      "officialURL": "https://www.jetbrains.com/webstorm/"
+    },
+    {
+      "target": "rubyMine",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.jetbrains.RubyMine"],
+      "inheritsMappingsFrom": "intellijIdea",
+      "officialURL": "https://www.jetbrains.com/ruby/"
+    },
+    {
+      "target": "pyCharm",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.jetbrains.pycharm", "com.jetbrains.pycharm.ce"],
+      "inheritsMappingsFrom": "intellijIdea",
+      "officialURL": "https://www.jetbrains.com/pycharm/"
+    },
+    {
+      "target": "goLand",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.jetbrains.goland"],
+      "inheritsMappingsFrom": "intellijIdea",
+      "officialURL": "https://www.jetbrains.com/go/"
+    },
+    {
+      "target": "cLion",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.jetbrains.CLion"],
+      "inheritsMappingsFrom": "intellijIdea",
+      "officialURL": "https://www.jetbrains.com/clion/"
+    },
+    {
+      "target": "rider",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.jetbrains.rider"],
+      "inheritsMappingsFrom": "intellijIdea",
+      "officialURL": "https://www.jetbrains.com/rider/"
+    },
+    {
+      "target": "androidStudio",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.google.android.studio"],
+      "inheritsMappingsFrom": "intellijIdea",
+      "officialURL": "https://developer.android.com/studio"
+    },
+    {
       "target": "terminal",
       "domains": ["development"],
       "bundleIdentifiers": ["com.apple.Terminal"],
@@ -421,6 +527,12 @@
       "domains": ["development"],
       "bundleIdentifiers": ["com.googlecode.iterm2"],
       "officialURL": "https://iterm2.com/downloads.html"
+    },
+    {
+      "target": "ghostty",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.mitchellh.ghostty"],
+      "officialURL": "https://ghostty.org/"
     },
     {
       "target": "safari",
@@ -924,6 +1036,214 @@
       "execution": {
         "method": "keyboardShortcut",
         "shortcut": {"virtualKeyCode": 50, "modifiers": ["control"], "displayValue": "⌃`"}
+      }
+    },
+    {
+      "action": "focusPreviousRegion",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 97, "modifiers": ["shift"], "displayValue": "⇧F6"}
+      }
+    },
+    {
+      "action": "focusNextRegion",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 97, "modifiers": [], "displayValue": "F6"}
+      }
+    },
+    {
+      "action": "goToDefinition",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 111, "modifiers": [], "displayValue": "F12"}
+      }
+    },
+    {
+      "action": "navigateBack",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 27, "modifiers": ["control"], "displayValue": "⌃-"}
+      }
+    },
+    {
+      "action": "navigateForward",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 27, "modifiers": ["control", "shift"], "displayValue": "⌃⇧-"}
+      }
+    },
+    {
+      "action": "focusPreviousRegion",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 97, "modifiers": ["shift"], "displayValue": "⇧F6"}
+      }
+    },
+    {
+      "action": "focusNextRegion",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 97, "modifiers": [], "displayValue": "F6"}
+      }
+    },
+    {
+      "action": "goToDefinition",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 111, "modifiers": [], "displayValue": "F12"}
+      }
+    },
+    {
+      "action": "navigateBack",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 27, "modifiers": ["control"], "displayValue": "⌃-"}
+      }
+    },
+    {
+      "action": "navigateForward",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 27, "modifiers": ["control", "shift"], "displayValue": "⌃⇧-"}
+      }
+    },
+    {
+      "action": "goToDefinition",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 38, "modifiers": ["command", "control"], "displayValue": "⌃⌘J"}
+      }
+    },
+    {
+      "action": "navigateBack",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 123, "modifiers": ["command", "control"], "displayValue": "⌃⌘←"}
+      }
+    },
+    {
+      "action": "navigateForward",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 124, "modifiers": ["command", "control"], "displayValue": "⌃⌘→"}
+      }
+    },
+    {
+      "action": "quickOpen",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 31, "modifiers": ["command", "shift"], "displayValue": "⌘⇧O"}
+      }
+    },
+    {
+      "action": "toggleTerminal",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 111, "modifiers": ["option"], "displayValue": "⌥F12"}
+      }
+    },
+    {
+      "action": "commandPalette",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 0, "modifiers": ["command", "shift"], "displayValue": "⌘⇧A"}
+      }
+    },
+    {
+      "action": "quickOpen",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 31, "modifiers": ["command", "shift"], "displayValue": "⌘⇧O"}
+      }
+    },
+    {
+      "action": "goToDefinition",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 11, "modifiers": ["command"], "displayValue": "⌘B"}
+      }
+    },
+    {
+      "action": "navigateBack",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 123, "modifiers": ["command", "option"], "displayValue": "⌘⌥←"}
+      }
+    },
+    {
+      "action": "navigateForward",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 124, "modifiers": ["command", "option"], "displayValue": "⌘⌥→"}
+      }
+    },
+    {
+      "action": "newTerminal",
+      "target": "ghostty",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 17, "modifiers": ["command"], "displayValue": "⌘T"}
+      }
+    },
+    {
+      "action": "nextTerminal",
+      "target": "ghostty",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 30, "modifiers": ["command", "shift"], "displayValue": "⌘⇧]"}
+      }
+    },
+    {
+      "action": "previousTerminal",
+      "target": "ghostty",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 33, "modifiers": ["command", "shift"], "displayValue": "⌘⇧["}
+      }
+    },
+    {
+      "action": "splitTerminal",
+      "target": "ghostty",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 2, "modifiers": ["command"], "displayValue": "⌘D"}
+      }
+    },
+    {
+      "action": "focusPreviousRegion",
+      "target": "ghostty",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 33, "modifiers": ["command"], "displayValue": "⌘["}
+      }
+    },
+    {
+      "action": "focusNextRegion",
+      "target": "ghostty",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 30, "modifiers": ["command"], "displayValue": "⌘]"}
       }
     },
     {

@@ -95,7 +95,7 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertTrue(store.actions(withTriggerModifiers: [.command, .option]).contains(.camera))
   }
 
-  func testEveryBuiltInActionHasAUniqueCommandOptionTrigger() throws {
+  func testEveryBuiltInActionHasAUniqueSafeTrigger() throws {
     let triggers = try Action.allCases.map {
       try XCTUnwrap(ActionCatalog.defaultTrigger(for: $0))
     }
@@ -104,7 +104,13 @@ final class QuickDrawConfigurationTests: XCTestCase {
       Set(triggers.map { "\($0.virtualKeyCode)-\($0.modifiers)" }).count,
       Action.allCases.count
     )
-    XCTAssertTrue(triggers.allSatisfy { $0.modifiers == [.command, .option] })
+    XCTAssertEqual(ActionCatalog.defaultTrigger(for: .focusNextRegion)?.displayValue, "F6")
+    XCTAssertEqual(ActionCatalog.defaultTrigger(for: .focusPreviousRegion)?.displayValue, "⇧F6")
+    XCTAssertTrue(
+      triggers.filter {
+        $0.displayValue != "F6" && $0.displayValue != "⇧F6"
+      }.allSatisfy { $0.modifiers == [.command, .option] }
+    )
   }
 
   func testMappingOverrideAndActionResetRemoveOnlySelectedAction() throws {

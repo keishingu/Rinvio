@@ -62,8 +62,18 @@ struct ApplicationMapping: Identifiable, Equatable {
       (.claude, "Claude", "terminal.fill"),
       (.visualStudioCode, "VS Code", "chevron.left.forwardslash.chevron.right"),
       (.cursor, "Cursor", "cursorarrow.rays"),
+      (.xcode, "Xcode", "hammer.fill"),
+      (.intellijIdea, "IntelliJ", "chevron.left.forwardslash.chevron.right"),
+      (.webStorm, "WebStorm", "chevron.left.forwardslash.chevron.right"),
+      (.rubyMine, "RubyMine", "diamond.fill"),
+      (.pyCharm, "PyCharm", "chevron.left.forwardslash.chevron.right"),
+      (.goLand, "GoLand", "chevron.left.forwardslash.chevron.right"),
+      (.cLion, "CLion", "chevron.left.forwardslash.chevron.right"),
+      (.rider, "Rider", "chevron.left.forwardslash.chevron.right"),
+      (.androidStudio, "Android Studio", "hammer.fill"),
       (.terminal, "Terminal", "terminal.fill"),
       (.iTerm2, "iTerm2", "terminal"),
+      (.ghostty, "Ghostty", "terminal"),
       (.safari, "Safari", "safari.fill"),
       (.googleChrome, "Chrome", "globe"),
       (.firefox, "Firefox", "flame.fill"),
@@ -108,7 +118,9 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case reactions
   case agentSessions
   case terminals
-  case commandsAndNavigation
+  case regions
+  case codeNavigation
+  case commands
   case pageLoading
   case tabs
   case browserTools
@@ -212,32 +224,57 @@ struct ActionDefinition: Identifiable, Equatable {
     ActionDefinition(
       action: .focusSidebar,
       systemImage: "sidebar.left",
-      category: .commandsAndNavigation
+      category: .regions
     ),
     ActionDefinition(
       action: .focusMainColumn,
       systemImage: "rectangle.fill",
-      category: .commandsAndNavigation
+      category: .regions
     ),
     ActionDefinition(
       action: .focusTerminal,
       systemImage: "terminal.fill",
-      category: .commandsAndNavigation
+      category: .regions
+    ),
+    ActionDefinition(
+      action: .focusPreviousRegion,
+      systemImage: "arrow.left.square",
+      category: .regions
+    ),
+    ActionDefinition(
+      action: .focusNextRegion,
+      systemImage: "arrow.right.square",
+      category: .regions
+    ),
+    ActionDefinition(
+      action: .goToDefinition,
+      systemImage: "arrow.down.forward.and.arrow.up.backward",
+      category: .codeNavigation
+    ),
+    ActionDefinition(
+      action: .navigateBack,
+      systemImage: "chevron.backward",
+      category: .codeNavigation
+    ),
+    ActionDefinition(
+      action: .navigateForward,
+      systemImage: "chevron.forward",
+      category: .codeNavigation
     ),
     ActionDefinition(
       action: .commandPalette,
       systemImage: "command",
-      category: .commandsAndNavigation
+      category: .commands
     ),
     ActionDefinition(
       action: .quickOpen,
       systemImage: "doc.text.magnifyingglass",
-      category: .commandsAndNavigation
+      category: .commands
     ),
     ActionDefinition(
       action: .showKeyboardShortcuts,
       systemImage: "keyboard",
-      category: .commandsAndNavigation
+      category: .commands
     ),
     ActionDefinition(
       action: .hardReload,

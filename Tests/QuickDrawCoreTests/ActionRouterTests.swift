@@ -153,6 +153,47 @@ final class ActionRouterTests: XCTestCase {
       try assertRoute(
         .focusTerminal, bundleIdentifier: bundleIdentifier, keyCode: 50,
         modifiers: [.control], display: "⌃`")
+      try assertRoute(
+        .focusPreviousRegion, bundleIdentifier: bundleIdentifier, keyCode: 97,
+        modifiers: [.shift], display: "⇧F6")
+      try assertRoute(
+        .focusNextRegion, bundleIdentifier: bundleIdentifier, keyCode: 97,
+        modifiers: [], display: "F6")
+      try assertRoute(
+        .goToDefinition, bundleIdentifier: bundleIdentifier, keyCode: 111,
+        modifiers: [], display: "F12")
+      try assertRoute(
+        .navigateBack, bundleIdentifier: bundleIdentifier, keyCode: 27,
+        modifiers: [.control], display: "⌃-")
+      try assertRoute(
+        .navigateForward, bundleIdentifier: bundleIdentifier, keyCode: 27,
+        modifiers: [.control, .shift], display: "⌃⇧-")
+    }
+
+    try assertRoute(
+      .goToDefinition, bundleIdentifier: "com.apple.dt.Xcode", keyCode: 38,
+      modifiers: [.command, .control], display: "⌃⌘J")
+    try assertRoute(
+      .navigateBack, bundleIdentifier: "com.apple.dt.Xcode", keyCode: 123,
+      modifiers: [.command, .control], display: "⌃⌘←")
+    try assertRoute(
+      .navigateForward, bundleIdentifier: "com.apple.dt.Xcode", keyCode: 124,
+      modifiers: [.command, .control], display: "⌃⌘→")
+
+    for bundleIdentifier in [
+      "com.jetbrains.intellij", "com.jetbrains.WebStorm", "com.jetbrains.RubyMine",
+      "com.jetbrains.pycharm", "com.jetbrains.goland", "com.jetbrains.CLion",
+      "com.jetbrains.rider", "com.google.android.studio",
+    ] {
+      try assertRoute(
+        .goToDefinition, bundleIdentifier: bundleIdentifier, keyCode: 11,
+        modifiers: [.command], display: "⌘B")
+      try assertRoute(
+        .navigateBack, bundleIdentifier: bundleIdentifier, keyCode: 123,
+        modifiers: [.command, .option], display: "⌘⌥←")
+      try assertRoute(
+        .navigateForward, bundleIdentifier: bundleIdentifier, keyCode: 124,
+        modifiers: [.command, .option], display: "⌘⌥→")
     }
 
     try assertRoute(
@@ -167,6 +208,18 @@ final class ActionRouterTests: XCTestCase {
     try assertRoute(
       .splitTerminal, bundleIdentifier: "com.googlecode.iterm2", keyCode: 2,
       modifiers: [.command], display: "⌘D")
+    try assertRoute(
+      .newTerminal, bundleIdentifier: "com.mitchellh.ghostty", keyCode: 17,
+      modifiers: [.command], display: "⌘T")
+    try assertRoute(
+      .splitTerminal, bundleIdentifier: "com.mitchellh.ghostty", keyCode: 2,
+      modifiers: [.command], display: "⌘D")
+    try assertRoute(
+      .focusPreviousRegion, bundleIdentifier: "com.mitchellh.ghostty", keyCode: 33,
+      modifiers: [.command], display: "⌘[")
+    try assertRoute(
+      .focusNextRegion, bundleIdentifier: "com.mitchellh.ghostty", keyCode: 30,
+      modifiers: [.command], display: "⌘]")
   }
 
   func testRoutesHardReloadWithoutWebApplicationDetection() throws {

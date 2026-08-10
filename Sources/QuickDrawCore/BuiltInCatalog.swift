@@ -14,6 +14,7 @@ public struct CatalogApplication: Codable, Equatable, Sendable {
   public let target: ActionTarget
   public let domains: [ActionDomain]
   public let bundleIdentifiers: [String]
+  public let inheritsMappingsFrom: ActionTarget?
   public let webApplication: CatalogWebApplication?
   public let officialURL: URL?
 }
@@ -38,6 +39,7 @@ public enum BuiltInCatalogError: Error, Equatable {
   case duplicateBundleIdentifier(String)
   case duplicateMapping(Action, ActionTarget)
   case domainMismatch(Action, ActionTarget)
+  case invalidMappingInheritance(ActionTarget)
   case duplicateTrigger(Action, Action)
   case invalidWebApplication(ActionTarget)
 }
@@ -82,7 +84,14 @@ public struct BuiltInCatalog: Sendable {
   }
 
   public func defaultShortcut(for action: Action, target: ActionTarget) -> KeyStroke? {
-    mappings.first { $0.action == action && $0.target == target }?.execution.shortcut
+    if let shortcut = mappings.first(where: { $0.action == action && $0.target == target })?
+      .execution.shortcut
+    {
+      return shortcut
+    }
+    guard let inheritedTarget = application(for: target).inheritsMappingsFrom else { return nil }
+    return mappings.first { $0.action == action && $0.target == inheritedTarget }?.execution
+      .shortcut
   }
 
   public func application(for target: ActionTarget) -> CatalogApplication {
@@ -137,6 +146,20 @@ public struct BuiltInCatalog: Sendable {
     }
     guard seenApplications == Set(ActionTarget.allCases) else {
       throw BuiltInCatalogError.incompleteApplications
+    }
+
+    for application in document.applications {
+      guard let inheritedTarget = application.inheritsMappingsFrom else { continue }
+      guard
+        inheritedTarget != application.target,
+        let inheritedApplication = document.applications.first(where: {
+          $0.target == inheritedTarget
+        }),
+        application.domains.allSatisfy(inheritedApplication.domains.contains),
+        inheritedApplication.inheritsMappingsFrom == nil
+      else {
+        throw BuiltInCatalogError.invalidMappingInheritance(application.target)
+      }
     }
 
     for application in document.applications {

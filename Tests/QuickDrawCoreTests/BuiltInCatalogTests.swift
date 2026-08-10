@@ -40,8 +40,24 @@ final class BuiltInCatalogTests: XCTestCase {
       ActionCatalog.target(forBundleIdentifier: "com.todesktop.230313mzl4w4u92"),
       .cursor
     )
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.dt.Xcode"), .xcode)
+    XCTAssertEqual(
+      ActionCatalog.target(forBundleIdentifier: "com.jetbrains.intellij"),
+      .intellijIdea
+    )
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.jetbrains.WebStorm"), .webStorm)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.jetbrains.RubyMine"), .rubyMine)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.jetbrains.pycharm"), .pyCharm)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.jetbrains.goland"), .goLand)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.jetbrains.CLion"), .cLion)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.jetbrains.rider"), .rider)
+    XCTAssertEqual(
+      ActionCatalog.target(forBundleIdentifier: "com.google.android.studio"),
+      .androidStudio
+    )
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.Terminal"), .terminal)
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.googlecode.iterm2"), .iTerm2)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.mitchellh.ghostty"), .ghostty)
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.Safari"), .safari)
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "org.mozilla.firefox"), .firefox)
     XCTAssertEqual(
@@ -76,6 +92,21 @@ final class BuiltInCatalogTests: XCTestCase {
       Set(ActionCatalog.application(for: .microsoftTeams).domains),
       Set([.meeting, .chat])
     )
+  }
+
+  func testJetBrainsApplicationsShareDefaultMappingsButKeepTheirOwnIdentity() {
+    let intellijShortcut = ActionCatalog.defaultShortcut(
+      for: .goToDefinition,
+      target: .intellijIdea
+    )
+
+    for target in [
+      ActionTarget.webStorm, .rubyMine, .pyCharm, .goLand, .cLion, .rider, .androidStudio,
+    ] {
+      XCTAssertEqual(
+        ActionCatalog.defaultShortcut(for: .goToDefinition, target: target), intellijShortcut)
+      XCTAssertNotEqual(target, .intellijIdea)
+    }
   }
 
   func testMeetWebIdentityComesFromCatalog() throws {

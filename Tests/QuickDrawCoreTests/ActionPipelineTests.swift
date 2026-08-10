@@ -137,7 +137,20 @@ final class ActionPipelineTests: XCTestCase {
     )
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
     XCTAssertEqual(fixture.applicationProvider.revalidationCount, 0)
-    XCTAssertTrue(report.outcome.consumesTrigger)
+    XCTAssertFalse(report.outcome.consumesTrigger)
+  }
+
+  func testJetBrainsF6PassesThroughWhenRegionNavigationIsUnsupported() {
+    let fixture = makeFixture(bundleIdentifier: "com.google.android.studio")
+
+    let report = fixture.pipeline.run(action: .focusNextRegion, mode: .live)
+
+    XCTAssertEqual(
+      report.outcome,
+      .failed(.routing(.unsupportedAction(action: .focusNextRegion, target: .androidStudio)))
+    )
+    XCTAssertFalse(report.outcome.consumesTrigger)
+    XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
   }
 
   func testActionFromInactiveDomainPassesTriggerThrough() {

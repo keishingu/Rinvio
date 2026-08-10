@@ -58,6 +58,11 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case focusSidebar
   case focusMainColumn
   case focusTerminal
+  case focusPreviousRegion
+  case focusNextRegion
+  case goToDefinition
+  case navigateBack
+  case navigateForward
   case commandPalette
   case quickOpen
   case showKeyboardShortcuts
@@ -107,6 +112,11 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .focusSidebar: "Focus Sidebar"
     case .focusMainColumn: "Focus Main Column"
     case .focusTerminal: "Focus Terminal"
+    case .focusPreviousRegion: "Focus Previous Region"
+    case .focusNextRegion: "Focus Next Region"
+    case .goToDefinition: "Go to Definition"
+    case .navigateBack: "Navigate Back"
+    case .navigateForward: "Navigate Forward"
     case .commandPalette: "Command Palette"
     case .quickOpen: "Quick Open"
     case .showKeyboardShortcuts: "Keyboard Shortcuts"
@@ -134,8 +144,18 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
   case claude
   case visualStudioCode
   case cursor
+  case xcode
+  case intellijIdea
+  case webStorm
+  case rubyMine
+  case pyCharm
+  case goLand
+  case cLion
+  case rider
+  case androidStudio
   case terminal
   case iTerm2
+  case ghostty
   case safari
   case googleChrome
   case firefox
@@ -155,8 +175,18 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
     case .claude: "Claude"
     case .visualStudioCode: "Visual Studio Code"
     case .cursor: "Cursor"
+    case .xcode: "Xcode"
+    case .intellijIdea: "IntelliJ IDEA"
+    case .webStorm: "WebStorm"
+    case .rubyMine: "RubyMine"
+    case .pyCharm: "PyCharm"
+    case .goLand: "GoLand"
+    case .cLion: "CLion"
+    case .rider: "Rider"
+    case .androidStudio: "Android Studio"
     case .terminal: "Terminal"
     case .iTerm2: "iTerm2"
+    case .ghostty: "Ghostty"
     case .safari: "Safari"
     case .googleChrome: "Google Chrome"
     case .firefox: "Firefox"
