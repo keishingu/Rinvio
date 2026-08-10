@@ -169,11 +169,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     do {
       try coordinator.start(
-        handler: { [weak controller, weak foregroundProvider] actions in
+        handler: {
+          [weak controller, weak foregroundProvider, weak cheatSheetController] actions in
           guard foregroundProvider?.isPotentialQuickDrawTargetForeground() == true else {
             return false
           }
-          return controller?.trigger(actions) ?? false
+          let wasHandled = controller?.trigger(actions) ?? false
+          if wasHandled {
+            DispatchQueue.main.async {
+              cheatSheetController?.handleShortcutExecution()
+            }
+          }
+          return wasHandled
         },
         modifierHandler: { [weak cheatSheetController] modifiers in
           DispatchQueue.main.async {

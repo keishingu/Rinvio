@@ -39,6 +39,7 @@ final class ShortcutCheatSheetController {
   private let panel: NSPanel
 
   private var currentModifiers = Set<ModifierKey>()
+  private var isAwaitingModifierRelease = false
   private var presentedModifiers: Set<ModifierKey>?
   private var pendingModifiers: Set<ModifierKey>?
   private var pendingPresentation: DispatchWorkItem?
@@ -95,9 +96,18 @@ final class ShortcutCheatSheetController {
   func handleModifierChange(_ modifiers: Set<ModifierKey>) {
     currentModifiers = modifiers
 
+    if modifiers.isEmpty {
+      isAwaitingModifierRelease = false
+      reset()
+      return
+    }
+    guard !isAwaitingModifierRelease else {
+      reset()
+      return
+    }
+
     let hasMatchingTrigger =
-      !modifiers.isEmpty
-      && !configurationStore.actions(withTriggerModifiers: modifiers).isEmpty
+      !configurationStore.actions(withTriggerModifiers: modifiers).isEmpty
     guard hasMatchingTrigger else {
       reset()
       return
@@ -132,6 +142,11 @@ final class ShortcutCheatSheetController {
       deadline: .now() + Self.holdDelay,
       execute: workItem
     )
+  }
+
+  func handleShortcutExecution() {
+    isAwaitingModifierRelease = !currentModifiers.isEmpty
+    reset()
   }
 
   func reset() {
