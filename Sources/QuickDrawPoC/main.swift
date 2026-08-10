@@ -22,7 +22,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let activeTabProvider = ChromeActiveTabProvider()
     let shortcutExecutor = ShortcutExecutor()
     let pipeline = ActionPipeline(
-      router: ActionRouter(overrideProvider: configurationStore),
+      router: ActionRouter(
+        overrideProvider: configurationStore,
+        applicationEnablementProvider: configurationStore
+      ),
       applicationProvider: foregroundProvider,
       activeTabProvider: activeTabProvider,
       shortcutDeliverer: shortcutExecutor

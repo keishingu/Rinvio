@@ -15,6 +15,7 @@
 - Microsoft Teams / Zoom Workplace / Google Meet / Slack / Discord / Cairn / Codex / Claude / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
 - Foreground target only
 - Action-first native settings window with an application mapping inspector
+- Installed applications can be included in or excluded from QuickDraw individually
 - Editable global Triggers and per-application shortcut overrides with one-click default restore
 - Foreground Application向けのShortcut Guideを、登録済みTriggerの修飾キー長押しで表示
 - Versioned configuration persisted in Application Support
@@ -70,7 +71,9 @@ Action Inspectorから次を編集できます。
 - `Restore Default`: 個別のOverrideを削除してBuilt-in Catalogへ戻す。
 - `Restore All Defaults for This Action`: TriggerとそのActionの全Application Mappingを確認後にまとめて戻す。
 
-設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は [`built-in-catalog.json`](Sources/QuickDrawCore/Resources/built-in-catalog.json) から読み込み、ユーザー設定にはOverrideだけを保存します。Action IDを維持しているため、既存のOverrideもそのまま引き継がれます。
+Applications一覧では、インストール済みApplicationごとに`QuickDrawの対象`をON/OFFできます。OFFにしたApplicationではTriggerを消費せず、Shortcutを配送せず、Shortcut Guideも表示しません。設定したMapping Overrideは保持されるため、再度ONにするとそのまま利用できます。
+
+設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は [`built-in-catalog.json`](Sources/QuickDrawCore/Resources/built-in-catalog.json) から読み込み、ユーザー設定にはOverrideと対象外Applicationだけを保存します。Action IDを維持し、追加フィールドがない既存設定も読み込めるため、既存のOverrideはそのまま引き継がれます。
 
 Built-in Actionには主にQuickDrawの名前空間として`⌘⌥` Triggerを割り当てています。UI領域の前後移動だけは各アプリの慣例に合わせて`⇧F6` / `F6`を使います。TriggerはForeground Applicationのカテゴリ内で解決し、そのActionのMappingがある場合だけQuickDrawがキーを消費します。別カテゴリ、対象外、またはMapping未対応なら元のキーイベントをそのままアプリ／macOSへ渡します。
 

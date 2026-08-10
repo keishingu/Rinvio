@@ -386,48 +386,71 @@ private struct ApplicationsView: View {
   ) -> some View {
     let rowID = "\(domain.rawValue):\(application.id)"
     let isSelected = selection == rowID
+    let isEnabled = model.isApplicationEnabled(application.target)
 
-    return Button {
-      selection = rowID
-    } label: {
-      HStack(spacing: 13) {
-        Image(systemName: application.systemImage)
-          .font(.title3)
-          .symbolRenderingMode(.hierarchical)
-          .frame(width: 36, height: 36)
-          .background(
-            isSelected ? Color.white.opacity(0.16) : Color.primary.opacity(0.08),
-            in: RoundedRectangle(cornerRadius: 8)
-          )
+    return HStack(spacing: 8) {
+      Button {
+        selection = rowID
+      } label: {
+        HStack(spacing: 13) {
+          Image(systemName: application.systemImage)
+            .font(.title3)
+            .symbolRenderingMode(.hierarchical)
+            .frame(width: 36, height: 36)
+            .background(
+              isSelected ? Color.white.opacity(0.16) : Color.primary.opacity(0.08),
+              in: RoundedRectangle(cornerRadius: 8)
+            )
 
-        VStack(alignment: .leading, spacing: 3) {
-          Text(application.name)
-            .font(.headline)
-          Text(application.identity)
+          VStack(alignment: .leading, spacing: 3) {
+            Text(application.name)
+              .font(.headline)
+            Text(application.identity)
+              .font(.caption)
+              .foregroundStyle(isSelected ? Color.white.opacity(0.78) : Color.secondary)
+          }
+
+          Spacer()
+
+          VStack(alignment: .trailing, spacing: 3) {
+            Text(model.copy.actionCount(model.supportedActionCount(for: application.target)))
+            Text(
+              application.isInstalled
+                ? (isEnabled ? model.copy.detected : model.copy.excluded)
+                : model.copy.notInstalled
+            )
             .font(.caption)
             .foregroundStyle(isSelected ? Color.white.opacity(0.78) : Color.secondary)
+          }
         }
-
-        Spacer()
-
-        VStack(alignment: .trailing, spacing: 3) {
-          Text(model.copy.actionCount(model.supportedActionCount(for: application.target)))
-          Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
-            .font(.caption)
-            .foregroundStyle(isSelected ? Color.white.opacity(0.78) : Color.secondary)
-        }
+        .foregroundStyle(isSelected ? Color.white : Color.primary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .padding(.leading, 8)
+        .padding(.vertical, 7)
       }
-      .foregroundStyle(isSelected ? Color.white : Color.primary)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .contentShape(Rectangle())
-      .padding(.horizontal, 8)
-      .padding(.vertical, 7)
-      .background(
-        isSelected ? Color.accentColor : Color.clear,
-        in: RoundedRectangle(cornerRadius: 8)
-      )
+      .buttonStyle(.plain)
+
+      if application.isInstalled {
+        Toggle(
+          model.copy.quickDrawTarget,
+          isOn: Binding(
+            get: { model.isApplicationEnabled(application.target) },
+            set: { model.setApplicationEnabled($0, for: application.target) }
+          )
+        )
+        .labelsHidden()
+        .toggleStyle(.switch)
+        .controlSize(.small)
+        .help(model.copy.quickDrawTarget)
+        .padding(.trailing, 8)
+      }
     }
-    .buttonStyle(.plain)
+    .opacity(application.isInstalled && !isEnabled ? 0.65 : 1)
+    .background(
+      isSelected ? Color.accentColor : Color.clear,
+      in: RoundedRectangle(cornerRadius: 8)
+    )
   }
 }
 
@@ -726,6 +749,21 @@ private struct ApplicationInspector: View {
       Section(model.copy.identity) {
         Text(application.identity)
           .textSelection(.enabled)
+      }
+
+      if application.isInstalled {
+        Section {
+          Toggle(
+            model.copy.quickDrawTarget,
+            isOn: Binding(
+              get: { model.isApplicationEnabled(application.target) },
+              set: { model.setApplicationEnabled($0, for: application.target) }
+            )
+          )
+          Text(model.copy.quickDrawTargetDescription)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
       }
 
       if !application.isInstalled {

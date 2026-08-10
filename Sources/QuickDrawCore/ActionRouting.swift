@@ -212,6 +212,18 @@ public struct NoShortcutOverrides: ShortcutOverrideProviding, Sendable {
   }
 }
 
+public protocol ApplicationEnablementProviding {
+  func isApplicationEnabled(_ target: ActionTarget) -> Bool
+}
+
+public struct AllApplicationsEnabled: ApplicationEnablementProviding, Sendable {
+  public init() {}
+
+  public func isApplicationEnabled(_ target: ActionTarget) -> Bool {
+    true
+  }
+}
+
 public struct ActionRoute: Equatable, Sendable {
   public let action: Action
   public let target: ActionTarget
@@ -239,6 +251,7 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
   case browserContextUnavailable
   case unsupportedWebPage(host: String?)
   case unsupportedApplication(bundleIdentifier: String)
+  case disabledApplication(target: ActionTarget)
   case inactiveDomain(domain: ActionDomain, target: ActionTarget)
   case unsupportedAction(action: Action, target: ActionTarget)
 
@@ -252,6 +265,8 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
       "Active Chrome tab is not Google Meet"
     case .unsupportedApplication(let bundleIdentifier):
       "Unsupported foreground application (\(bundleIdentifier))"
+    case .disabledApplication(let target):
+      "\(target.displayName) is disabled in QuickDraw"
     case .inactiveDomain(let domain, let target):
       "\(target.displayName) is not active for the \(domain.rawValue) category"
     case .unsupportedAction(let action, let target):
@@ -262,9 +277,14 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
 
 public struct ActionRouter {
   private let overrideProvider: any ShortcutOverrideProviding
+  private let applicationEnablementProvider: any ApplicationEnablementProviding
 
-  public init(overrideProvider: any ShortcutOverrideProviding = NoShortcutOverrides()) {
+  public init(
+    overrideProvider: any ShortcutOverrideProviding = NoShortcutOverrides(),
+    applicationEnablementProvider: any ApplicationEnablementProviding = AllApplicationsEnabled()
+  ) {
     self.overrideProvider = overrideProvider
+    self.applicationEnablementProvider = applicationEnablementProvider
   }
 
   public func route(
@@ -299,6 +319,10 @@ public struct ActionRouter {
         return .failure(.inactiveDomain(domain: action.domain, target: foregroundTarget))
       }
       target = foregroundTarget
+    }
+
+    guard applicationEnablementProvider.isApplicationEnabled(target) else {
+      return .failure(.disabledApplication(target: target))
     }
 
     guard let shortcut = shortcut(for: action, target: target) else {

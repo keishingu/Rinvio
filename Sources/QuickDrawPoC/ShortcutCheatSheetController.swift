@@ -192,7 +192,10 @@ final class ShortcutCheatSheetController {
       bundleIdentifier: bundleIdentifier,
       activeTabURL: activeTabURL
     )
-    let router = ActionRouter(overrideProvider: configurationStore)
+    let router = ActionRouter(
+      overrideProvider: configurationStore,
+      applicationEnablementProvider: configurationStore
+    )
     let copy = QuickDrawCopy(language: languageProvider())
 
     var routedTargets = Set<ActionTarget>()

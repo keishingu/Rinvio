@@ -541,6 +541,22 @@ final class ActionRouterTests: XCTestCase {
     XCTAssertEqual(route.shortcut, override)
   }
 
+  func testDisabledApplicationDoesNotRoute() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    try store.setApplicationEnabled(false, for: .visualStudioCode)
+    let router = ActionRouter(
+      overrideProvider: store,
+      applicationEnablementProvider: store
+    )
+
+    let result = router.route(
+      action: .goToDefinition,
+      context: ForegroundContext(bundleIdentifier: "com.microsoft.VSCode")
+    )
+
+    XCTAssertEqual(result, .failure(.disabledApplication(target: .visualStudioCode)))
+  }
+
   private func assertRoute(
     _ action: Action,
     bundleIdentifier: String,

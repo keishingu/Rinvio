@@ -28,15 +28,40 @@ public struct QuickDrawConfiguration: Codable, Equatable, Sendable {
   public var schemaVersion: Int
   public var triggerOverrides: [TriggerOverride]
   public var shortcutOverrides: [ApplicationShortcutOverride]
+  public var disabledApplications: [ActionTarget]
 
   public init(
     schemaVersion: Int = Self.currentSchemaVersion,
     triggerOverrides: [TriggerOverride] = [],
-    shortcutOverrides: [ApplicationShortcutOverride] = []
+    shortcutOverrides: [ApplicationShortcutOverride] = [],
+    disabledApplications: [ActionTarget] = []
   ) {
     self.schemaVersion = schemaVersion
     self.triggerOverrides = triggerOverrides
     self.shortcutOverrides = shortcutOverrides
+    self.disabledApplications = disabledApplications
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case schemaVersion
+    case triggerOverrides
+    case shortcutOverrides
+    case disabledApplications
+  }
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+    triggerOverrides = try container.decode([TriggerOverride].self, forKey: .triggerOverrides)
+    shortcutOverrides = try container.decode(
+      [ApplicationShortcutOverride].self,
+      forKey: .shortcutOverrides
+    )
+    disabledApplications =
+      try container.decodeIfPresent(
+        [ActionTarget].self,
+        forKey: .disabledApplications
+      ) ?? []
   }
 }
 
@@ -57,7 +82,9 @@ public enum QuickDrawConfigurationError: LocalizedError, Equatable {
   }
 }
 
-public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unchecked Sendable {
+public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
+  ApplicationEnablementProviding, @unchecked Sendable
+{
   private static let functionKeyCodes: Set<UInt16> = [
     122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111, 105, 107, 113, 106, 64, 79,
     80, 90,
@@ -127,6 +154,20 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
 
   public func isShortcutOverridden(for action: Action, target: ActionTarget) -> Bool {
     shortcutOverride(for: action, target: target) != nil
+  }
+
+  public func isApplicationEnabled(_ target: ActionTarget) -> Bool {
+    lock.withLock { !storedConfiguration.disabledApplications.contains(target) }
+  }
+
+  public func setApplicationEnabled(_ enabled: Bool, for target: ActionTarget) throws {
+    try update { configuration in
+      configuration.disabledApplications.removeAll { $0 == target }
+      if !enabled {
+        configuration.disabledApplications.append(target)
+        configuration.disabledApplications.sort { $0.rawValue < $1.rawValue }
+      }
+    }
   }
 
   public func validateTrigger(_ shortcut: KeyStroke, for action: Action) throws {

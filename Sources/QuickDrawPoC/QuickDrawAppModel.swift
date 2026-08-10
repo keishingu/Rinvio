@@ -477,6 +477,20 @@ final class QuickDrawAppModel: ObservableObject {
     configurationStore.isShortcutOverridden(for: action, target: target)
   }
 
+  func isApplicationEnabled(_ target: ActionTarget) -> Bool {
+    configurationStore.isApplicationEnabled(target)
+  }
+
+  func setApplicationEnabled(_ enabled: Bool, for target: ActionTarget) {
+    do {
+      try configurationStore.setApplicationEnabled(enabled, for: target)
+      shortcutEditingError = nil
+      syncConfiguration()
+    } catch {
+      shortcutEditingError = error.localizedDescription
+    }
+  }
+
   func actions(in domain: ActionDomain) -> [ActionDefinition] {
     actions.filter { $0.domain == domain }
   }
@@ -486,7 +500,9 @@ final class QuickDrawAppModel: ObservableObject {
   }
 
   func installedApplications(in domain: ActionDomain) -> [ApplicationMapping] {
-    applications(in: domain).filter(\.isInstalled)
+    applications(in: domain).filter {
+      $0.isInstalled && isApplicationEnabled($0.target)
+    }
   }
 
   func supportedActionCount(for target: ActionTarget) -> Int {

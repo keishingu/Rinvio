@@ -12,6 +12,8 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertNil(store.shortcut(for: .openChat, target: .microsoftTeams))
     XCTAssertTrue(store.configuration.triggerOverrides.isEmpty)
     XCTAssertTrue(store.configuration.shortcutOverrides.isEmpty)
+    XCTAssertTrue(store.configuration.disabledApplications.isEmpty)
+    XCTAssertTrue(store.isApplicationEnabled(.zoomWorkplace))
   }
 
   func testTriggerOverrideCanBeRestoredBySettingDefault() throws {
@@ -154,10 +156,48 @@ final class QuickDrawConfigurationTests: XCTestCase {
     )
     try stored.setTriggerOverride(trigger, for: .mute)
     try stored.setShortcutOverride(mapping, for: .camera, target: .microsoftTeams)
+    try stored.setApplicationEnabled(false, for: .zoomWorkplace)
 
     let reloaded = QuickDrawConfigurationStore(fileURL: fileURL)
 
     XCTAssertEqual(reloaded.trigger(for: .mute), trigger)
     XCTAssertEqual(reloaded.shortcut(for: .camera, target: .microsoftTeams), mapping)
+    XCTAssertFalse(reloaded.isApplicationEnabled(.zoomWorkplace))
+    XCTAssertTrue(reloaded.isApplicationEnabled(.microsoftTeams))
+  }
+
+  func testApplicationCanBeExcludedAndIncludedAgain() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+
+    try store.setApplicationEnabled(false, for: .visualStudioCode)
+    XCTAssertFalse(store.isApplicationEnabled(.visualStudioCode))
+    XCTAssertEqual(store.configuration.disabledApplications, [.visualStudioCode])
+
+    try store.setApplicationEnabled(true, for: .visualStudioCode)
+    XCTAssertTrue(store.isApplicationEnabled(.visualStudioCode))
+    XCTAssertTrue(store.configuration.disabledApplications.isEmpty)
+  }
+
+  func testConfigurationWithoutApplicationEnablementFieldStillLoads() throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let fileURL = directory.appendingPathComponent("configuration.json")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let legacyData = try XCTUnwrap(
+      """
+      {
+        "schemaVersion": 1,
+        "triggerOverrides": [],
+        "shortcutOverrides": []
+      }
+      """.data(using: .utf8)
+    )
+    try legacyData.write(to: fileURL)
+
+    let store = QuickDrawConfigurationStore(fileURL: fileURL)
+
+    XCTAssertTrue(store.configuration.disabledApplications.isEmpty)
+    XCTAssertTrue(store.isApplicationEnabled(.ghostty))
   }
 }

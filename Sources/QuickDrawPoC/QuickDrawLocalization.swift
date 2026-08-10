@@ -106,7 +106,15 @@ struct QuickDrawCopy {
     )
   }
   var detected: String { text("検出済み", "Detected") }
+  var excluded: String { text("対象外", "Excluded") }
   var notInstalled: String { text("未インストール", "Not installed") }
+  var quickDrawTarget: String { text("QuickDrawの対象", "Use with QuickDraw") }
+  var quickDrawTargetDescription: String {
+    text(
+      "OFFにすると、このアプリではTriggerを消費せず、ショートカットガイドも表示しません。",
+      "When off, QuickDraw passes triggers through in this app and does not show its Shortcut Guide."
+    )
+  }
   var noInstalledApplications: String {
     text("このカテゴリの対応アプリはインストールされていません", "No supported apps in this category are installed")
   }

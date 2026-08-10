@@ -13,6 +13,7 @@
 | Meet routes | Mute `⌘D`, Camera `⌘E`, Raise Hand `⌃⌘H` on exact HTTPS `meet.google.com` | Pass |
 | Expanded Action catalog | Meeting controls, reactions, Chat, Development, and Browser Actions | Pass |
 | Partial capabilities | Missing Application × Action shortcut is not delivered or consumed; user override can add one | Pass |
+| Application enablement | Installed targets can be excluded persistently; disabled targets pass triggers through and are omitted from the Shortcut Guide | Pass |
 | Fail closed | fake Meet host, HTTP Meet, non-Meet tab, unsupported app, missing context | Pass |
 | Full pipeline | routing, target revalidation, delivery, and injected failures | Pass |
 | Dry Run | route is resolved without revalidation or shortcut delivery | Pass |
@@ -35,7 +36,7 @@
 | Built-in Catalog | Bundled JSON decode, schema validation, complete Action/Application coverage | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
-| Tests | `swift test`: 70 tests, 0 failures | Pass |
+| Tests | `swift test`: 74 tests, 0 failures | Pass |
 | Idle resources | 43 seconds idle: CPU 0.0%, RSS about 20 MB | Pass (single observation) |
 
 ## Installed application identities

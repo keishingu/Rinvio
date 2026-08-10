@@ -153,6 +153,25 @@ final class ActionPipelineTests: XCTestCase {
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
   }
 
+  func testDisabledApplicationPassesTriggerThroughWithoutDelivery() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    try store.setApplicationEnabled(false, for: .zoomWorkplace)
+    let router = ActionRouter(
+      overrideProvider: store,
+      applicationEnablementProvider: store
+    )
+    let fixture = makeFixture(bundleIdentifier: "us.zoom.xos", router: router)
+
+    let report = fixture.pipeline.run(action: .mute, mode: .live)
+
+    XCTAssertEqual(
+      report.outcome,
+      .failed(.routing(.disabledApplication(target: .zoomWorkplace)))
+    )
+    XCTAssertFalse(report.outcome.consumesTrigger)
+    XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
+  }
+
   func testActionFromInactiveDomainPassesTriggerThrough() {
     let fixture = makeFixture(bundleIdentifier: "com.tinyspeck.slackmacgap")
 
@@ -221,7 +240,8 @@ final class ActionPipelineTests: XCTestCase {
     activeTabURL: URL = URL(string: "https://example.com")!,
     activeTabError: Error? = nil,
     deliveryError: Error? = nil,
-    clock: any UptimeProviding = SystemUptimeProvider()
+    clock: any UptimeProviding = SystemUptimeProvider(),
+    router: ActionRouter = ActionRouter()
   ) -> Fixture {
     let applicationProvider = TestApplicationProvider(
       application: hasApplication
@@ -232,6 +252,7 @@ final class ActionPipelineTests: XCTestCase {
     let activeTabProvider = TestActiveTabProvider(url: activeTabURL, error: activeTabError)
     let deliverer = TestShortcutDeliverer(error: deliveryError)
     let pipeline = ActionPipeline(
+      router: router,
       applicationProvider: applicationProvider,
       activeTabProvider: activeTabProvider,
       shortcutDeliverer: deliverer,
