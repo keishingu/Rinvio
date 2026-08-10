@@ -81,6 +81,20 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
   }
 
+  func testFindsActionsByTheirCurrentTriggerModifiers() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let commandShift = KeyStroke(
+      virtualKeyCode: 46,
+      modifiers: [.command, .shift],
+      displayValue: "⌘⇧M"
+    )
+    try store.setTriggerOverride(commandShift, for: .mute)
+
+    XCTAssertEqual(store.actions(withTriggerModifiers: [.command, .shift]), [.mute])
+    XCTAssertFalse(store.actions(withTriggerModifiers: [.command, .option]).contains(.mute))
+    XCTAssertTrue(store.actions(withTriggerModifiers: [.command, .option]).contains(.camera))
+  }
+
   func testEveryBuiltInActionHasAUniqueCommandOptionTrigger() throws {
     let triggers = try Action.allCases.map {
       try XCTUnwrap(ActionCatalog.defaultTrigger(for: $0))

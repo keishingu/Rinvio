@@ -731,7 +731,7 @@
       "target": "codex",
       "execution": {
         "method": "keyboardShortcut",
-        "shortcut": {"virtualKeyCode": 50, "modifiers": ["control"], "displayValue": "⌃`"}
+        "shortcut": {"virtualKeyCode": 38, "modifiers": ["command"], "displayValue": "⌘J"}
       }
     },
     {

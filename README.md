@@ -16,7 +16,7 @@
 - Foreground target only
 - Action-first native settings window with an application mapping inspector
 - Editable global Triggers and per-application shortcut overrides with one-click default restore
-- Foreground Application向けのShortcut Guideを`⌘⌥`長押しで表示
+- Foreground Application向けのShortcut Guideを、登録済みTriggerの修飾キー長押しで表示
 - Versioned configuration persisted in Application Support
 - Versioned Built-in Catalog bundled as JSON
 - Live Japanese / English display switching, persisted across launches
@@ -55,7 +55,7 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 ## Shortcut Guide
 
-対応ApplicationをForegroundにして`⌘⌥`を約0.6秒長押しすると、そのApplicationで現在利用できるQuickDraw Actionだけを画面中央のHUDへ表示します。`⌘⌥`を離すと閉じ、Modifierイベント自体は消費しません。`⌥1`などへ変更したTriggerも含め、現在のユーザー設定をそのまま表示します。
+対応ApplicationをForegroundにして、登録済みTriggerの修飾キー（`⌘⌥`や`⌘⇧`など）を約0.6秒長押しすると、その修飾キーから実行できるQuickDraw Actionだけを画面中央のHUDへ表示します。修飾キーを離すと閉じ、Modifierイベント自体は消費しません。各ActionにはQuickDraw Triggerと、対象Applicationへ配送する既定Shortcut（Mapping Overrideがあれば変更後の値）を罫線で分けて表示します。修飾キーを持たないFキーTriggerは長押し表示の対象外ですが、`Preview`では確認できます。
 
 Sidebarの`Settings`から表示をON/OFFでき、`Preview`で最後に使った対応Application向けの内容を確認できます。設定はUserDefaultsへ保存します。
 
@@ -117,7 +117,7 @@ macOS標準またはSystem Settingsで有効なショートカットと競合す
 | Action | Trigger | Codex | Claude | VS Code | Cursor | Terminal | iTerm2 |
 |---|---|---|---|---|---|---|---|
 | New Session | `⌘⌥N` | `⌘N` | `⌘N` | — | — | — | — |
-| Toggle Terminal | `⌘⌥T` | `⌃\`` | — | `⌃\`` | `⌃\`` | — | — |
+| Toggle Terminal | `⌘⌥T` | `⌘J` | — | `⌃\`` | `⌃\`` | — | — |
 | New Terminal | `⌘⌥A` | — | — | `⌃⇧\`` | `⌃⇧\`` | — | — |
 | Next Terminal | `⌘⌥.` | — | — | `⇧⌘]` | `⇧⌘]` | `⌃Tab` | — |
 | Previous Terminal | `⌘⌥,` | — | — | `⇧⌘[` | `⇧⌘[` | `⌃⇧Tab` | — |

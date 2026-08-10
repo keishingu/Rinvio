@@ -69,12 +69,12 @@ struct QuickDrawCopy {
   var messaging: String { text("メッセージ", "Messaging") }
   var shortcutGuide: String { text("ショートカットガイド", "Shortcut Guide") }
   var showShortcutGuideOnHold: String {
-    text("⌘⌥の長押しで表示", "Show when holding ⌘⌥")
+    text("Triggerの修飾キーを長押しで表示", "Show when holding a Trigger's modifier keys")
   }
   var shortcutGuideDescription: String {
     text(
-      "約0.6秒長押しすると、現在のアプリで利用できるQuickDraw Actionを画面中央に表示します。キー入力は消費しません。",
-      "Hold for about 0.6 seconds to show QuickDraw Actions available in the current app. The modifier keys remain available to the app."
+      "登録済みTriggerの修飾キーを約0.6秒長押しすると、そこから実行できるActionとアプリ側のショートカットを表示します。キー入力は消費しません。",
+      "Hold a configured Trigger's modifier keys for about 0.6 seconds to see its Actions and their app shortcuts. The modifier keys remain available to the app."
     )
   }
   var previewShortcutGuide: String { text("プレビュー", "Preview") }
@@ -92,7 +92,10 @@ struct QuickDrawCopy {
     )
   }
   var holdToKeepGuideVisible: String {
-    text("⌘⌥を離すと閉じます", "Release ⌘⌥ to close")
+    text("修飾キーを離すと閉じます", "Release the modifier keys to close")
+  }
+  func releaseModifiersToClose(_ modifiers: String) -> String {
+    text("\(modifiers)を離すと閉じます", "Release \(modifiers) to close")
   }
   var applicationsSubtitle: String {
     text(

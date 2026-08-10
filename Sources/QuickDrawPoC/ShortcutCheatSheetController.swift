@@ -6,7 +6,8 @@ import SwiftUI
 private struct ShortcutCheatSheetEntry: Identifiable {
   let action: Action
   let name: String
-  let trigger: String
+  let quickDrawShortcut: String
+  let applicationShortcut: String
   let systemImage: String
 
   var id: Action { action }
@@ -29,7 +30,6 @@ private struct ShortcutCheatSheetContent {
 
 @MainActor
 final class ShortcutCheatSheetController {
-  private static let activationModifiers: Set<ModifierKey> = [.command, .option]
   private static let holdDelay: TimeInterval = 0.6
 
   private let configurationStore: QuickDrawConfigurationStore
@@ -39,6 +39,8 @@ final class ShortcutCheatSheetController {
   private let panel: NSPanel
 
   private var currentModifiers = Set<ModifierKey>()
+  private var presentedModifiers: Set<ModifierKey>?
+  private var pendingModifiers: Set<ModifierKey>?
   private var pendingPresentation: DispatchWorkItem?
   private var pendingPreviewDismissal: DispatchWorkItem?
 
@@ -93,21 +95,38 @@ final class ShortcutCheatSheetController {
   func handleModifierChange(_ modifiers: Set<ModifierKey>) {
     currentModifiers = modifiers
 
-    guard modifiers == Self.activationModifiers else {
+    let hasMatchingTrigger =
+      !modifiers.isEmpty
+      && !configurationStore.actions(withTriggerModifiers: modifiers).isEmpty
+    guard hasMatchingTrigger else {
       reset()
       return
     }
     guard isCheatSheetEnabled, isQuickDrawEnabled, !isSuppressed else {
       return
     }
-    guard pendingPresentation == nil, !panel.isVisible else { return }
+    if panel.isVisible {
+      guard presentedModifiers != modifiers else { return }
+      reset()
+    }
+    if pendingPresentation != nil {
+      guard pendingModifiers != modifiers else { return }
+      pendingPresentation?.cancel()
+      pendingPresentation = nil
+    }
 
+    let activationModifiers = modifiers
     let workItem = DispatchWorkItem { [weak self] in
       guard let self else { return }
       self.pendingPresentation = nil
-      guard self.currentModifiers == Self.activationModifiers else { return }
-      self.presentForForegroundApplication(isPreview: false)
+      self.pendingModifiers = nil
+      guard self.currentModifiers == activationModifiers else { return }
+      self.presentForForegroundApplication(
+        isPreview: false,
+        triggerModifiers: activationModifiers
+      )
     }
+    pendingModifiers = activationModifiers
     pendingPresentation = workItem
     DispatchQueue.main.asyncAfter(
       deadline: .now() + Self.holdDelay,
@@ -118,14 +137,16 @@ final class ShortcutCheatSheetController {
   func reset() {
     pendingPresentation?.cancel()
     pendingPresentation = nil
+    pendingModifiers = nil
     pendingPreviewDismissal?.cancel()
     pendingPreviewDismissal = nil
+    presentedModifiers = nil
     panel.orderOut(nil)
   }
 
   func presentPreview() {
     guard isQuickDrawEnabled, !isSuppressed else { return }
-    presentForForegroundApplication(isPreview: true)
+    presentForForegroundApplication(isPreview: true, triggerModifiers: nil)
     guard panel.isVisible else { return }
 
     let workItem = DispatchWorkItem { [weak self] in self?.reset() }
@@ -133,7 +154,10 @@ final class ShortcutCheatSheetController {
     DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: workItem)
   }
 
-  private func presentForForegroundApplication(isPreview: Bool) {
+  private func presentForForegroundApplication(
+    isPreview: Bool,
+    triggerModifiers: Set<ModifierKey>?
+  ) {
     guard isQuickDrawEnabled, !isSuppressed else { return }
     guard isPreview || isCheatSheetEnabled else { return }
     guard isPreview || foregroundProvider.isPotentialQuickDrawTargetForeground() else { return }
@@ -160,6 +184,7 @@ final class ShortcutCheatSheetController {
     var routedEntries: [(domain: ActionDomain, entry: ShortcutCheatSheetEntry)] = []
     for definition in ActionDefinition.all {
       guard let trigger = configurationStore.trigger(for: definition.action) else { continue }
+      guard triggerModifiers == nil || trigger.modifiers == triggerModifiers else { continue }
       guard case .success(let route) = router.route(action: definition.action, context: context)
       else { continue }
       routedTargets.insert(route.target)
@@ -170,7 +195,8 @@ final class ShortcutCheatSheetController {
             ShortcutCheatSheetEntry(
               action: definition.action,
               name: copy.actionName(definition.action),
-              trigger: trigger.displayValue,
+              quickDrawShortcut: trigger.displayValue,
+              applicationShortcut: route.shortcut.displayValue,
               systemImage: definition.systemImage
             )
         )
@@ -197,22 +223,25 @@ final class ShortcutCheatSheetController {
       applicationName: presentationTarget.displayName,
       applicationSystemImage: applicationPresentation?.systemImage ?? "app.fill",
       dismissalHint:
-        isPreview ? copy.previewClosesAutomatically : copy.holdToKeepGuideVisible,
+        isPreview
+        ? copy.previewClosesAutomatically
+        : copy.releaseModifiersToClose(modifierSymbols(triggerModifiers ?? [])),
       groups: groups
     )
 
-    present(content)
+    present(content, triggerModifiers: triggerModifiers)
   }
 
-  private func present(_ content: ShortcutCheatSheetContent) {
+  private func present(
+    _ content: ShortcutCheatSheetContent,
+    triggerModifiers: Set<ModifierKey>?
+  ) {
     let screen = screenContainingPointer() ?? NSScreen.main ?? NSScreen.screens.first
     guard let screen else { return }
 
-    let rowCount = content.groups.reduce(0) { partial, group in
-      partial + Int(ceil(Double(group.entries.count) / 2.0))
-    }
+    let rowCount = content.groups.reduce(0) { $0 + $1.entries.count }
     let width = min(620.0, screen.visibleFrame.width - 48.0)
-    let idealHeight = 84.0 + CGFloat(content.groups.count * 28) + CGFloat(rowCount * 38)
+    let idealHeight = 117.0 + CGFloat(content.groups.count * 28) + CGFloat(rowCount * 35)
     let height = min(idealHeight, screen.visibleFrame.height * 0.72)
     let size = NSSize(width: width, height: height)
 
@@ -226,6 +255,7 @@ final class ShortcutCheatSheetController {
         y: screen.visibleFrame.midY - size.height / 2
       )
     )
+    presentedModifiers = triggerModifiers
 
     if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
       panel.alphaValue = 1
@@ -245,15 +275,21 @@ final class ShortcutCheatSheetController {
     let location = NSEvent.mouseLocation
     return NSScreen.screens.first { NSMouseInRect(location, $0.frame, false) }
   }
+
+  private func modifierSymbols(_ modifiers: Set<ModifierKey>) -> String {
+    [
+      modifiers.contains(.command) ? "⌘" : "",
+      modifiers.contains(.option) ? "⌥" : "",
+      modifiers.contains(.control) ? "⌃" : "",
+      modifiers.contains(.shift) ? "⇧" : "",
+    ].joined()
+  }
 }
 
 private struct ShortcutCheatSheetView: View {
   let content: ShortcutCheatSheetContent
 
-  private let columns = [
-    GridItem(.flexible(), spacing: 12),
-    GridItem(.flexible(), spacing: 12),
-  ]
+  private let shortcutColumnWidth = 86.0
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
@@ -275,17 +311,29 @@ private struct ShortcutCheatSheetView: View {
 
       Divider()
 
+      HStack(spacing: 10) {
+        Spacer(minLength: 0)
+        Text("QuickDraw")
+          .frame(width: shortcutColumnWidth, alignment: .center)
+        Divider()
+        Text(content.applicationName)
+          .frame(width: shortcutColumnWidth, alignment: .center)
+      }
+      .font(.caption.weight(.semibold))
+      .foregroundStyle(.secondary)
+      .frame(height: 18)
+
       ScrollView {
-        VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 13) {
           ForEach(content.groups) { group in
             VStack(alignment: .leading, spacing: 7) {
               Text(group.title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
 
-              LazyVGrid(columns: columns, alignment: .leading, spacing: 7) {
+              VStack(alignment: .leading, spacing: 4) {
                 ForEach(group.entries) { entry in
-                  HStack(spacing: 8) {
+                  HStack(spacing: 10) {
                     Image(systemName: entry.systemImage)
                       .symbolRenderingMode(.hierarchical)
                       .foregroundStyle(.secondary)
@@ -294,13 +342,14 @@ private struct ShortcutCheatSheetView: View {
                       .lineLimit(1)
                       .minimumScaleFactor(0.82)
                     Spacer(minLength: 6)
-                    Text(entry.trigger)
-                      .font(.caption.monospaced().weight(.medium))
-                      .padding(.horizontal, 7)
-                      .padding(.vertical, 3)
-                      .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+                    ShortcutCheatSheetKeyBadge(text: entry.quickDrawShortcut)
+                      .frame(width: shortcutColumnWidth)
+                    Divider()
+                    ShortcutCheatSheetKeyBadge(text: entry.applicationShortcut)
+                      .frame(width: shortcutColumnWidth)
                   }
-                  .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
+                  .frame(maxWidth: .infinity, minHeight: 31, alignment: .leading)
+                  .accessibilityElement(children: .combine)
                 }
               }
             }
@@ -313,5 +362,19 @@ private struct ShortcutCheatSheetView: View {
     .padding(.vertical, 17)
     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
     .accessibilityElement(children: .contain)
+  }
+}
+
+private struct ShortcutCheatSheetKeyBadge: View {
+  let text: String
+
+  var body: some View {
+    Text(text)
+      .font(.caption.monospaced().weight(.medium))
+      .lineLimit(1)
+      .minimumScaleFactor(0.8)
+      .padding(.horizontal, 7)
+      .padding(.vertical, 3)
+      .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
   }
 }

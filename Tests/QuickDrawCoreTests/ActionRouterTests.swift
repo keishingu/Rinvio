@@ -107,8 +107,8 @@ final class ActionRouterTests: XCTestCase {
 
   func testRoutesDevelopmentToolActions() throws {
     try assertRoute(
-      .toggleTerminal, bundleIdentifier: "com.openai.codex", keyCode: 50,
-      modifiers: [.control], display: "⌃`")
+      .toggleTerminal, bundleIdentifier: "com.openai.codex", keyCode: 38,
+      modifiers: [.command], display: "⌘J")
     try assertRoute(
       .commandPalette, bundleIdentifier: "com.openai.codex", keyCode: 40,
       modifiers: [.command], display: "⌘K")
