@@ -29,23 +29,34 @@ final class GlobalHotKeyRegistrar {
 
   private var eventTap: CFMachPort?
   private var runLoopSource: CFRunLoopSource?
-  private var handler: ((Action) -> Bool)?
-  private var actionsByShortcut: [ShortcutIdentity: Action] = [:]
+  private var handler: (([Action]) -> Bool)?
+  private var modifierHandler: ((Set<ModifierKey>) -> Void)?
+  private var actionsByShortcut: [ShortcutIdentity: [Action]] = [:]
   private var consumedKeyCodes: Set<UInt16> = []
 
   func register(
     bindings: [Action: KeyStroke],
-    handler: @escaping (Action) -> Bool
+    handler: @escaping ([Action]) -> Bool,
+    modifierHandler: @escaping (Set<ModifierKey>) -> Void
   ) throws {
     unregister()
     self.handler = handler
-    actionsByShortcut = Dictionary(
-      uniqueKeysWithValues: bindings.map { (ShortcutIdentity($0.value), $0.key) }
+    self.modifierHandler = modifierHandler
+    let actionOrder = Dictionary(
+      uniqueKeysWithValues: Action.allCases.enumerated().map { ($0.element, $0.offset) }
     )
+    let groupedBindings = Dictionary(grouping: bindings) { binding in
+      ShortcutIdentity(binding.value)
+    }
+    actionsByShortcut = groupedBindings.mapValues { bindings in
+      let actions = bindings.map(\.key)
+      return actions.sorted { actionOrder[$0, default: 0] < actionOrder[$1, default: 0] }
+    }
 
     let eventMask =
       (CGEventMask(1) << CGEventType.keyDown.rawValue)
       | (CGEventMask(1) << CGEventType.keyUp.rawValue)
+      | (CGEventMask(1) << CGEventType.flagsChanged.rawValue)
 
     guard
       let eventTap = CGEvent.tapCreate(
@@ -93,6 +104,8 @@ final class GlobalHotKeyRegistrar {
     runLoopSource = nil
     eventTap = nil
     handler = nil
+    modifierHandler?([])
+    modifierHandler = nil
     actionsByShortcut = [:]
     consumedKeyCodes = []
   }
@@ -108,6 +121,11 @@ final class GlobalHotKeyRegistrar {
     if event.getIntegerValueField(.eventSourceUserData)
       == ShortcutEventPlanner.quickDrawSourceMarker
     {
+      return Unmanaged.passUnretained(event)
+    }
+
+    if eventType == .flagsChanged {
+      modifierHandler?(modifiers(from: event.flags))
       return Unmanaged.passUnretained(event)
     }
 
@@ -130,7 +148,7 @@ final class GlobalHotKeyRegistrar {
         displayValue: ""
       )
     )
-    guard let action = actionsByShortcut[shortcut] else {
+    guard let actions = actionsByShortcut[shortcut] else {
       return Unmanaged.passUnretained(event)
     }
 
@@ -138,7 +156,7 @@ final class GlobalHotKeyRegistrar {
       return consumedKeyCodes.contains(keyCode) ? nil : Unmanaged.passUnretained(event)
     }
 
-    guard handler?(action) == true else {
+    guard handler?(actions) == true else {
       return Unmanaged.passUnretained(event)
     }
 

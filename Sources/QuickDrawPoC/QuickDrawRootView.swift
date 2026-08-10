@@ -7,7 +7,7 @@ struct QuickDrawRootView: View {
 
   @State private var selectedSection: QuickDrawSection? = .meeting
   @State private var selectedActionID: String? = Action.mute.rawValue
-  @State private var selectedApplicationID: String? = "microsoftTeams"
+  @State private var selectedApplicationID: String? = "meeting:microsoftTeams"
   @State private var isInspectorPresented = true
 
   var body: some View {
@@ -125,12 +125,14 @@ struct QuickDrawRootView: View {
   @ViewBuilder
   private var detail: some View {
     switch selectedSection ?? .meeting {
-    case .meeting, .development, .browser:
+    case .meeting, .chat, .development, .browser:
       if let domain = (selectedSection ?? .meeting).actionDomain {
         ActionsView(domain: domain, selection: $selectedActionID, model: model)
       }
     case .applications:
       ApplicationsView(selection: $selectedApplicationID, model: model)
+    case .settings:
+      SettingsView(model: model)
     case .diagnostics:
       DiagnosticsView(model: model)
     }
@@ -139,7 +141,7 @@ struct QuickDrawRootView: View {
   @ViewBuilder
   private var inspector: some View {
     switch selectedSection ?? .meeting {
-    case .meeting, .development, .browser:
+    case .meeting, .chat, .development, .browser:
       if let selectedAction {
         ActionInspector(definition: selectedAction, model: model)
       } else {
@@ -149,7 +151,9 @@ struct QuickDrawRootView: View {
         )
       }
     case .applications:
-      if let application = model.applications.first(where: { $0.id == selectedApplicationID })
+      if let application = model.applications.first(where: {
+        $0.id == selectedApplicationID?.split(separator: ":").last.map(String.init)
+      })
         ?? model.applications.first
       {
         ApplicationInspector(
@@ -159,6 +163,8 @@ struct QuickDrawRootView: View {
       } else {
         ContentUnavailableView(model.copy.noApplications, systemImage: "square.grid.2x2")
       }
+    case .settings:
+      SettingsInspector(model: model)
     case .diagnostics:
       DiagnosticsInspector(model: model)
     }
@@ -169,6 +175,47 @@ struct QuickDrawRootView: View {
     let definitions = model.actions(in: domain)
     guard !definitions.contains(where: { $0.id == selectedActionID }) else { return }
     selectedActionID = definitions.first?.id
+  }
+}
+
+private struct SettingsView: View {
+  @ObservedObject var model: QuickDrawAppModel
+
+  var body: some View {
+    VStack(spacing: 0) {
+      ContentHeader(
+        title: model.copy.settings,
+        subtitle: model.copy.shortcutGuideDescription
+      )
+      Divider()
+
+      Form {
+        Section(model.copy.shortcutGuide) {
+          Toggle(
+            model.copy.showShortcutGuideOnHold,
+            isOn: Binding(
+              get: { model.isCheatSheetEnabled },
+              set: model.setCheatSheetEnabled
+            )
+          )
+          Text(model.copy.shortcutGuideDescription)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+          Button(model.copy.previewShortcutGuide) {
+            model.previewCheatSheet()
+          }
+        }
+
+        Section(model.copy.screenSharingPrivacy) {
+          Label(model.copy.screenSharingBestEffort, systemImage: "eye.slash")
+          Text(model.copy.screenSharingLimitation)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
+      .formStyle(.grouped)
+    }
+    .navigationTitle("QuickDraw")
   }
 }
 
@@ -340,7 +387,7 @@ private struct ApplicationsView: View {
                 }
               }
               .padding(.vertical, 7)
-              .tag(application.id)
+              .tag("(domain.rawValue):(application.id)")
             }
           }
         }
@@ -610,7 +657,7 @@ private struct ApplicationInspector: View {
   @ObservedObject var model: QuickDrawAppModel
 
   private var definitions: [ActionDefinition] {
-    model.actions(in: application.domain)
+    application.domains.flatMap(model.actions(in:))
   }
 
   private var categories: [ActionCategory] {
@@ -701,6 +748,27 @@ private struct DiagnosticsInspector: View {
         Label(model.copy.noKeyLogging, systemImage: "checkmark.shield")
         Label(model.copy.noFullURLStorage, systemImage: "checkmark.shield")
         Label(model.copy.noTelemetry, systemImage: "checkmark.shield")
+      }
+    }
+    .formStyle(.grouped)
+  }
+}
+
+private struct SettingsInspector: View {
+  @ObservedObject var model: QuickDrawAppModel
+
+  var body: some View {
+    Form {
+      Section(model.copy.shortcutGuide) {
+        Label(model.copy.showShortcutGuideOnHold, systemImage: "command")
+        Text(model.copy.holdToKeepGuideVisible)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
+      Section(model.copy.privacy) {
+        Label(model.copy.noKeyLogging, systemImage: "checkmark.shield")
+        Label(model.copy.screenSharingBestEffort, systemImage: "eye.slash")
       }
     }
     .formStyle(.grouped)

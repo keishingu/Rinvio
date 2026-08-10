@@ -5,16 +5,18 @@
 - `⌘⌥M → Mute`
 - `⌘⌥C → Camera`
 - `⌘⌥H → Raise Hand`
+- `⌘⌥J → Jump to Conversation`
 - `⌘⌥N → New Session`
 - `⌘⌥R → Hard Reload`
 
 ## Scope
 
-- Meeting / Development / Browserに分類した34のBuilt-in Action
-- Microsoft Teams / Zoom Workplace / Google Meet / Codex / Claude / Visual Studio Code / Cursor / Terminal / iTerm2 / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
+- Meeting / Chat / Development / Browserに分類した40のBuilt-in Action
+- Microsoft Teams / Zoom Workplace / Google Meet / Slack / Discord / Cairn / Codex / Claude / Visual Studio Code / Cursor / Terminal / iTerm2 / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
 - Foreground target only
 - Action-first native settings window with an application mapping inspector
 - Editable global Triggers and per-application shortcut overrides with one-click default restore
+- Foreground Application向けのShortcut Guideを`⌘⌥`長押しで表示
 - Versioned configuration persisted in Application Support
 - Versioned Built-in Catalog bundled as JSON
 - Live Japanese / English display switching, persisted across launches
@@ -43,13 +45,21 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 ## First run
 
-1. 起動時に表示されるQuickDraw Windowで、Meeting / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
+1. 起動時に表示されるQuickDraw Windowで、Meeting / Chat / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
    表示言語はToolbarの地球アイコンから日本語／Englishを切り替えられる。
 2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
 3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
 4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。
 5. Google Meetを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
 6. Dry Runを無効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。
+
+## Shortcut Guide
+
+対応ApplicationをForegroundにして`⌘⌥`を約0.6秒長押しすると、そのApplicationで現在利用できるQuickDraw Actionだけを画面中央のHUDへ表示します。`⌘⌥`を離すと閉じ、Modifierイベント自体は消費しません。`⌥1`などへ変更したTriggerも含め、現在のユーザー設定をそのまま表示します。
+
+Sidebarの`Settings`から表示をON/OFFでき、`Preview`で最後に使った対応Application向けの内容を確認できます。設定はUserDefaultsへ保存します。
+
+HUDには画面共有からの除外指定をベストエフォートで付与しています。ただしAppleは`NSWindow.SharingType.none`を現在legacyとし、キャプチャ除外目的には使わないよう案内しています。共有側ApplicationがScreenCaptureKitのFilterでQuickDrawを除外しない限り、すべての画面共有方式で非表示になる保証はありません。
 
 ## Shortcut configuration
 
@@ -62,7 +72,9 @@ Action Inspectorから次を編集できます。
 
 設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は [`built-in-catalog.json`](Sources/QuickDrawCore/Resources/built-in-catalog.json) から読み込み、ユーザー設定にはOverrideだけを保存します。Action IDを維持しているため、既存のOverrideもそのまま引き継がれます。
 
-Built-in ActionにはQuickDrawの名前空間として`⌘⌥` Triggerを割り当てています。対応アプリまたはMeetタブでだけQuickDrawがキーを消費し、対象外では元のキーイベントをそのままアプリ／macOSへ渡します。
+Built-in ActionにはQuickDrawの名前空間として`⌘⌥` Triggerを割り当てています。TriggerはForeground Applicationのカテゴリ内で解決し、対応アプリまたはMeetタブでだけQuickDrawがキーを消費します。別カテゴリや対象外では元のキーイベントをそのままアプリ／macOSへ渡します。
+
+Applicationの所属カテゴリが交差しないAction同士は、同じTriggerを再利用できます。一方、TeamsのようにMeetingとChatの両方へ所属するApplicationがあるカテゴリ間では、判定が曖昧になるため重複Triggerを設定できません。Google MeetではActive Tabを判定できるため、MeetタブならMeeting Action、それ以外のChromeタブならBrowser Actionを優先します。
 
 macOS標準またはSystem Settingsで有効なショートカットと競合する場合、Action Inspectorに警告を表示します。これは使用禁止ではなく、対応アプリではQuickDrawが優先されることを示します。System Settingsの検出は非公開のPreference表現を読むbest-effort方式であり、既知の標準ショートカットカタログと組み合わせています。
 
@@ -88,6 +100,17 @@ macOS標準またはSystem Settingsで有効なショートカットと競合す
 | Reaction: 😂 | `⌘⌥4` | — | `⌥⌘7` | — |
 | Reaction: 😮 | `⌘⌥5` | — | `⌥⌘8` | — |
 | Reaction: 🎉 | `⌘⌥6` | — | `⌥⌘9` | — |
+
+### Chat
+
+| Action | Trigger | Slack | Teams | Discord | Cairn |
+|---|---|---|---|---|---|
+| Jump to Conversation | `⌘⌥J` | `⌘K` | `⌘G` | `⌘K` | — |
+| Search Messages | `⌘⌥F` | `⌘G` | `⌘E` | `⌘⇧F` | `⌘⇧F` |
+| New Message | `⌘⌥W` | `⌘N` | `⌘N` | — | — |
+| Previous Conversation | `⌘⌥Page Up` | `⌥↑` | — | `⌥↑` | `⌥↑` |
+| Next Conversation | `⌘⌥Page Down` | `⌥↓` | — | `⌥↓` | `⌥↓` |
+| Open Unreads | `⌘⌥U` | `⌘⇧A` | — | — | — |
 
 ### Development
 
@@ -117,7 +140,7 @@ macOS標準またはSystem Settingsで有効なショートカットと競合す
 | Open Downloads | `⌘⌥D` | `⌘⌥L` | `⌘⇧J` |
 | Open Developer Tools | `⌘⌥E` | `⌘⌥I` | `⌘⌥I` |
 
-`—`はそのApplicationのショートカットが確認できていない状態です。実行時はキーを送らず、未対応として安全に終了します。既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)、[Visual Studio Code](https://code.visualstudio.com/docs/getstarted/keybindings)、[Terminal](https://support.apple.com/guide/terminal/keyboard-shortcuts-trmlshtcts/mac)、[iTerm2](https://iterm2.com/documentation/2.1/documentation-highlights.html)、[Safari](https://support.apple.com/guide/safari/keyboard-and-other-shortcuts-cpsh003/mac)、[Google Chrome](https://support.google.com/chrome/answer/157179)の資料と、インストール済みCodexのCommand定義に基づきます。Application側でショートカットを変更した場合や独自に割り当てた場合は、QuickDrawのAction Inspectorから同じ値へOverrideできます。
+`—`はそのApplicationのショートカットが確認できていない状態です。実行時はキーを送らず、未対応として安全に終了します。既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)、[Slack](https://slack.com/help/articles/201374536-Slack-keyboard-shortcuts-and-commands)、[Discord](https://support.discord.com/hc/en-us/articles/31232432266647-Discord-Commands-Shortcuts-and-Navigation-Guide)、[Visual Studio Code](https://code.visualstudio.com/docs/getstarted/keybindings)、[Terminal](https://support.apple.com/guide/terminal/keyboard-shortcuts-trmlshtcts/mac)、[iTerm2](https://iterm2.com/documentation/2.1/documentation-highlights.html)、[Safari](https://support.apple.com/guide/safari/keyboard-and-other-shortcuts-cpsh003/mac)、[Google Chrome](https://support.google.com/chrome/answer/157179)の資料、CairnのCommand Catalog、インストール済みCodexのCommand定義に基づきます。Application側でショートカットを変更した場合や独自に割り当てた場合は、QuickDrawのAction Inspectorから同じ値へOverrideできます。
 
 SafariのDeveloper Toolsは、Safari設定の「Webデベロッパ用の機能を表示」が有効な場合に利用できます。VS CodeのKeyboard Shortcutsは既定値が2段階のChord (`⌘K` → `⌘S`) のため、単一Shortcutのみを配送する現在のCatalogでは未対応です。Application側で単一Shortcutを割り当てればQuickDrawからOverrideできます。
 

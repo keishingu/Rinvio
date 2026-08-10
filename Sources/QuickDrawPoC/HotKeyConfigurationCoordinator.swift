@@ -4,16 +4,25 @@ import QuickDrawCore
 final class HotKeyConfigurationCoordinator {
   private let registrar: GlobalHotKeyRegistrar
   private let store: QuickDrawConfigurationStore
-  private var handler: ((Action) -> Bool)?
+  private var handler: (([Action]) -> Bool)?
+  private var modifierHandler: ((Set<ModifierKey>) -> Void)?
 
   init(registrar: GlobalHotKeyRegistrar, store: QuickDrawConfigurationStore) {
     self.registrar = registrar
     self.store = store
   }
 
-  func start(handler: @escaping (Action) -> Bool) throws {
+  func start(
+    handler: @escaping ([Action]) -> Bool,
+    modifierHandler: @escaping (Set<ModifierKey>) -> Void
+  ) throws {
     self.handler = handler
-    try registrar.register(bindings: currentBindings(), handler: handler)
+    self.modifierHandler = modifierHandler
+    try registrar.register(
+      bindings: currentBindings(),
+      handler: handler,
+      modifierHandler: modifierHandler
+    )
   }
 
   func suspend() {
@@ -22,9 +31,15 @@ final class HotKeyConfigurationCoordinator {
 
   @discardableResult
   func resume() -> String? {
-    guard let handler else { return "Global shortcut handler is unavailable" }
+    guard let handler, let modifierHandler else {
+      return "Global shortcut handler is unavailable"
+    }
     do {
-      try registrar.register(bindings: currentBindings(), handler: handler)
+      try registrar.register(
+        bindings: currentBindings(),
+        handler: handler,
+        modifierHandler: modifierHandler
+      )
       return nil
     } catch {
       return error.localizedDescription
@@ -41,10 +56,16 @@ final class HotKeyConfigurationCoordinator {
 
     var nextBindings = currentBindings()
     nextBindings[action] = shortcut
-    guard let handler else { return "Global shortcut handler is unavailable" }
+    guard let handler, let modifierHandler else {
+      return "Global shortcut handler is unavailable"
+    }
 
     do {
-      try registrar.register(bindings: nextBindings, handler: handler)
+      try registrar.register(
+        bindings: nextBindings,
+        handler: handler,
+        modifierHandler: modifierHandler
+      )
       do {
         try store.setTriggerOverride(shortcut, for: action)
         return nil
@@ -59,11 +80,17 @@ final class HotKeyConfigurationCoordinator {
   }
 
   func resetTrigger(for action: Action) -> String? {
-    guard let handler else { return "Global shortcut handler is unavailable" }
+    guard let handler, let modifierHandler else {
+      return "Global shortcut handler is unavailable"
+    }
     var nextBindings = currentBindings()
     nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
     do {
-      try registrar.register(bindings: nextBindings, handler: handler)
+      try registrar.register(
+        bindings: nextBindings,
+        handler: handler,
+        modifierHandler: modifierHandler
+      )
       try store.resetTrigger(for: action)
       return nil
     } catch {
@@ -73,11 +100,17 @@ final class HotKeyConfigurationCoordinator {
   }
 
   func resetAction(_ action: Action) -> String? {
-    guard let handler else { return "Global shortcut handler is unavailable" }
+    guard let handler, let modifierHandler else {
+      return "Global shortcut handler is unavailable"
+    }
     var nextBindings = currentBindings()
     nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
     do {
-      try registrar.register(bindings: nextBindings, handler: handler)
+      try registrar.register(
+        bindings: nextBindings,
+        handler: handler,
+        modifierHandler: modifierHandler
+      )
       try store.resetAction(action)
       return nil
     } catch {

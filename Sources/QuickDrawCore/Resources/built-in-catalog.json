@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "actions": [
     {
       "action": "mute",
@@ -306,22 +306,76 @@
         "modifiers": ["command", "option"],
         "displayValue": "⌘⌥Z"
       }
+    },
+    {
+      "action": "quickSwitcher",
+      "domain": "chat",
+      "defaultTrigger": {
+        "virtualKeyCode": 38,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥J"
+      }
+    },
+    {
+      "action": "searchMessages",
+      "domain": "chat",
+      "defaultTrigger": {
+        "virtualKeyCode": 3,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥F"
+      }
+    },
+    {
+      "action": "newMessage",
+      "domain": "chat",
+      "defaultTrigger": {
+        "virtualKeyCode": 13,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥W"
+      }
+    },
+    {
+      "action": "previousConversation",
+      "domain": "chat",
+      "defaultTrigger": {
+        "virtualKeyCode": 116,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥Page Up"
+      }
+    },
+    {
+      "action": "nextConversation",
+      "domain": "chat",
+      "defaultTrigger": {
+        "virtualKeyCode": 121,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥Page Down"
+      }
+    },
+    {
+      "action": "openUnreads",
+      "domain": "chat",
+      "defaultTrigger": {
+        "virtualKeyCode": 32,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌘⌥U"
+      }
     }
   ],
   "applications": [
     {
       "target": "microsoftTeams",
-      "domain": "meeting",
+      "domains": ["meeting", "chat"],
       "bundleIdentifiers": ["com.microsoft.teams2", "com.microsoft.teams"]
     },
     {
       "target": "zoomWorkplace",
-      "domain": "meeting",
+      "domains": ["meeting"],
       "bundleIdentifiers": ["us.zoom.xos"]
     },
     {
       "target": "googleMeet",
-      "domain": "meeting",
+      "domains": ["meeting"],
       "bundleIdentifiers": [],
       "webApplication": {
         "browserTarget": "googleChrome",
@@ -331,43 +385,58 @@
     },
     {
       "target": "codex",
-      "domain": "development",
+      "domains": ["development"],
       "bundleIdentifiers": ["com.openai.codex"]
     },
     {
       "target": "claude",
-      "domain": "development",
+      "domains": ["development"],
       "bundleIdentifiers": ["com.anthropic.claudefordesktop"]
     },
     {
       "target": "visualStudioCode",
-      "domain": "development",
+      "domains": ["development"],
       "bundleIdentifiers": ["com.microsoft.VSCode", "com.microsoft.VSCodeInsiders"]
     },
     {
       "target": "cursor",
-      "domain": "development",
+      "domains": ["development"],
       "bundleIdentifiers": ["com.todesktop.230313mzl4w4u92"]
     },
     {
       "target": "terminal",
-      "domain": "development",
+      "domains": ["development"],
       "bundleIdentifiers": ["com.apple.Terminal"]
     },
     {
       "target": "iTerm2",
-      "domain": "development",
+      "domains": ["development"],
       "bundleIdentifiers": ["com.googlecode.iterm2"]
     },
     {
       "target": "safari",
-      "domain": "browser",
+      "domains": ["browser"],
       "bundleIdentifiers": ["com.apple.Safari"]
     },
     {
       "target": "googleChrome",
-      "domain": "browser",
+      "domains": ["browser"],
       "bundleIdentifiers": ["com.google.Chrome"]
+    },
+    {
+      "target": "slack",
+      "domains": ["chat"],
+      "bundleIdentifiers": ["com.tinyspeck.slackmacgap"]
+    },
+    {
+      "target": "discord",
+      "domains": ["chat"],
+      "bundleIdentifiers": ["com.hnc.Discord"]
+    },
+    {
+      "target": "cairn",
+      "domains": ["chat"],
+      "bundleIdentifiers": ["com.oss-cairn.desktop", "com.oss-cairn.desktop.dev"]
     }
   ],
   "mappings": [
@@ -945,6 +1014,134 @@
       "execution": {
         "method": "keyboardShortcut",
         "shortcut": {"virtualKeyCode": 17, "modifiers": ["command", "shift"], "displayValue": "⌘⇧T"}
+      }
+    },
+    {
+      "action": "quickSwitcher",
+      "target": "slack",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 40, "modifiers": ["command"], "displayValue": "⌘K"}
+      }
+    },
+    {
+      "action": "searchMessages",
+      "target": "slack",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 5, "modifiers": ["command"], "displayValue": "⌘G"}
+      }
+    },
+    {
+      "action": "newMessage",
+      "target": "slack",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "previousConversation",
+      "target": "slack",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 126, "modifiers": ["option"], "displayValue": "⌥↑"}
+      }
+    },
+    {
+      "action": "nextConversation",
+      "target": "slack",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 125, "modifiers": ["option"], "displayValue": "⌥↓"}
+      }
+    },
+    {
+      "action": "openUnreads",
+      "target": "slack",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 0, "modifiers": ["command", "shift"], "displayValue": "⌘⇧A"}
+      }
+    },
+    {
+      "action": "quickSwitcher",
+      "target": "microsoftTeams",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 5, "modifiers": ["command"], "displayValue": "⌘G"}
+      }
+    },
+    {
+      "action": "searchMessages",
+      "target": "microsoftTeams",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 14, "modifiers": ["command"], "displayValue": "⌘E"}
+      }
+    },
+    {
+      "action": "newMessage",
+      "target": "microsoftTeams",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "quickSwitcher",
+      "target": "discord",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 40, "modifiers": ["command"], "displayValue": "⌘K"}
+      }
+    },
+    {
+      "action": "searchMessages",
+      "target": "discord",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command", "shift"], "displayValue": "⌘⇧F"}
+      }
+    },
+    {
+      "action": "previousConversation",
+      "target": "discord",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 126, "modifiers": ["option"], "displayValue": "⌥↑"}
+      }
+    },
+    {
+      "action": "nextConversation",
+      "target": "discord",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 125, "modifiers": ["option"], "displayValue": "⌥↓"}
+      }
+    },
+    {
+      "action": "searchMessages",
+      "target": "cairn",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command", "shift"], "displayValue": "⌘⇧F"}
+      }
+    },
+    {
+      "action": "previousConversation",
+      "target": "cairn",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 126, "modifiers": ["option"], "displayValue": "⌥↑"}
+      }
+    },
+    {
+      "action": "nextConversation",
+      "target": "cairn",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 125, "modifiers": ["option"], "displayValue": "⌥↓"}
       }
     }
   ]

@@ -62,21 +62,27 @@ final class ActionController {
 
   @discardableResult
   func trigger(_ action: Action, forceDryRun: Bool = false) -> Bool {
+    trigger([action], forceDryRun: forceDryRun)
+  }
+
+  @discardableResult
+  func trigger(_ candidateActions: [Action], forceDryRun: Bool = false) -> Bool {
     guard isEnabled else {
       logger.debug("Action trigger ignored because QuickDraw is disabled")
       return false
     }
 
     let mode: ActionExecutionMode = forceDryRun || isDryRunEnabled ? .dryRun : .live
-    let report = pipeline.run(action: action, mode: mode)
-    let consumesTrigger = forceDryRun || report.outcome.consumesTrigger
-    guard consumesTrigger else {
-      logger.debug("Shortcut passed through because no QuickDraw target matched")
-      return false
+    for action in candidateActions {
+      let report = pipeline.run(action: action, mode: mode)
+      let consumesTrigger = forceDryRun || report.outcome.consumesTrigger
+      guard consumesTrigger else { continue }
+      record(report)
+      publish(report)
+      return true
     }
-    record(report)
-    publish(report)
-    return true
+    logger.debug("Shortcut passed through because no QuickDraw target matched")
+    return false
   }
 
   @discardableResult

@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var actionController: ActionController?
   private var statusMenuController: StatusMenuController?
   private var configurationWindowController: ConfigurationWindowController?
+  private var shortcutCheatSheetController: ShortcutCheatSheetController?
   private var appModel: QuickDrawAppModel?
   private let logger = Logger(
     subsystem: Bundle.main.bundleIdentifier ?? "dev.actionrouter.quickdraw-poc",
@@ -18,11 +19,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     let configurationStore = QuickDrawConfigurationStore()
     let foregroundProvider = ForegroundApplicationProvider()
+    let activeTabProvider = ChromeActiveTabProvider()
     let shortcutExecutor = ShortcutExecutor()
     let pipeline = ActionPipeline(
       router: ActionRouter(overrideProvider: configurationStore),
       applicationProvider: foregroundProvider,
-      activeTabProvider: ChromeActiveTabProvider(),
+      activeTabProvider: activeTabProvider,
       shortcutDeliverer: shortcutExecutor
     )
     let controller = ActionController(
@@ -31,6 +33,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     )
     let menuController = StatusMenuController()
     let model = QuickDrawAppModel(configurationStore: configurationStore)
+    let cheatSheetController = ShortcutCheatSheetController(
+      configurationStore: configurationStore,
+      foregroundProvider: foregroundProvider,
+      activeTabProvider: activeTabProvider,
+      languageProvider: { [weak model] in model?.language ?? .english }
+    )
+    cheatSheetController.isCheatSheetEnabled = model.isCheatSheetEnabled
     let windowController = ConfigurationWindowController(model: model)
     let coordinator = HotKeyConfigurationCoordinator(
       registrar: GlobalHotKeyRegistrar(),
@@ -59,13 +68,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         diagnostics: controller.diagnosticsText()
       )
     }
-    model.onSetEnabled = { [weak controller, weak menuController] enabled in
+    model.onSetEnabled = {
+      [weak controller, weak menuController, weak cheatSheetController] enabled in
       controller?.isEnabled = enabled
       menuController?.setEnabled(enabled)
+      cheatSheetController?.isQuickDrawEnabled = enabled
     }
     model.onSetDryRun = { [weak controller, weak menuController] enabled in
       controller?.isDryRunEnabled = enabled
       menuController?.setDryRun(enabled)
+    }
+    model.onSetCheatSheetEnabled = { [weak cheatSheetController] enabled in
+      cheatSheetController?.isCheatSheetEnabled = enabled
+    }
+    model.onPreviewCheatSheet = { [weak cheatSheetController] in
+      cheatSheetController?.presentPreview()
     }
     model.onRunDryCheck = { [weak controller] action in
       controller?.trigger(action, forceDryRun: true)
@@ -93,13 +110,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     model.onLanguageChange = { [weak menuController] language in
       menuController?.setLanguage(language)
     }
-    model.onShortcutRecordingBegan = { [weak coordinator, weak controller, weak model] in
+    model.onShortcutRecordingBegan = {
+      [weak coordinator, weak controller, weak model, weak cheatSheetController] in
+      cheatSheetController?.isSuppressed = true
       coordinator?.suspend()
       controller?.areHotKeysRegistered = false
       model?.setHotKeysRegistered(false)
     }
-    model.onShortcutRecordingEnded = { [weak coordinator, weak controller, weak model] in
+    model.onShortcutRecordingEnded = {
+      [weak coordinator, weak controller, weak model, weak cheatSheetController] in
       let error = coordinator?.resume()
+      cheatSheetController?.isSuppressed = false
       controller?.areHotKeysRegistered = error == nil
       model?.setHotKeysRegistered(error == nil)
       return error
@@ -147,12 +168,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     do {
-      try coordinator.start { [weak controller, weak foregroundProvider] action in
-        guard foregroundProvider?.isPotentialQuickDrawTargetForeground() == true else {
-          return false
+      try coordinator.start(
+        handler: { [weak controller, weak foregroundProvider] actions in
+          guard foregroundProvider?.isPotentialQuickDrawTargetForeground() == true else {
+            return false
+          }
+          return controller?.trigger(actions) ?? false
+        },
+        modifierHandler: { [weak cheatSheetController] modifiers in
+          DispatchQueue.main.async {
+            cheatSheetController?.handleModifierChange(modifiers)
+          }
         }
-        return controller?.trigger(action) ?? false
-      }
+      )
       controller.areHotKeysRegistered = true
       model.setHotKeysRegistered(true)
       let initialStatus = ActionStatus(
@@ -203,6 +231,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     actionController = controller
     statusMenuController = menuController
     configurationWindowController = windowController
+    shortcutCheatSheetController = cheatSheetController
     appModel = model
 
     windowController.present()

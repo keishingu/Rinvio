@@ -12,7 +12,7 @@ public struct CatalogWebApplication: Codable, Equatable, Sendable {
 
 public struct CatalogApplication: Codable, Equatable, Sendable {
   public let target: ActionTarget
-  public let domain: ActionDomain
+  public let domains: [ActionDomain]
   public let bundleIdentifiers: [String]
   public let webApplication: CatalogWebApplication?
 }
@@ -42,7 +42,7 @@ public enum BuiltInCatalogError: Error, Equatable {
 }
 
 public struct BuiltInCatalog: Sendable {
-  public static let currentSchemaVersion = 1
+  public static let currentSchemaVersion = 2
 
   private struct Document: Decodable {
     let schemaVersion: Int
@@ -88,6 +88,13 @@ public struct BuiltInCatalog: Sendable {
     applications.first { $0.target == target }!
   }
 
+  public func triggerScopesOverlap(_ first: ActionDomain, _ second: ActionDomain) -> Bool {
+    first == second
+      || applications.contains { application in
+        application.domains.contains(first) && application.domains.contains(second)
+      }
+  }
+
   public func target(forBundleIdentifier bundleIdentifier: String) -> ActionTarget? {
     applications.first { $0.bundleIdentifiers.contains(bundleIdentifier) }?.target
   }
@@ -97,7 +104,7 @@ public struct BuiltInCatalog: Sendable {
     domain: ActionDomain
   ) -> CatalogApplication? {
     applications.first {
-      $0.domain == domain && $0.webApplication?.browserTarget == browserTarget
+      $0.domains.contains(domain) && $0.webApplication?.browserTarget == browserTarget
     }
   }
 
@@ -117,6 +124,9 @@ public struct BuiltInCatalog: Sendable {
     for application in document.applications {
       guard seenApplications.insert(application.target).inserted else {
         throw BuiltInCatalogError.duplicateApplication(application.target)
+      }
+      guard !application.domains.isEmpty else {
+        throw BuiltInCatalogError.incompleteApplications
       }
       for bundleIdentifier in application.bundleIdentifiers {
         guard seenBundleIdentifiers.insert(bundleIdentifier).inserted else {
@@ -147,16 +157,24 @@ public struct BuiltInCatalog: Sendable {
         throw BuiltInCatalogError.duplicateMapping(mapping.action, mapping.target)
       }
       guard
-        document.actions.first(where: { $0.action == mapping.action })?.domain
-          == document.applications.first(where: { $0.target == mapping.target })?.domain
+        let actionDomain = document.actions.first(where: { $0.action == mapping.action })?.domain,
+        let application = document.applications.first(where: { $0.target == mapping.target }),
+        application.domains.contains(actionDomain)
       else {
         throw BuiltInCatalogError.domainMismatch(mapping.action, mapping.target)
       }
     }
 
     for (index, action) in document.actions.enumerated() {
-      if let duplicate = document.actions.dropFirst(index + 1).first(where: {
-        $0.defaultTrigger.matchesPhysicalShortcut(action.defaultTrigger)
+      if let duplicate = document.actions.dropFirst(index + 1).first(where: { candidate in
+        let scopesOverlap =
+          candidate.domain == action.domain
+          || document.applications.contains { application in
+            application.domains.contains(action.domain)
+              && application.domains.contains(candidate.domain)
+          }
+        return scopesOverlap
+          && candidate.defaultTrigger.matchesPhysicalShortcut(action.defaultTrigger)
       }) {
         throw BuiltInCatalogError.duplicateTrigger(action.action, duplicate.action)
       }
@@ -200,6 +218,10 @@ public enum ActionCatalog {
 
   public static func target(forBundleIdentifier bundleIdentifier: String) -> ActionTarget? {
     builtIn.target(forBundleIdentifier: bundleIdentifier)
+  }
+
+  public static func triggerScopesOverlap(_ first: Action, _ second: Action) -> Bool {
+    builtIn.triggerScopesOverlap(first.domain, second.domain)
   }
 
   public static func webApplication(

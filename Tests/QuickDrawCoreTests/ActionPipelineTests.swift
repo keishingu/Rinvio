@@ -140,6 +140,19 @@ final class ActionPipelineTests: XCTestCase {
     XCTAssertTrue(report.outcome.consumesTrigger)
   }
 
+  func testActionFromInactiveDomainPassesTriggerThrough() {
+    let fixture = makeFixture(bundleIdentifier: "com.tinyspeck.slackmacgap")
+
+    let report = fixture.pipeline.run(action: .leaveMeeting, mode: .live)
+
+    XCTAssertEqual(
+      report.outcome,
+      .failed(.routing(.inactiveDomain(domain: .meeting, target: .slack)))
+    )
+    XCTAssertFalse(report.outcome.consumesTrigger)
+    XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
+  }
+
   func testNonMeetChromePagePassesTriggerThrough() {
     let fixture = makeFixture(
       bundleIdentifier: "com.google.Chrome",

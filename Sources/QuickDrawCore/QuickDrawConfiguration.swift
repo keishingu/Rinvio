@@ -133,6 +133,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding, @unch
 
     if let duplicate = Action.allCases.first(where: { candidate in
       candidate != action
+        && ActionCatalog.triggerScopesOverlap(action, candidate)
         && trigger(for: candidate)?.matchesPhysicalShortcut(shortcut) == true
     }) {
       throw QuickDrawConfigurationError.duplicateTrigger(duplicate)

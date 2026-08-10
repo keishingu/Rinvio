@@ -48,6 +48,26 @@ final class QuickDrawConfigurationTests: XCTestCase {
     }
   }
 
+  func testAllowsSameTriggerAcrossDisjointApplicationDomains() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let meetingTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .mute))
+
+    try store.setTriggerOverride(meetingTrigger, for: .hardReload)
+
+    XCTAssertEqual(store.trigger(for: .hardReload), meetingTrigger)
+  }
+
+  func testRejectsSameTriggerAcrossDomainsSharedByTeams() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let meetingTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .mute))
+
+    XCTAssertThrowsError(
+      try store.setTriggerOverride(meetingTrigger, for: .quickSwitcher)
+    ) { error in
+      XCTAssertEqual(error as? QuickDrawConfigurationError, .duplicateTrigger(.mute))
+    }
+  }
+
   func testActionCanReceiveAndResetTriggerOverride() throws {
     let store = QuickDrawConfigurationStore(fileURL: nil)
     let custom = KeyStroke(virtualKeyCode: 103, modifiers: [], displayValue: "F11")

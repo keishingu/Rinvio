@@ -101,7 +101,7 @@ public enum ActionPipelineOutcome: Equatable, Sendable {
       case .routing(let routingFailure):
         switch routingFailure {
         case .missingBundleIdentifier, .browserContextUnavailable, .unsupportedWebPage,
-          .unsupportedApplication:
+          .unsupportedApplication, .inactiveDomain:
           false
         case .unsupportedAction:
           true

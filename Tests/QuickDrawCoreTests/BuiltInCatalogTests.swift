@@ -43,7 +43,19 @@ final class BuiltInCatalogTests: XCTestCase {
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.Terminal"), .terminal)
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.googlecode.iterm2"), .iTerm2)
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.Safari"), .safari)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.tinyspeck.slackmacgap"), .slack)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.hnc.Discord"), .discord)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.oss-cairn.desktop"), .cairn)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.oss-cairn.desktop.dev"), .cairn)
+    XCTAssertNil(ActionCatalog.target(forBundleIdentifier: "jp.naver.line.mac"))
     XCTAssertNil(ActionCatalog.target(forBundleIdentifier: "com.apple.TextEdit"))
+  }
+
+  func testTeamsParticipatesInMeetingAndChatDomains() {
+    XCTAssertEqual(
+      Set(ActionCatalog.application(for: .microsoftTeams).domains),
+      Set([.meeting, .chat])
+    )
   }
 
   func testMeetWebIdentityComesFromCatalog() throws {
@@ -71,19 +83,19 @@ final class BuiltInCatalogTests: XCTestCase {
   func testRejectsUnsupportedCatalogSchema() throws {
     let data = try XCTUnwrap(
       """
-      {"schemaVersion":2,"actions":[],"applications":[],"mappings":[]}
+      {"schemaVersion":3,"actions":[],"applications":[],"mappings":[]}
       """.data(using: .utf8)
     )
 
     XCTAssertThrowsError(try BuiltInCatalog(data: data)) { error in
-      XCTAssertEqual(error as? BuiltInCatalogError, .unsupportedSchemaVersion(2))
+      XCTAssertEqual(error as? BuiltInCatalogError, .unsupportedSchemaVersion(3))
     }
   }
 
   func testRejectsIncompleteCatalog() throws {
     let data = try XCTUnwrap(
       """
-      {"schemaVersion":1,"actions":[],"applications":[],"mappings":[]}
+      {"schemaVersion":2,"actions":[],"applications":[],"mappings":[]}
       """.data(using: .utf8)
     )
 

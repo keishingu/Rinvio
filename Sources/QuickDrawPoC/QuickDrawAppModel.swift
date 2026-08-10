@@ -6,9 +6,11 @@ import QuickDrawCore
 
 enum QuickDrawSection: String, CaseIterable, Identifiable {
   case meeting
+  case chat
   case development
   case browser
   case applications
+  case settings
   case diagnostics
 
   var id: Self { self }
@@ -16,9 +18,11 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
   var systemImage: String {
     switch self {
     case .meeting: "person.2.fill"
+    case .chat: "bubble.left.and.bubble.right.fill"
     case .development: "wrench.and.screwdriver.fill"
     case .browser: "globe"
     case .applications: "square.grid.2x2"
+    case .settings: "gearshape"
     case .diagnostics: "waveform.path.ecg"
     }
   }
@@ -26,14 +30,15 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
   var actionDomain: ActionDomain? {
     switch self {
     case .meeting: .meeting
+    case .chat: .chat
     case .development: .development
     case .browser: .browser
-    case .applications, .diagnostics: nil
+    case .applications, .settings, .diagnostics: nil
     }
   }
 
-  static let actionSections: [QuickDrawSection] = [.meeting, .development, .browser]
-  static let utilitySections: [QuickDrawSection] = [.applications, .diagnostics]
+  static let actionSections: [QuickDrawSection] = [.meeting, .chat, .development, .browser]
+  static let utilitySections: [QuickDrawSection] = [.applications, .settings, .diagnostics]
 }
 
 struct ApplicationMapping: Identifiable, Equatable {
@@ -44,7 +49,7 @@ struct ApplicationMapping: Identifiable, Equatable {
   let systemImage: String
   let identity: String
   let isInstalled: Bool
-  let domain: ActionDomain
+  let domains: [ActionDomain]
 
   static func current() -> [ApplicationMapping] {
     let workspace = NSWorkspace.shared
@@ -60,6 +65,9 @@ struct ApplicationMapping: Identifiable, Equatable {
       (.iTerm2, "iTerm2", "terminal"),
       (.safari, "Safari", "safari.fill"),
       (.googleChrome, "Chrome", "globe"),
+      (.slack, "Slack", "bubble.left.and.bubble.right.fill"),
+      (.discord, "Discord", "bubble.left.and.bubble.right.fill"),
+      (.cairn, "Cairn", "mountain.2.fill"),
     ]
 
     return presentations.map { target, compactName, systemImage in
@@ -82,7 +90,7 @@ struct ApplicationMapping: Identifiable, Equatable {
         isInstalled: installationBundleIdentifiers.contains {
           workspace.urlForApplication(withBundleIdentifier: $0) != nil
         },
-        domain: application.domain
+        domains: application.domains
       )
     }
   }
@@ -98,6 +106,8 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case pageLoading
   case tabs
   case browserTools
+  case conversationNavigation
+  case messaging
 
   var id: Self { self }
 }
@@ -253,6 +263,36 @@ struct ActionDefinition: Identifiable, Equatable {
       systemImage: "hammer.fill",
       category: .browserTools
     ),
+    ActionDefinition(
+      action: .quickSwitcher,
+      systemImage: "arrow.triangle.swap",
+      category: .conversationNavigation
+    ),
+    ActionDefinition(
+      action: .searchMessages,
+      systemImage: "magnifyingglass",
+      category: .conversationNavigation
+    ),
+    ActionDefinition(
+      action: .previousConversation,
+      systemImage: "arrow.up",
+      category: .conversationNavigation
+    ),
+    ActionDefinition(
+      action: .nextConversation,
+      systemImage: "arrow.down",
+      category: .conversationNavigation
+    ),
+    ActionDefinition(
+      action: .newMessage,
+      systemImage: "square.and.pencil",
+      category: .messaging
+    ),
+    ActionDefinition(
+      action: .openUnreads,
+      systemImage: "tray.full.fill",
+      category: .messaging
+    ),
   ]
 }
 
@@ -263,9 +303,12 @@ enum ShortcutRecordingDestination: Equatable {
 
 @MainActor
 final class QuickDrawAppModel: ObservableObject {
+  private static let cheatSheetEnabledKey = "cheatSheetEnabled"
+
   @Published private(set) var language: AppLanguage
   @Published private(set) var isEnabled = true
   @Published private(set) var isDryRunEnabled = false
+  @Published private(set) var isCheatSheetEnabled: Bool
   @Published private(set) var hasAccessibilityPermission = false
   @Published private(set) var areHotKeysRegistered = false
   @Published private(set) var status = ActionStatus(
@@ -289,6 +332,8 @@ final class QuickDrawAppModel: ObservableObject {
 
   var onSetEnabled: ((Bool) -> Void)?
   var onSetDryRun: ((Bool) -> Void)?
+  var onSetCheatSheetEnabled: ((Bool) -> Void)?
+  var onPreviewCheatSheet: (() -> Void)?
   var onRunDryCheck: ((Action) -> Void)?
   var onRequestAccessibility: (() -> Void)?
   var onRefreshPermission: (() -> Bool)?
@@ -310,6 +355,8 @@ final class QuickDrawAppModel: ObservableObject {
     self.configurationStore = configurationStore
     self.configuredSystemShortcutDetector = configuredSystemShortcutDetector
     language = AppLanguage.preferred(defaults: defaults)
+    isCheatSheetEnabled =
+      defaults.object(forKey: Self.cheatSheetEnabledKey) as? Bool ?? true
     configuration = configurationStore.configuration
   }
 
@@ -343,6 +390,16 @@ final class QuickDrawAppModel: ObservableObject {
   func setDryRunEnabled(_ enabled: Bool) {
     isDryRunEnabled = enabled
     onSetDryRun?(enabled)
+  }
+
+  func setCheatSheetEnabled(_ enabled: Bool) {
+    isCheatSheetEnabled = enabled
+    defaults.set(enabled, forKey: Self.cheatSheetEnabledKey)
+    onSetCheatSheetEnabled?(enabled)
+  }
+
+  func previewCheatSheet() {
+    onPreviewCheatSheet?()
   }
 
   func runDryCheck(action: Action) {
@@ -382,7 +439,7 @@ final class QuickDrawAppModel: ObservableObject {
   }
 
   func applications(in domain: ActionDomain) -> [ApplicationMapping] {
-    applications.filter { $0.domain == domain }
+    applications.filter { $0.domains.contains(domain) }
   }
 
   func supportedActionCount(for target: ActionTarget) -> Int {

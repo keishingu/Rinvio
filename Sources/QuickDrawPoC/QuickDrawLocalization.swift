@@ -47,6 +47,7 @@ struct QuickDrawCopy {
   var quickDrawPaused: String { text("QuickDrawは停止中です", "QuickDraw is paused") }
   var actions: String { text("アクション", "Actions") }
   var applications: String { text("アプリケーション", "Applications") }
+  var settings: String { text("設定", "Settings") }
   var diagnostics: String { text("診断", "Diagnostics") }
   var noApplications: String { text("アプリケーションがありません", "No Applications") }
   var noActionsInCategory: String {
@@ -64,6 +65,35 @@ struct QuickDrawCopy {
   var pageLoading: String { text("ページ読み込み", "Page loading") }
   var tabs: String { text("タブ", "Tabs") }
   var browserTools: String { text("ブラウザツール", "Browser tools") }
+  var conversationNavigation: String { text("会話の移動", "Conversation navigation") }
+  var messaging: String { text("メッセージ", "Messaging") }
+  var shortcutGuide: String { text("ショートカットガイド", "Shortcut Guide") }
+  var showShortcutGuideOnHold: String {
+    text("⌘⌥の長押しで表示", "Show when holding ⌘⌥")
+  }
+  var shortcutGuideDescription: String {
+    text(
+      "約0.6秒長押しすると、現在のアプリで利用できるQuickDraw Actionを画面中央に表示します。キー入力は消費しません。",
+      "Hold for about 0.6 seconds to show QuickDraw Actions available in the current app. The modifier keys remain available to the app."
+    )
+  }
+  var previewShortcutGuide: String { text("プレビュー", "Preview") }
+  var previewClosesAutomatically: String {
+    text("プレビューは3秒後に閉じます", "Preview closes in 3 seconds")
+  }
+  var screenSharingPrivacy: String { text("画面共有", "Screen Sharing") }
+  var screenSharingBestEffort: String {
+    text("共有画面からの除外を試みます", "Attempts to stay out of shared screens")
+  }
+  var screenSharingLimitation: String {
+    text(
+      "macOSには他社アプリの画面共有からウインドウを確実に除外する公開APIがないため、共有方式によっては表示されます。",
+      "macOS has no public API that can reliably exclude a window from another app's screen share, so the guide may still appear depending on the sharing method."
+    )
+  }
+  var holdToKeepGuideVisible: String {
+    text("⌘⌥を離すと閉じます", "Release ⌘⌥ to close")
+  }
   var applicationsSubtitle: String {
     text(
       "各アプリでActionがどう実行されるか確認できます。",
@@ -246,9 +276,11 @@ struct QuickDrawCopy {
   func sectionTitle(_ section: QuickDrawSection) -> String {
     switch section {
     case .meeting: actionDomainName(.meeting)
+    case .chat: actionDomainName(.chat)
     case .development: actionDomainName(.development)
     case .browser: actionDomainName(.browser)
     case .applications: applications
+    case .settings: settings
     case .diagnostics: diagnostics
     }
   }
@@ -256,6 +288,7 @@ struct QuickDrawCopy {
   func actionDomainName(_ domain: ActionDomain) -> String {
     switch domain {
     case .meeting: text("Meeting", "Meeting")
+    case .chat: text("Chat", "Chat")
     case .development: text("Development", "Development")
     case .browser: text("Browser", "Browser")
     }
@@ -267,6 +300,11 @@ struct QuickDrawCopy {
       text(
         "会議アプリごとの操作差を、共通Actionへ変換します。",
         "Translate meeting controls into the same Actions across apps."
+      )
+    case .chat:
+      text(
+        "チャットサービスごとの移動・検索・作成操作を統一します。",
+        "Unify navigation, search, and compose Actions across chat services."
       )
     case .development:
       text(
@@ -296,6 +334,8 @@ struct QuickDrawCopy {
     case .pageLoading: pageLoading
     case .tabs: tabs
     case .browserTools: browserTools
+    case .conversationNavigation: conversationNavigation
+    case .messaging: messaging
     }
   }
 
@@ -335,6 +375,12 @@ struct QuickDrawCopy {
     case .openDownloads: text("ダウンロードを表示", "Open Downloads")
     case .openDeveloperTools: text("開発者ツールを表示", "Open Developer Tools")
     case .reopenClosedTab: text("閉じたタブを開き直す", "Reopen Closed Tab")
+    case .quickSwitcher: text("会話へ移動", "Jump to Conversation")
+    case .searchMessages: text("メッセージを検索", "Search Messages")
+    case .newMessage: text("新しいメッセージ", "New Message")
+    case .previousConversation: text("前の会話", "Previous Conversation")
+    case .nextConversation: text("次の会話", "Next Conversation")
+    case .openUnreads: text("未読を表示", "Open Unreads")
     }
   }
 
@@ -453,6 +499,18 @@ struct QuickDrawCopy {
       )
     case .reopenClosedTab:
       text("最後に閉じたタブを開き直します", "Reopen the most recently closed tab")
+    case .quickSwitcher:
+      text("チャンネルやダイレクトメッセージへ名前から移動します", "Jump to a channel or direct message by name")
+    case .searchMessages:
+      text("チャットサービス内のメッセージを横断検索します", "Search messages across the active chat service")
+    case .newMessage:
+      text("新しいメッセージまたはチャットの作成画面を開きます", "Open the composer for a new message or chat")
+    case .previousConversation:
+      text("前のチャンネルまたは会話へ移動します", "Move to the previous channel or conversation")
+    case .nextConversation:
+      text("次のチャンネルまたは会話へ移動します", "Move to the next channel or conversation")
+    case .openUnreads:
+      text("未読メッセージの一覧を開きます", "Open the unread messages view")
     }
   }
 

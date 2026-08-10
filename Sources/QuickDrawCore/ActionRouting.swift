@@ -25,6 +25,7 @@ public struct KeyStroke: Codable, Equatable, Hashable, Sendable {
 
 public enum ActionDomain: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
   case meeting
+  case chat
   case development
   case browser
 
@@ -66,6 +67,12 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case openDownloads
   case openDeveloperTools
   case reopenClosedTab
+  case quickSwitcher
+  case searchMessages
+  case newMessage
+  case previousConversation
+  case nextConversation
+  case openUnreads
 
   public var id: Self { self }
 
@@ -109,6 +116,12 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .openDownloads: "Open Downloads"
     case .openDeveloperTools: "Developer Tools"
     case .reopenClosedTab: "Reopen Closed Tab"
+    case .quickSwitcher: "Jump to Conversation"
+    case .searchMessages: "Search Messages"
+    case .newMessage: "New Message"
+    case .previousConversation: "Previous Conversation"
+    case .nextConversation: "Next Conversation"
+    case .openUnreads: "Open Unreads"
     }
   }
 }
@@ -125,6 +138,9 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
   case iTerm2
   case safari
   case googleChrome
+  case slack
+  case discord
+  case cairn
 
   public var displayName: String {
     switch self {
@@ -139,6 +155,9 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
     case .iTerm2: "iTerm2"
     case .safari: "Safari"
     case .googleChrome: "Google Chrome"
+    case .slack: "Slack"
+    case .discord: "Discord"
+    case .cairn: "Cairn"
     }
   }
 }
@@ -182,6 +201,7 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
   case browserContextUnavailable
   case unsupportedWebPage(host: String?)
   case unsupportedApplication(bundleIdentifier: String)
+  case inactiveDomain(domain: ActionDomain, target: ActionTarget)
   case unsupportedAction(action: Action, target: ActionTarget)
 
   public var userMessage: String {
@@ -194,6 +214,8 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
       "Active Chrome tab is not Google Meet"
     case .unsupportedApplication(let bundleIdentifier):
       "Unsupported foreground application (\(bundleIdentifier))"
+    case .inactiveDomain(let domain, let target):
+      "\(target.displayName) is not active for the \(domain.rawValue) category"
     case .unsupportedAction(let action, let target):
       "\(action.displayName) has no shortcut for \(target.displayName)"
     }
@@ -235,6 +257,9 @@ public struct ActionRouter {
       }
       target = webApplication.target
     } else {
+      guard ActionCatalog.application(for: foregroundTarget).domains.contains(action.domain) else {
+        return .failure(.inactiveDomain(domain: action.domain, target: foregroundTarget))
+      }
       target = foregroundTarget
     }
 

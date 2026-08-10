@@ -11,7 +11,7 @@
 | Teams routes | Mute `⌘⇧M`, Camera `⌘⇧O`, Raise Hand `⌘⇧K` | Pass |
 | Zoom routes | Mute `⌘⇧A`, Camera `⌘⇧V`, Raise Hand `⌥Y` | Pass |
 | Meet routes | Mute `⌘D`, Camera `⌘E`, Raise Hand `⌃⌘H` on exact HTTPS `meet.google.com` | Pass |
-| Expanded Action catalog | Chat, Participants, Captions, Share Screen, Switch Camera, Picture in Picture, six Zoom reactions | Pass |
+| Expanded Action catalog | Meeting controls, reactions, Chat, Development, and Browser Actions | Pass |
 | Partial capabilities | Missing Application × Action shortcut fails closed without key delivery; user override can add one | Pass |
 | Fail closed | fake Meet host, HTTP Meet, non-Meet tab, unsupported app, missing context | Pass |
 | Full pipeline | routing, target revalidation, delivery, and injected failures | Pass |
@@ -19,20 +19,21 @@
 | Event sequence | one matching key-down/key-up pair with source marker | Pass |
 | Privacy | reports retain Meet classification but not active-tab URL or non-Meet host | Pass |
 | Latency guard | 1,000 in-process Dry Runs, p95 under 25 ms | Pass |
-| Global Triggers | 15 unique `⌘⌥` Triggers monitored by CGEventTap; unsupported app/page outcomes pass through | Pass |
+| Global Triggers | 40 default `⌘⌥` Triggers monitored by CGEventTap; domain-scoped override reuse and unsupported app/page pass-through | Pass |
 | Generated-event suppression | QuickDraw source marker bypasses Trigger matching | Pass |
 | Shortcut conflicts | Known macOS catalog + enabled `AppleSymbolicHotKeys` best-effort detection | Pass |
 | App lifecycle | Dock app and Menu Bar Extra remain available after closing the settings window | Pass |
 | Native configuration window | Action-first split view, mapping inspector, Applications and Diagnostics navigation | Pass |
 | Window interactions | Sidebar navigation and Inspector show/hide verified with macOS Accessibility tree | Pass |
 | Language switching | Japanese / English updates live and the selection is persisted in UserDefaults | Pass |
-| Trigger configuration | Safe Trigger validation, duplicate rejection, dynamic HotKey registration, default restore | Pass |
+| Shortcut Guide | Modifier-only hold monitoring, foreground capability filtering, persistent ON/OFF setting, preview, and release dismissal | Pass |
+| Trigger configuration | Safe Trigger validation, overlapping-domain duplicate rejection, disjoint-domain reuse, dynamic HotKey registration, default restore | Pass |
 | Mapping overrides | Router uses persisted Action × Application overrides; individual and Action-level restore | Pass |
 | Configuration persistence | Versioned JSON round-trip and defaults-not-copied behavior | Pass |
 | Built-in Catalog | Bundled JSON decode, schema validation, complete Action/Application coverage | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
-| Tests | `swift test`: 43 tests, 0 failures | Pass |
+| Tests | `swift test`: 62 tests, 0 failures | Pass |
 | Idle resources | 43 seconds idle: CPU 0.0%, RSS about 20 MB | Pass (single observation) |
 
 ## Installed application identities

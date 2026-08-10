@@ -211,12 +211,77 @@ final class ActionRouterTests: XCTestCase {
       modifiers: [.command, .shift], display: "⌘⇧T")
   }
 
+  func testRoutesChatActionsForSlack() throws {
+    try assertRoute(
+      .quickSwitcher, bundleIdentifier: "com.tinyspeck.slackmacgap", keyCode: 40,
+      modifiers: [.command], display: "⌘K")
+    try assertRoute(
+      .searchMessages, bundleIdentifier: "com.tinyspeck.slackmacgap", keyCode: 5,
+      modifiers: [.command], display: "⌘G")
+    try assertRoute(
+      .newMessage, bundleIdentifier: "com.tinyspeck.slackmacgap", keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+    try assertRoute(
+      .nextConversation, bundleIdentifier: "com.tinyspeck.slackmacgap", keyCode: 125,
+      modifiers: [.option], display: "⌥↓")
+    try assertRoute(
+      .openUnreads, bundleIdentifier: "com.tinyspeck.slackmacgap", keyCode: 0,
+      modifiers: [.command, .shift], display: "⌘⇧A")
+  }
+
+  func testRoutesChatActionsForTeams() throws {
+    try assertRoute(
+      .quickSwitcher, bundleIdentifier: "com.microsoft.teams2", keyCode: 5,
+      modifiers: [.command], display: "⌘G")
+    try assertRoute(
+      .searchMessages, bundleIdentifier: "com.microsoft.teams2", keyCode: 14,
+      modifiers: [.command], display: "⌘E")
+    try assertRoute(
+      .newMessage, bundleIdentifier: "com.microsoft.teams2", keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+  }
+
+  func testRoutesChatActionsForDiscord() throws {
+    try assertRoute(
+      .quickSwitcher, bundleIdentifier: "com.hnc.Discord", keyCode: 40,
+      modifiers: [.command], display: "⌘K")
+    try assertRoute(
+      .searchMessages, bundleIdentifier: "com.hnc.Discord", keyCode: 3,
+      modifiers: [.command, .shift], display: "⌘⇧F")
+    try assertRoute(
+      .previousConversation, bundleIdentifier: "com.hnc.Discord", keyCode: 126,
+      modifiers: [.option], display: "⌥↑")
+  }
+
+  func testRoutesChatActionsForCairn() throws {
+    for bundleIdentifier in ["com.oss-cairn.desktop", "com.oss-cairn.desktop.dev"] {
+      try assertRoute(
+        .searchMessages, bundleIdentifier: bundleIdentifier, keyCode: 3,
+        modifiers: [.command, .shift], display: "⌘⇧F")
+      try assertRoute(
+        .previousConversation, bundleIdentifier: bundleIdentifier, keyCode: 126,
+        modifiers: [.option], display: "⌥↑")
+      try assertRoute(
+        .nextConversation, bundleIdentifier: bundleIdentifier, keyCode: 125,
+        modifiers: [.option], display: "⌥↓")
+    }
+  }
+
   func testUnsupportedActionFailsWithoutShortcut() {
     assertFailure(
       action: .reactionLike,
       bundleIdentifier: "com.microsoft.teams2",
       activeTabURL: nil,
       expected: .unsupportedAction(action: .reactionLike, target: .microsoftTeams)
+    )
+  }
+
+  func testMeetingActionDoesNotEnterChatOnlyApplicationDomain() {
+    assertFailure(
+      action: .leaveMeeting,
+      bundleIdentifier: "com.tinyspeck.slackmacgap",
+      activeTabURL: nil,
+      expected: .inactiveDomain(domain: .meeting, target: .slack)
     )
   }
 
