@@ -50,6 +50,7 @@ struct ApplicationMapping: Identifiable, Equatable {
   let identity: String
   let isInstalled: Bool
   let domains: [ActionDomain]
+  let officialURL: URL?
 
   static func current() -> [ApplicationMapping] {
     let workspace = NSWorkspace.shared
@@ -65,6 +66,10 @@ struct ApplicationMapping: Identifiable, Equatable {
       (.iTerm2, "iTerm2", "terminal"),
       (.safari, "Safari", "safari.fill"),
       (.googleChrome, "Chrome", "globe"),
+      (.firefox, "Firefox", "flame.fill"),
+      (.microsoftEdge, "Edge", "wave.3.right"),
+      (.brave, "Brave", "shield.fill"),
+      (.arc, "Arc", "circle.circle"),
       (.slack, "Slack", "bubble.left.and.bubble.right.fill"),
       (.discord, "Discord", "bubble.left.and.bubble.right.fill"),
       (.cairn, "Cairn", "mountain.2.fill"),
@@ -90,7 +95,8 @@ struct ApplicationMapping: Identifiable, Equatable {
         isInstalled: installationBundleIdentifiers.contains {
           workspace.urlForApplication(withBundleIdentifier: $0) != nil
         },
-        domains: application.domains
+        domains: application.domains,
+        officialURL: application.officialURL
       )
     }
   }
@@ -440,6 +446,10 @@ final class QuickDrawAppModel: ObservableObject {
 
   func applications(in domain: ActionDomain) -> [ApplicationMapping] {
     applications.filter { $0.domains.contains(domain) }
+  }
+
+  func installedApplications(in domain: ActionDomain) -> [ApplicationMapping] {
+    applications(in: domain).filter(\.isInstalled)
   }
 
   func supportedActionCount(for target: ActionTarget) -> Int {

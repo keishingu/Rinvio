@@ -102,6 +102,16 @@ struct QuickDrawCopy {
   }
   var detected: String { text("検出済み", "Detected") }
   var notInstalled: String { text("未インストール", "Not installed") }
+  var noInstalledApplications: String {
+    text("このカテゴリの対応アプリはインストールされていません", "No supported apps in this category are installed")
+  }
+  var installToUseMappings: String {
+    text(
+      "インストール後、このアプリのActionマッピングをQuickDrawで利用できます。",
+      "Install this app to use its Action mappings with QuickDraw."
+    )
+  }
+  var openOfficialWebsite: String { text("公式サイトを開く", "Open Official Website") }
   func actionCount(_ count: Int) -> String {
     text("\(count)個のAction", "\(count) Actions")
   }

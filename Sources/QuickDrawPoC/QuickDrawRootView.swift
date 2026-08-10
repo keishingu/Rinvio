@@ -312,7 +312,7 @@ private struct ActionRow: View {
         alignment: .leading,
         spacing: 7
       ) {
-        ForEach(model.applications(in: definition.domain)) { application in
+        ForEach(model.installedApplications(in: definition.domain)) { application in
           CompactMapping(application: application, action: definition.action, model: model)
         }
       }
@@ -358,43 +358,76 @@ private struct ApplicationsView: View {
       ContentHeader(title: model.copy.applications, subtitle: model.copy.applicationsSubtitle)
       Divider()
 
-      List(selection: $selection) {
-        ForEach(ActionDomain.allCases) { domain in
-          Section(model.copy.actionDomainName(domain)) {
+      ScrollView {
+        LazyVStack(alignment: .leading, spacing: 0) {
+          ForEach(ActionDomain.allCases) { domain in
+            Text(model.copy.actionDomainName(domain))
+              .font(.caption.weight(.semibold))
+              .foregroundStyle(.secondary)
+              .padding(.horizontal, 8)
+              .padding(.top, 14)
+              .padding(.bottom, 5)
+
             ForEach(model.applications(in: domain)) { application in
-              HStack(spacing: 13) {
-                Image(systemName: application.systemImage)
-                  .font(.title3)
-                  .symbolRenderingMode(.hierarchical)
-                  .frame(width: 36, height: 36)
-                  .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-
-                VStack(alignment: .leading, spacing: 3) {
-                  Text(application.name)
-                    .font(.headline)
-                  Text(application.identity)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 3) {
-                  Text(model.copy.actionCount(model.supportedActionCount(for: application.target)))
-                  Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-              }
-              .padding(.vertical, 7)
-              .tag("(domain.rawValue):(application.id)")
+              applicationRow(application, in: domain)
             }
           }
         }
+        .padding(.horizontal, 10)
+        .padding(.bottom, 12)
       }
-      .listStyle(.inset)
     }
     .navigationTitle("QuickDraw")
+  }
+
+  private func applicationRow(
+    _ application: ApplicationMapping,
+    in domain: ActionDomain
+  ) -> some View {
+    let rowID = "\(domain.rawValue):\(application.id)"
+    let isSelected = selection == rowID
+
+    return Button {
+      selection = rowID
+    } label: {
+      HStack(spacing: 13) {
+        Image(systemName: application.systemImage)
+          .font(.title3)
+          .symbolRenderingMode(.hierarchical)
+          .frame(width: 36, height: 36)
+          .background(
+            isSelected ? Color.white.opacity(0.16) : Color.primary.opacity(0.08),
+            in: RoundedRectangle(cornerRadius: 8)
+          )
+
+        VStack(alignment: .leading, spacing: 3) {
+          Text(application.name)
+            .font(.headline)
+          Text(application.identity)
+            .font(.caption)
+            .foregroundStyle(isSelected ? Color.white.opacity(0.78) : Color.secondary)
+        }
+
+        Spacer()
+
+        VStack(alignment: .trailing, spacing: 3) {
+          Text(model.copy.actionCount(model.supportedActionCount(for: application.target)))
+          Text(application.isInstalled ? model.copy.detected : model.copy.notInstalled)
+            .font(.caption)
+            .foregroundStyle(isSelected ? Color.white.opacity(0.78) : Color.secondary)
+        }
+      }
+      .foregroundStyle(isSelected ? Color.white : Color.primary)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(Rectangle())
+      .padding(.horizontal, 8)
+      .padding(.vertical, 7)
+      .background(
+        isSelected ? Color.accentColor : Color.clear,
+        in: RoundedRectangle(cornerRadius: 8)
+      )
+    }
+    .buttonStyle(.plain)
   }
 }
 
@@ -529,12 +562,18 @@ private struct ActionInspector: View {
       }
 
       Section(model.copy.applicationMappings) {
-        ForEach(model.applications(in: definition.domain)) { application in
-          MappingRow(
-            application: application,
-            action: definition.action,
-            model: model
-          )
+        let installedApplications = model.installedApplications(in: definition.domain)
+        if installedApplications.isEmpty {
+          Label(model.copy.noInstalledApplications, systemImage: "app.dashed")
+            .foregroundStyle(.secondary)
+        } else {
+          ForEach(installedApplications) { application in
+            MappingRow(
+              application: application,
+              action: definition.action,
+              model: model
+            )
+          }
         }
       }
 
@@ -687,6 +726,18 @@ private struct ApplicationInspector: View {
       Section(model.copy.identity) {
         Text(application.identity)
           .textSelection(.enabled)
+      }
+
+      if !application.isInstalled {
+        Section {
+          Label(model.copy.installToUseMappings, systemImage: "arrow.down.app")
+            .foregroundStyle(.secondary)
+          if let officialURL = application.officialURL {
+            Link(destination: officialURL) {
+              Label(model.copy.openOfficialWebsite, systemImage: "arrow.up.right.square")
+            }
+          }
+        }
       }
 
       ForEach(categories) { category in

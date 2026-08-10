@@ -716,7 +716,7 @@ Reaction成功はMVP条件に含めない。
 |---|---|---|---|
 | Zoom | Official reaction shortcuts | 必要時semantic AX | policy/layout/custom settingをPoC |
 | Teams | Semantic Accessibility | 初期はなし | element identityとupdate耐性がgate |
-| Meet | macOS Accessibility | Extension + Native Messaging | AXが不安定ならExtension |
+| Meet | Browser Extension + Native Messaging | Semantic Accessibility | DOM element identityとversion skewがgate |
 
 ### AX element識別
 
@@ -732,17 +732,22 @@ Coordinate禁止、単一depth/index path禁止、ambiguousならfail closed。P
 
 Extensionが必要になるのは**Web UI execution**であり、必ずしも**tab recognition**ではない。
 
+Browser Extensionは独立したChrome版QuickDrawではなく、QuickDraw.appが確定したActionを実行するApplication Adapterとする。Trigger、Action設定、Routing、DiagnosticsのSource of TruthはQuickDraw.appに置き、Extension側へ重複させない。Repositoryは段階的モノレポとし、既存Swift構成を維持したままPoC開始時に`BrowserExtension/`と共有message schemaを追加する。詳細は[ADR-0001](adr/0001-browser-extension-adapter-and-monorepo.md)を参照。
+
 ```mermaid
 sequenceDiagram
     participant Q as QuickDraw.app
-    participant N as Native Messaging Host
-    participant E as Meet Extension
+    participant N as Native Bridge
+    participant E as Extension Service Worker
     participant M as Google Meet DOM
+    E->>N: connectNative(schema + version)
+    N-->>Q: bridge available
     Q->>N: ActionID + request ID
     N->>E: fixed-schema message
     E->>M: exact supported control
     M-->>E: typed result
-    E-->>Q: result + extension version
+    E-->>N: result + extension version
+    N-->>Q: typed result
 ```
 
 - Host permissionはMeet originだけ。
@@ -751,7 +756,7 @@ sequenceDiagram
 - Page content、chat、participant dataをNative側へ返さない。
 - Optional installでCapability単位に要求する。
 
-Native Messagingはbrowserごとのmanifest、sign/install、store review、version skewが増える。Meet Reaction AXがreliability gateを満たさない場合だけ採用する。
+Native Messagingはbrowserごとのmanifest、sign/install、store review、version skewが増える。Level 1は既存Shortcut経路を維持し、ExtensionはMeet ReactionなどDOM accessが必要なCapabilityだけに採用する。
 
 ---
 
@@ -768,7 +773,7 @@ Native Messagingはbrowserごとのmanifest、sign/install、store review、vers
 
 - Zoom Shortcut Reaction。
 - Teams AX Reaction。
-- Meet AX → 必要ならExtension/Native Messaging。
+- Meet Extension/Native Messaging Reaction。AXは比較baselineとfallback候補。
 - 会議Contextが確実、またはdedicated hardwareの場合だけone-key reaction。
 
 ### Phase 3 — External Input Surface
@@ -855,8 +860,8 @@ PoCはProduct Code開始ではなく、破棄可能なLab Targetとする。OS/A
 
 9. Zoom Reactionをpolicy/locale/layout/override別に検証。
 10. Teams Reaction AX snapshotと100回実行、window size/locale/update差分。
-11. Meet Reaction AXをChrome/Safariで検証。
-12. #11が失敗した場合だけ最小Meet Extension + Native Messagingのinstall/update/version skewを評価。
+11. Meet Reaction AXをChromeで比較baselineとして検証。
+12. 最小Meet Extension + Native Messagingで👍だけを実行し、DOM識別、install、update、version skewを評価。
 
 Level 2 Ship Gate: valid stateで99%以上、coordinate依存ゼロ、UI更新時にbounded failure、executable codeをdownloadしないdisable strategy。
 
@@ -868,60 +873,29 @@ Level 2 Ship Gate: valid stateで99%以上、coordinate依存ゼロ、UI更新�
 
 ```text
 QuickDraw/
-├─ App/
-│  ├─ QuickDrawApp
-│  ├─ AppCoordinator
-│  └─ AppEnvironment
-├─ Domain/
-│  ├─ ActionDefinition
-│  ├─ Trigger / TriggerBinding
-│  ├─ ApplicationDescriptor
-│  ├─ Capability
-│  ├─ RoutingContext / Target
-│  └─ ExecutionResult
-├─ Routing/
-│  ├─ ActionDispatcher
-│  ├─ TargetRouter
-│  ├─ AdapterRegistry
-│  └─ ExecutionCoordinator
-├─ Adapters/
-│  ├─ ApplicationAdapter
-│  ├─ TeamsAdapter
-│  ├─ ZoomAdapter
-│  └─ GoogleMeetAdapter
-├─ Infrastructure/
-│  ├─ Input/HotKeyRegistrar
-│  ├─ Applications/WorkspaceApplicationMonitor
-│  ├─ Browsers/BrowserContextProvider
-│  ├─ Browsers/ChromeContextProvider
-│  ├─ Browsers/SafariContextProvider
-│  ├─ Execution/ShortcutExecutor
-│  ├─ Execution/AccessibilityExecutor      # Level 2 later
-│  ├─ Permissions/PermissionCenter
-│  ├─ Persistence/ConfigurationStore
-│  └─ Diagnostics/DiagnosticsStore
-├─ Features/
-│  ├─ Onboarding
-│  ├─ Actions
-│  ├─ Applications
-│  ├─ Diagnostics
-│  ├─ MenuBar
-│  └─ Settings
-├─ Resources/
-│  ├─ ActionCatalog
-│  ├─ ApplicationCatalog
-│  ├─ Assets
-│  └─ Localizable
+├─ Package.swift
+├─ Sources/
+│  ├─ QuickDrawCore/                     # Action、Routing、Catalog
+│  ├─ QuickDrawPoC/                      # macOS App、UI、macOS gateways
+│  └─ QuickDrawBrowserBridge/            # Native Messaging PoC開始時に追加
 ├─ Tests/
-│  ├─ DomainTests
-│  ├─ RoutingTests
-│  ├─ AdapterContractTests
-│  ├─ PersistenceTests
-│  └─ UITests
-└─ PoCLab/                                # disposable target/scheme
+│  └─ QuickDrawCoreTests/
+├─ BrowserExtension/                     # Level 2 PoC開始時に追加
+│  ├─ package.json
+│  ├─ src/service-worker/
+│  ├─ src/content-scripts/google-meet/
+│  ├─ manifests/chromium/
+│  └─ tests/
+├─ Shared/
+│  ├─ browser-message.schema.json         # Native Messaging導入時に追加
+│  └─ fixtures/browser-messages/
+├─ Scripts/
+└─ docs/
+   └─ adr/
 ```
 
 - 初期は1 App Target + Test。XPC helper/daemonなし。
+- Browser Extension開始時も既存Swift codeを`apps/macos`へ移動せず、必要なtop-level directoryだけを追加する。
 - Adapterは普通のconcrete type。2実装またはtest seamが必要になるまでProtocolを増やさない。
 - Default catalogはResource、Execution logicはSwift。Runtime plugin manifestにしない。
 - DI Container frameworkを使わず `AppEnvironment` で組み立てる。

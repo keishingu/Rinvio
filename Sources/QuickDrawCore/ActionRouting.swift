@@ -138,6 +138,10 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
   case iTerm2
   case safari
   case googleChrome
+  case firefox
+  case microsoftEdge
+  case brave
+  case arc
   case slack
   case discord
   case cairn
@@ -155,6 +159,10 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
     case .iTerm2: "iTerm2"
     case .safari: "Safari"
     case .googleChrome: "Google Chrome"
+    case .firefox: "Firefox"
+    case .microsoftEdge: "Microsoft Edge"
+    case .brave: "Brave"
+    case .arc: "Arc"
     case .slack: "Slack"
     case .discord: "Discord"
     case .cairn: "Cairn"

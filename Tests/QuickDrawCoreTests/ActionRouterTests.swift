@@ -211,6 +211,90 @@ final class ActionRouterTests: XCTestCase {
       modifiers: [.command, .shift], display: "⌘⇧T")
   }
 
+  func testRoutesFirefoxBrowserActions() throws {
+    try assertRoute(
+      .hardReload, bundleIdentifier: "org.mozilla.firefox", keyCode: 15,
+      modifiers: [.command, .shift], display: "⌘⇧R")
+    try assertRoute(
+      .nextTab, bundleIdentifier: "org.mozilla.firefox", keyCode: 124,
+      modifiers: [.command, .option], display: "⌘⌥→")
+    try assertRoute(
+      .previousTab, bundleIdentifier: "org.mozilla.firefox", keyCode: 123,
+      modifiers: [.command, .option], display: "⌘⌥←")
+    try assertRoute(
+      .openDownloads, bundleIdentifier: "org.mozilla.firefox", keyCode: 38,
+      modifiers: [.command], display: "⌘J")
+    try assertRoute(
+      .openDeveloperTools, bundleIdentifier: "org.mozilla.firefox", keyCode: 34,
+      modifiers: [.command, .option], display: "⌘⌥I")
+    try assertRoute(
+      .reopenClosedTab, bundleIdentifier: "org.mozilla.firefox", keyCode: 17,
+      modifiers: [.command, .shift], display: "⌘⇧T")
+  }
+
+  func testRoutesEdgeBrowserActions() throws {
+    let bundleIdentifier = "com.microsoft.edgemac"
+    try assertRoute(
+      .hardReload, bundleIdentifier: bundleIdentifier, keyCode: 15,
+      modifiers: [.command, .shift], display: "⌘⇧R")
+    try assertRoute(
+      .nextTab, bundleIdentifier: bundleIdentifier, keyCode: 124,
+      modifiers: [.command, .option], display: "⌘⌥→")
+    try assertRoute(
+      .previousTab, bundleIdentifier: bundleIdentifier, keyCode: 123,
+      modifiers: [.command, .option], display: "⌘⌥←")
+    try assertRoute(
+      .openDownloads, bundleIdentifier: bundleIdentifier, keyCode: 37,
+      modifiers: [.command, .option], display: "⌘⌥L")
+    try assertRoute(
+      .openDeveloperTools, bundleIdentifier: bundleIdentifier, keyCode: 34,
+      modifiers: [.command, .option], display: "⌘⌥I")
+    try assertRoute(
+      .reopenClosedTab, bundleIdentifier: bundleIdentifier, keyCode: 17,
+      modifiers: [.command, .shift], display: "⌘⇧T")
+  }
+
+  func testRoutesBraveBrowserActions() throws {
+    let bundleIdentifier = "com.brave.Browser"
+    try assertRoute(
+      .hardReload, bundleIdentifier: bundleIdentifier, keyCode: 15,
+      modifiers: [.command, .shift], display: "⌘⇧R")
+    try assertRoute(
+      .nextTab, bundleIdentifier: bundleIdentifier, keyCode: 124,
+      modifiers: [.command, .option], display: "⌘⌥→")
+    try assertRoute(
+      .previousTab, bundleIdentifier: bundleIdentifier, keyCode: 123,
+      modifiers: [.command, .option], display: "⌘⌥←")
+    try assertRoute(
+      .openDownloads, bundleIdentifier: bundleIdentifier, keyCode: 38,
+      modifiers: [.command, .shift], display: "⌘⇧J")
+    try assertRoute(
+      .openDeveloperTools, bundleIdentifier: bundleIdentifier, keyCode: 34,
+      modifiers: [.command, .option], display: "⌘⌥I")
+    try assertRoute(
+      .reopenClosedTab, bundleIdentifier: bundleIdentifier, keyCode: 17,
+      modifiers: [.command, .shift], display: "⌘⇧T")
+  }
+
+  func testRoutesConfirmedArcBrowserActions() throws {
+    let bundleIdentifier = "company.thebrowser.Browser"
+    try assertRoute(
+      .nextTab, bundleIdentifier: bundleIdentifier, keyCode: 125,
+      modifiers: [.command, .option], display: "⌘⌥↓")
+    try assertRoute(
+      .previousTab, bundleIdentifier: bundleIdentifier, keyCode: 126,
+      modifiers: [.command, .option], display: "⌘⌥↑")
+    try assertRoute(
+      .reopenClosedTab, bundleIdentifier: bundleIdentifier, keyCode: 17,
+      modifiers: [.command, .shift], display: "⌘⇧T")
+    assertFailure(
+      action: .hardReload,
+      bundleIdentifier: bundleIdentifier,
+      activeTabURL: nil,
+      expected: .unsupportedAction(action: .hardReload, target: .arc)
+    )
+  }
+
   func testRoutesChatActionsForSlack() throws {
     try assertRoute(
       .quickSwitcher, bundleIdentifier: "com.tinyspeck.slackmacgap", keyCode: 40,

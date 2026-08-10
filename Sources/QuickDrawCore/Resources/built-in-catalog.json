@@ -366,12 +366,14 @@
     {
       "target": "microsoftTeams",
       "domains": ["meeting", "chat"],
-      "bundleIdentifiers": ["com.microsoft.teams2", "com.microsoft.teams"]
+      "bundleIdentifiers": ["com.microsoft.teams2", "com.microsoft.teams"],
+      "officialURL": "https://www.microsoft.com/microsoft-teams/download-app"
     },
     {
       "target": "zoomWorkplace",
       "domains": ["meeting"],
-      "bundleIdentifiers": ["us.zoom.xos"]
+      "bundleIdentifiers": ["us.zoom.xos"],
+      "officialURL": "https://zoom.us/download"
     },
     {
       "target": "googleMeet",
@@ -381,62 +383,98 @@
         "browserTarget": "googleChrome",
         "scheme": "https",
         "host": "meet.google.com"
-      }
+      },
+      "officialURL": "https://meet.google.com/"
     },
     {
       "target": "codex",
       "domains": ["development"],
-      "bundleIdentifiers": ["com.openai.codex"]
+      "bundleIdentifiers": ["com.openai.codex"],
+      "officialURL": "https://openai.com/codex/"
     },
     {
       "target": "claude",
       "domains": ["development"],
-      "bundleIdentifiers": ["com.anthropic.claudefordesktop"]
+      "bundleIdentifiers": ["com.anthropic.claudefordesktop"],
+      "officialURL": "https://claude.ai/download"
     },
     {
       "target": "visualStudioCode",
       "domains": ["development"],
-      "bundleIdentifiers": ["com.microsoft.VSCode", "com.microsoft.VSCodeInsiders"]
+      "bundleIdentifiers": ["com.microsoft.VSCode", "com.microsoft.VSCodeInsiders"],
+      "officialURL": "https://code.visualstudio.com/download"
     },
     {
       "target": "cursor",
       "domains": ["development"],
-      "bundleIdentifiers": ["com.todesktop.230313mzl4w4u92"]
+      "bundleIdentifiers": ["com.todesktop.230313mzl4w4u92"],
+      "officialURL": "https://cursor.com/downloads"
     },
     {
       "target": "terminal",
       "domains": ["development"],
-      "bundleIdentifiers": ["com.apple.Terminal"]
+      "bundleIdentifiers": ["com.apple.Terminal"],
+      "officialURL": "https://support.apple.com/guide/terminal/welcome/mac"
     },
     {
       "target": "iTerm2",
       "domains": ["development"],
-      "bundleIdentifiers": ["com.googlecode.iterm2"]
+      "bundleIdentifiers": ["com.googlecode.iterm2"],
+      "officialURL": "https://iterm2.com/downloads.html"
     },
     {
       "target": "safari",
       "domains": ["browser"],
-      "bundleIdentifiers": ["com.apple.Safari"]
+      "bundleIdentifiers": ["com.apple.Safari"],
+      "officialURL": "https://www.apple.com/safari/"
     },
     {
       "target": "googleChrome",
       "domains": ["browser"],
-      "bundleIdentifiers": ["com.google.Chrome"]
+      "bundleIdentifiers": ["com.google.Chrome"],
+      "officialURL": "https://www.google.com/chrome/"
+    },
+    {
+      "target": "firefox",
+      "domains": ["browser"],
+      "bundleIdentifiers": ["org.mozilla.firefox"],
+      "officialURL": "https://www.firefox.com/"
+    },
+    {
+      "target": "microsoftEdge",
+      "domains": ["browser"],
+      "bundleIdentifiers": ["com.microsoft.edgemac"],
+      "officialURL": "https://www.microsoft.com/edge/download"
+    },
+    {
+      "target": "brave",
+      "domains": ["browser"],
+      "bundleIdentifiers": ["com.brave.Browser"],
+      "officialURL": "https://brave.com/download/"
+    },
+    {
+      "target": "arc",
+      "domains": ["browser"],
+      "bundleIdentifiers": ["company.thebrowser.Browser"],
+      "officialURL": "https://arc.net/download"
     },
     {
       "target": "slack",
       "domains": ["chat"],
-      "bundleIdentifiers": ["com.tinyspeck.slackmacgap"]
+      "bundleIdentifiers": ["com.tinyspeck.slackmacgap"],
+      "officialURL": "https://slack.com/downloads/mac"
     },
     {
       "target": "discord",
       "domains": ["chat"],
-      "bundleIdentifiers": ["com.hnc.Discord"]
+      "bundleIdentifiers": ["com.hnc.Discord"],
+      "officialURL": "https://discord.com/download"
     },
     {
       "target": "cairn",
       "domains": ["chat"],
-      "bundleIdentifiers": ["com.oss-cairn.desktop", "com.oss-cairn.desktop.dev"]
+      "bundleIdentifiers": ["com.oss-cairn.desktop", "com.oss-cairn.desktop.dev"],
+      "officialURL": "https://github.com/keishingu/Cairn"
     }
   ],
   "mappings": [
@@ -1011,6 +1049,174 @@
     {
       "action": "reopenClosedTab",
       "target": "googleChrome",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 17, "modifiers": ["command", "shift"], "displayValue": "⌘⇧T"}
+      }
+    },
+    {
+      "action": "hardReload",
+      "target": "firefox",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command", "shift"], "displayValue": "⌘⇧R"}
+      }
+    },
+    {
+      "action": "nextTab",
+      "target": "firefox",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 124, "modifiers": ["command", "option"], "displayValue": "⌘⌥→"}
+      }
+    },
+    {
+      "action": "previousTab",
+      "target": "firefox",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 123, "modifiers": ["command", "option"], "displayValue": "⌘⌥←"}
+      }
+    },
+    {
+      "action": "openDownloads",
+      "target": "firefox",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 38, "modifiers": ["command"], "displayValue": "⌘J"}
+      }
+    },
+    {
+      "action": "openDeveloperTools",
+      "target": "firefox",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 34, "modifiers": ["command", "option"], "displayValue": "⌘⌥I"}
+      }
+    },
+    {
+      "action": "reopenClosedTab",
+      "target": "firefox",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 17, "modifiers": ["command", "shift"], "displayValue": "⌘⇧T"}
+      }
+    },
+    {
+      "action": "hardReload",
+      "target": "microsoftEdge",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command", "shift"], "displayValue": "⌘⇧R"}
+      }
+    },
+    {
+      "action": "nextTab",
+      "target": "microsoftEdge",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 124, "modifiers": ["command", "option"], "displayValue": "⌘⌥→"}
+      }
+    },
+    {
+      "action": "previousTab",
+      "target": "microsoftEdge",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 123, "modifiers": ["command", "option"], "displayValue": "⌘⌥←"}
+      }
+    },
+    {
+      "action": "openDownloads",
+      "target": "microsoftEdge",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 37, "modifiers": ["command", "option"], "displayValue": "⌘⌥L"}
+      }
+    },
+    {
+      "action": "openDeveloperTools",
+      "target": "microsoftEdge",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 34, "modifiers": ["command", "option"], "displayValue": "⌘⌥I"}
+      }
+    },
+    {
+      "action": "reopenClosedTab",
+      "target": "microsoftEdge",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 17, "modifiers": ["command", "shift"], "displayValue": "⌘⇧T"}
+      }
+    },
+    {
+      "action": "hardReload",
+      "target": "brave",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command", "shift"], "displayValue": "⌘⇧R"}
+      }
+    },
+    {
+      "action": "nextTab",
+      "target": "brave",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 124, "modifiers": ["command", "option"], "displayValue": "⌘⌥→"}
+      }
+    },
+    {
+      "action": "previousTab",
+      "target": "brave",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 123, "modifiers": ["command", "option"], "displayValue": "⌘⌥←"}
+      }
+    },
+    {
+      "action": "openDownloads",
+      "target": "brave",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 38, "modifiers": ["command", "shift"], "displayValue": "⌘⇧J"}
+      }
+    },
+    {
+      "action": "openDeveloperTools",
+      "target": "brave",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 34, "modifiers": ["command", "option"], "displayValue": "⌘⌥I"}
+      }
+    },
+    {
+      "action": "reopenClosedTab",
+      "target": "brave",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 17, "modifiers": ["command", "shift"], "displayValue": "⌘⇧T"}
+      }
+    },
+    {
+      "action": "nextTab",
+      "target": "arc",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 125, "modifiers": ["command", "option"], "displayValue": "⌘⌥↓"}
+      }
+    },
+    {
+      "action": "previousTab",
+      "target": "arc",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 126, "modifiers": ["command", "option"], "displayValue": "⌘⌥↑"}
+      }
+    },
+    {
+      "action": "reopenClosedTab",
+      "target": "arc",
       "execution": {
         "method": "keyboardShortcut",
         "shortcut": {"virtualKeyCode": 17, "modifiers": ["command", "shift"], "displayValue": "⌘⇧T"}

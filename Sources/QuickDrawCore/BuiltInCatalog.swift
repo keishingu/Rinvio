@@ -15,6 +15,7 @@ public struct CatalogApplication: Codable, Equatable, Sendable {
   public let domains: [ActionDomain]
   public let bundleIdentifiers: [String]
   public let webApplication: CatalogWebApplication?
+  public let officialURL: URL?
 }
 
 public struct CatalogExecution: Codable, Equatable, Sendable {
