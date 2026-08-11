@@ -363,7 +363,7 @@ public struct ActionRouter {
     context: ForegroundContext
   ) -> Result<ActionRoute, ActionRoutingFailure> {
     if ActionCatalog.isSystemWide(action) {
-      return routeSystemWide(action: action)
+      return .failure(.disabledApplication(target: .macOS))
     }
 
     guard let bundleIdentifier = context.bundleIdentifier else {
@@ -411,16 +411,4 @@ public struct ActionRouter {
       ?? ActionCatalog.defaultShortcut(for: action, target: target)
   }
 
-  private func routeSystemWide(
-    action: Action
-  ) -> Result<ActionRoute, ActionRoutingFailure> {
-    let target = ActionTarget.macOS
-    guard applicationEnablementProvider.isApplicationEnabled(target) else {
-      return .failure(.disabledApplication(target: target))
-    }
-    guard let shortcut = shortcut(for: action, target: target) else {
-      return .failure(.unsupportedAction(action: action, target: target))
-    }
-    return .success(ActionRoute(action: action, target: target, shortcut: shortcut))
-  }
 }

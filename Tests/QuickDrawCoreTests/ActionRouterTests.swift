@@ -452,6 +452,16 @@ final class ActionRouterTests: XCTestCase {
     )
   }
 
+  func testSystemActionsAreNeverRoutedByQuickDraw() {
+    XCTAssertEqual(
+      router.route(
+        action: .missionControl,
+        context: ForegroundContext(bundleIdentifier: "com.apple.TextEdit")
+      ),
+      .failure(.disabledApplication(target: .macOS))
+    )
+  }
+
   func testMeetingActionDoesNotEnterChatOnlyApplicationDomain() {
     assertFailure(
       action: .leaveMeeting,
