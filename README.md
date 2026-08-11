@@ -47,7 +47,7 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 ## First run
 
 1. 起動時に表示されるQuickDraw Windowで、Meeting / Chat / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
-   表示言語はToolbarの地球アイコンから日本語／Englishを切り替えられる。
+   表示言語はSidebarの`Settings`から日本語／Englishを切り替えられる。QuickDraw全体の有効／停止はSidebar下部の状態表示右端にあるToggleで切り替える。
 2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
 3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
 4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。
@@ -67,13 +67,14 @@ HUDには画面共有からの除外指定をベストエフォートで付与�
 Action Inspectorから次を編集できます。
 
 - `Trigger`: QuickDrawを呼び出すグローバルショートカット。Fキー、またはCommand / Control / Optionを含む組み合わせを使用する。
+- `Unassign`: Triggerを未割り当てにし、そのActionのグローバルキー登録とShortcut Guide表示を止める。
 - `Application mapping`: Actionを各Applicationへ配送するショートカット。Application側で既定値を変更した場合にOverrideする。
 - `Restore Default`: 個別のOverrideを削除してBuilt-in Catalogへ戻す。
 - `Restore All Defaults for This Action`: TriggerとそのActionの全Application Mappingを確認後にまとめて戻す。
 
 Applications一覧では、インストール済みApplicationごとに`QuickDrawの対象`をON/OFFできます。OFFにしたApplicationではTriggerを消費せず、Shortcutを配送せず、Shortcut Guideも表示しません。設定したMapping Overrideは保持されるため、再度ONにするとそのまま利用できます。
 
-設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は [`built-in-catalog.json`](Sources/QuickDrawCore/Resources/built-in-catalog.json) から読み込み、ユーザー設定にはOverrideと対象外Applicationだけを保存します。Action IDを維持し、追加フィールドがない既存設定も読み込めるため、既存のOverrideはそのまま引き継がれます。
+設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は [`built-in-catalog.json`](Sources/QuickDrawCore/Resources/built-in-catalog.json) から読み込み、ユーザー設定にはOverride、未割り当てTrigger、対象外Applicationだけを保存します。Action IDを維持し、追加フィールドがない既存設定も読み込めるため、既存のOverrideはそのまま引き継がれます。
 
 Built-in Actionには主にQuickDrawの名前空間として`⌘⌥` Triggerを割り当てています。UI領域の前後移動だけは各アプリの慣例に合わせて`⇧F6` / `F6`を使います。TriggerはForeground Applicationのカテゴリ内で解決し、そのActionのMappingがある場合だけQuickDrawがキーを消費します。別カテゴリ、対象外、またはMapping未対応なら元のキーイベントをそのままアプリ／macOSへ渡します。
 

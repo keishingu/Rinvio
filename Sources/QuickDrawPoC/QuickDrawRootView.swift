@@ -21,10 +21,7 @@ struct QuickDrawRootView: View {
         .inspectorColumnWidth(min: 300, ideal: 340, max: 390)
     }
     .toolbar {
-      ToolbarItemGroup(placement: .primaryAction) {
-        languageMenu
-        enabledToggle
-
+      ToolbarItem(placement: .primaryAction) {
         Button {
           isInspectorPresented.toggle()
         } label: {
@@ -49,43 +46,6 @@ struct QuickDrawRootView: View {
       ?? model.actions(in: domain).first
   }
 
-  private var languageMenu: some View {
-    Menu {
-      Picker(
-        model.copy.languageLabel,
-        selection: Binding(
-          get: { model.language },
-          set: model.setLanguage
-        )
-      ) {
-        ForEach(AppLanguage.allCases) { language in
-          Text(language.displayName)
-            .tag(language)
-        }
-      }
-    } label: {
-      Label(model.copy.languageLabel, systemImage: "globe")
-    }
-    .help(model.copy.chooseLanguage)
-  }
-
-  private var enabledToggle: some View {
-    HStack(spacing: 7) {
-      Text(model.isEnabled ? model.copy.enabled : model.copy.paused)
-        .foregroundStyle(.secondary)
-      Toggle(
-        "QuickDraw",
-        isOn: Binding(
-          get: { model.isEnabled },
-          set: model.setEnabled
-        )
-      )
-      .labelsHidden()
-      .toggleStyle(.switch)
-    }
-    .help(model.isEnabled ? model.copy.pauseQuickDraw : model.copy.enableQuickDraw)
-  }
-
   private var sidebar: some View {
     List(selection: $selectedSection) {
       Section(model.copy.actions) {
@@ -105,19 +65,41 @@ struct QuickDrawRootView: View {
     .navigationTitle("QuickDraw")
     .navigationSplitViewColumnWidth(min: 170, ideal: 200, max: 240)
     .safeAreaInset(edge: .bottom) {
-      VStack(alignment: .leading, spacing: 5) {
-        Label(
-          model.isEnabled ? model.copy.quickDrawEnabled : model.copy.quickDrawPaused,
-          systemImage: model.isEnabled ? "checkmark.circle.fill" : "pause.circle"
-        )
-        .font(.caption)
-        .foregroundStyle(.secondary)
+      VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .center, spacing: 8) {
+          Label(
+            model.isEnabled ? model.copy.quickDrawEnabled : model.copy.quickDrawPaused,
+            systemImage: model.isEnabled ? "checkmark.circle.fill" : "pause.circle"
+          )
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+          .minimumScaleFactor(0.85)
+
+          Spacer(minLength: 4)
+
+          Toggle(
+            "QuickDraw",
+            isOn: Binding(
+              get: { model.isEnabled },
+              set: model.setEnabled
+            )
+          )
+          .labelsHidden()
+          .toggleStyle(.switch)
+          .fixedSize()
+          .frame(minWidth: 44, minHeight: 44)
+          .accessibilityLabel("QuickDraw")
+          .accessibilityValue(model.isEnabled ? model.copy.enabled : model.copy.paused)
+          .help(model.isEnabled ? model.copy.pauseQuickDraw : model.copy.enableQuickDraw)
+        }
 
         Text(model.triggerSummary)
           .font(.caption2)
           .foregroundStyle(.tertiary)
+          .lineLimit(1)
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
+      .frame(maxWidth: .infinity)
       .padding(12)
     }
   }
@@ -185,11 +167,28 @@ private struct SettingsView: View {
     VStack(spacing: 0) {
       ContentHeader(
         title: model.copy.settings,
-        subtitle: model.copy.shortcutGuideDescription
+        subtitle: model.copy.settingsSubtitle
       )
       Divider()
 
       Form {
+        Section {
+          Picker(
+            model.copy.languageLabel,
+            selection: Binding(
+              get: { model.language },
+              set: model.setLanguage
+            )
+          ) {
+            ForEach(AppLanguage.allCases) { language in
+              Text(language.displayName)
+                .tag(language)
+            }
+          }
+          .pickerStyle(.menu)
+          .help(model.copy.chooseLanguage)
+        }
+
         Section(model.copy.shortcutGuide) {
           Toggle(
             model.copy.showShortcutGuideOnHold,
@@ -550,8 +549,16 @@ private struct ActionInspector: View {
           ShortcutRecordingRow(model: model)
         } else {
           HStack {
-            Button(model.copy.changeShortcut) {
+            Button(
+              model.trigger(for: definition.action) == nil
+                ? model.copy.assignShortcut : model.copy.changeShortcut
+            ) {
               model.beginRecording(.trigger(definition.action))
+            }
+            if model.trigger(for: definition.action) != nil {
+              Button(model.copy.unassignShortcut) {
+                model.unassignTrigger(for: definition.action)
+              }
             }
             if model.isTriggerOverridden(for: definition.action) {
               Button(model.copy.restoreDefault) {

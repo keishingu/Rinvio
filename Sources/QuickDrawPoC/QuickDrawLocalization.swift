@@ -43,11 +43,14 @@ struct QuickDrawCopy {
   var inspector: String { text("インスペクタ", "Inspector") }
   var showInspector: String { text("インスペクタを表示", "Show Inspector") }
   var hideInspector: String { text("インスペクタを隠す", "Hide Inspector") }
-  var quickDrawEnabled: String { text("QuickDrawは有効です", "QuickDraw is enabled") }
-  var quickDrawPaused: String { text("QuickDrawは停止中です", "QuickDraw is paused") }
+  var quickDrawEnabled: String { text("QuickDraw 有効", "QuickDraw enabled") }
+  var quickDrawPaused: String { text("QuickDraw 停止中", "QuickDraw paused") }
   var actions: String { text("アクション", "Actions") }
   var applications: String { text("アプリケーション", "Applications") }
   var settings: String { text("設定", "Settings") }
+  var settingsSubtitle: String {
+    text("QuickDrawの表示と動作を設定します。", "Configure QuickDraw's appearance and behavior.")
+  }
   var diagnostics: String { text("診断", "Diagnostics") }
   var noApplications: String { text("アプリケーションがありません", "No Applications") }
   var noActionsInCategory: String {
@@ -160,6 +163,8 @@ struct QuickDrawCopy {
     )
   }
   var changeShortcut: String { text("変更…", "Change…") }
+  var assignShortcut: String { text("割り当て…", "Assign…") }
+  var unassignShortcut: String { text("割り当て解除", "Unassign") }
   var pressShortcut: String { text("ショートカットを入力…", "Press shortcut…") }
   var unassigned: String { text("未割り当て", "Unassigned") }
   var noShortcut: String { text("ショートカットなし", "No shortcut") }

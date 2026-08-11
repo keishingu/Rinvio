@@ -142,6 +142,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       updateTriggerPresentation()
       return error
     }
+    model.onUnassignTrigger = { [weak coordinator, weak controller, weak model] action in
+      let error = coordinator?.unassignTrigger(for: action)
+      controller?.areHotKeysRegistered = error == nil
+      model?.setHotKeysRegistered(error == nil)
+      updateTriggerPresentation()
+      return error
+    }
     model.onResetAction = { [weak coordinator, weak controller, weak model] action in
       let error = coordinator?.resetAction(action)
       controller?.areHotKeysRegistered = error == nil

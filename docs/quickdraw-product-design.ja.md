@@ -122,7 +122,7 @@ Trigger Recorderは以下を行う。
 - bare letter/digit、Space、Return、Escape、Tabを拒否する。
 - 既知のSystem Shortcutを警告し、登録失敗を保存前に示す。
 - keyCodeとmodifierを正規化し、表示用の表記を分離する。
-- Restore Suggested Trigger / Clearを提供する。
+- Restore Suggested Trigger / Clearを提供する。ClearしたTriggerはグローバル登録とShortcut Guideから除外する。
 
 ### Application mapping
 
@@ -198,7 +198,8 @@ macOS標準の3カラムを使う。
 ### Actions
 
 - Primary view。初期選択。
-- Toolbar: Search、Global Enable、Inspector Toggle。
+- Toolbar: Inspector Toggle。
+- Sidebar Footer: Global状態、Trigger数、Global Enable Toggle。
 - Row: Action、Trigger、Application/Capability summary、Status。
 - MVPでは3行だけなのでCard Gridにしない。
 
@@ -580,7 +581,7 @@ UserDefaults:
 
 Application Supportの `configuration.json`:
 
-- schema version、TriggerBinding、per-app shortcut override、enabled app/browser、future profile-ready root。
+- schema version、TriggerBinding、未割り当てTrigger、per-app shortcut override、enabled app/browser、future profile-ready root。
 
 Bundled Catalog:
 
@@ -613,7 +614,8 @@ Writeはtemporary encode → atomic replace、last-known-good backupを持つ。
 
 ```text
 ConfigurationWindow
-├─ Toolbar(Search, GlobalEnable, InspectorToggle)
+├─ Toolbar(InspectorToggle)
+├─ SidebarFooter(GlobalStatus, TriggerCount, GlobalEnable)
 └─ NavigationSplitView
    ├─ Sidebar(Actions, Applications, Diagnostics)
    ├─ ActionList
@@ -652,7 +654,7 @@ Apple HIGもLiquid Glass上のSidebarとuser accent尊重を推奨する: [HIG �
 | Experimental | beaker label + last tested app version。 |
 | Error | InspectorとDiagnostics。red乱用なし。 |
 | App not installed | rowを残し `Not installed`。 |
-| Globally disabled | Menu Bar/Toolbarで明示し、編集は可能。 |
+| Globally disabled | Menu Bar/Sidebar Footerで明示し、編集は可能。 |
 
 Action画面だけで「何をする／何を押す／どのApp／どう実行／何が不足」を回答できることをUI acceptanceとする。
 

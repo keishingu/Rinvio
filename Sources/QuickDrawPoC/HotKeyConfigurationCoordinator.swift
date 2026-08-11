@@ -99,6 +99,26 @@ final class HotKeyConfigurationCoordinator {
     }
   }
 
+  func unassignTrigger(for action: Action) -> String? {
+    guard let handler, let modifierHandler else {
+      return "Global shortcut handler is unavailable"
+    }
+    var nextBindings = currentBindings()
+    nextBindings.removeValue(forKey: action)
+    do {
+      try registrar.register(
+        bindings: nextBindings,
+        handler: handler,
+        modifierHandler: modifierHandler
+      )
+      try store.unassignTrigger(for: action)
+      return nil
+    } catch {
+      _ = resume()
+      return error.localizedDescription
+    }
+  }
+
   func resetAction(_ action: Action) -> String? {
     guard let handler, let modifierHandler else {
       return "Global shortcut handler is unavailable"

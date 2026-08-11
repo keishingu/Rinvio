@@ -385,6 +385,7 @@ final class QuickDrawAppModel: ObservableObject {
   var onShortcutRecordingBegan: (() -> Void)?
   var onShortcutRecordingEnded: (() -> String?)?
   var onApplyTrigger: ((Action, KeyStroke) -> String?)?
+  var onUnassignTrigger: ((Action) -> String?)?
   var onResetTrigger: ((Action) -> String?)?
   var onResetAction: ((Action) -> String?)?
 
@@ -541,6 +542,11 @@ final class QuickDrawAppModel: ObservableObject {
 
   func resetTrigger(for action: Action) {
     shortcutEditingError = onResetTrigger?(action)
+    syncConfiguration()
+  }
+
+  func unassignTrigger(for action: Action) {
+    shortcutEditingError = onUnassignTrigger?(action)
     syncConfiguration()
   }
 

@@ -11,6 +11,7 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
     XCTAssertNil(store.shortcut(for: .openChat, target: .microsoftTeams))
     XCTAssertTrue(store.configuration.triggerOverrides.isEmpty)
+    XCTAssertTrue(store.configuration.unassignedTriggers.isEmpty)
     XCTAssertTrue(store.configuration.shortcutOverrides.isEmpty)
     XCTAssertTrue(store.configuration.disabledApplications.isEmpty)
     XCTAssertTrue(store.isApplicationEnabled(.zoomWorkplace))
@@ -79,6 +80,42 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertTrue(store.isTriggerOverridden(for: .openChat))
 
     try store.resetTrigger(for: .openChat)
+    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
+    XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
+  }
+
+  func testTriggerCanBeUnassignedAndRestoredToDefault() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+
+    try store.unassignTrigger(for: .openChat)
+    XCTAssertNil(store.trigger(for: .openChat))
+    XCTAssertTrue(store.isTriggerOverridden(for: .openChat))
+    XCTAssertEqual(store.configuration.unassignedTriggers, [.openChat])
+    XCTAssertFalse(store.actions(withTriggerModifiers: [.command, .option]).contains(.openChat))
+
+    try store.resetTrigger(for: .openChat)
+    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
+    XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
+    XCTAssertTrue(store.configuration.unassignedTriggers.isEmpty)
+  }
+
+  func testAssigningTriggerClearsUnassignedState() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let custom = KeyStroke(virtualKeyCode: 103, modifiers: [], displayValue: "F11")
+
+    try store.unassignTrigger(for: .openChat)
+    try store.setTriggerOverride(custom, for: .openChat)
+
+    XCTAssertEqual(store.trigger(for: .openChat), custom)
+    XCTAssertTrue(store.configuration.unassignedTriggers.isEmpty)
+  }
+
+  func testActionResetRestoresUnassignedTrigger() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+
+    try store.unassignTrigger(for: .openChat)
+    try store.resetAction(.openChat)
+
     XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
     XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
   }
@@ -155,12 +192,15 @@ final class QuickDrawConfigurationTests: XCTestCase {
       displayValue: "⌥⌘B"
     )
     try stored.setTriggerOverride(trigger, for: .mute)
+    try stored.unassignTrigger(for: .openChat)
     try stored.setShortcutOverride(mapping, for: .camera, target: .microsoftTeams)
     try stored.setApplicationEnabled(false, for: .zoomWorkplace)
 
     let reloaded = QuickDrawConfigurationStore(fileURL: fileURL)
 
     XCTAssertEqual(reloaded.trigger(for: .mute), trigger)
+    XCTAssertNil(reloaded.trigger(for: .openChat))
+    XCTAssertEqual(reloaded.configuration.unassignedTriggers, [.openChat])
     XCTAssertEqual(reloaded.shortcut(for: .camera, target: .microsoftTeams), mapping)
     XCTAssertFalse(reloaded.isApplicationEnabled(.zoomWorkplace))
     XCTAssertTrue(reloaded.isApplicationEnabled(.microsoftTeams))
@@ -198,6 +238,7 @@ final class QuickDrawConfigurationTests: XCTestCase {
     let store = QuickDrawConfigurationStore(fileURL: fileURL)
 
     XCTAssertTrue(store.configuration.disabledApplications.isEmpty)
+    XCTAssertTrue(store.configuration.unassignedTriggers.isEmpty)
     XCTAssertTrue(store.isApplicationEnabled(.ghostty))
   }
 }

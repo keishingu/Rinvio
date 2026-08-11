@@ -27,17 +27,20 @@ public struct QuickDrawConfiguration: Codable, Equatable, Sendable {
 
   public var schemaVersion: Int
   public var triggerOverrides: [TriggerOverride]
+  public var unassignedTriggers: [Action]
   public var shortcutOverrides: [ApplicationShortcutOverride]
   public var disabledApplications: [ActionTarget]
 
   public init(
     schemaVersion: Int = Self.currentSchemaVersion,
     triggerOverrides: [TriggerOverride] = [],
+    unassignedTriggers: [Action] = [],
     shortcutOverrides: [ApplicationShortcutOverride] = [],
     disabledApplications: [ActionTarget] = []
   ) {
     self.schemaVersion = schemaVersion
     self.triggerOverrides = triggerOverrides
+    self.unassignedTriggers = unassignedTriggers
     self.shortcutOverrides = shortcutOverrides
     self.disabledApplications = disabledApplications
   }
@@ -45,6 +48,7 @@ public struct QuickDrawConfiguration: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case schemaVersion
     case triggerOverrides
+    case unassignedTriggers
     case shortcutOverrides
     case disabledApplications
   }
@@ -53,6 +57,11 @@ public struct QuickDrawConfiguration: Codable, Equatable, Sendable {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
     triggerOverrides = try container.decode([TriggerOverride].self, forKey: .triggerOverrides)
+    unassignedTriggers =
+      try container.decodeIfPresent(
+        [Action].self,
+        forKey: .unassignedTriggers
+      ) ?? []
     shortcutOverrides = try container.decode(
       [ApplicationShortcutOverride].self,
       forKey: .shortcutOverrides
@@ -124,14 +133,16 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
 
   public func trigger(for action: Action) -> KeyStroke? {
     lock.withLock {
-      storedConfiguration.triggerOverrides.first { $0.action == action }?.shortcut
+      guard !storedConfiguration.unassignedTriggers.contains(action) else { return nil }
+      return storedConfiguration.triggerOverrides.first { $0.action == action }?.shortcut
         ?? ActionCatalog.defaultTrigger(for: action)
     }
   }
 
   public func isTriggerOverridden(for action: Action) -> Bool {
     lock.withLock {
-      storedConfiguration.triggerOverrides.contains { $0.action == action }
+      storedConfiguration.unassignedTriggers.contains(action)
+        || storedConfiguration.triggerOverrides.contains { $0.action == action }
     }
   }
 
@@ -189,15 +200,26 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
     try validateTrigger(shortcut, for: action)
     try update { configuration in
       configuration.triggerOverrides.removeAll { $0.action == action }
+      configuration.unassignedTriggers.removeAll { $0 == action }
       if shortcut != ActionCatalog.defaultTrigger(for: action) {
         configuration.triggerOverrides.append(TriggerOverride(action: action, shortcut: shortcut))
       }
     }
   }
 
+  public func unassignTrigger(for action: Action) throws {
+    try update { configuration in
+      configuration.triggerOverrides.removeAll { $0.action == action }
+      configuration.unassignedTriggers.removeAll { $0 == action }
+      configuration.unassignedTriggers.append(action)
+      configuration.unassignedTriggers.sort { $0.rawValue < $1.rawValue }
+    }
+  }
+
   public func resetTrigger(for action: Action) throws {
     try update { configuration in
       configuration.triggerOverrides.removeAll { $0.action == action }
+      configuration.unassignedTriggers.removeAll { $0 == action }
     }
   }
 
@@ -229,6 +251,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
   public func resetAction(_ action: Action) throws {
     try update { configuration in
       configuration.triggerOverrides.removeAll { $0.action == action }
+      configuration.unassignedTriggers.removeAll { $0 == action }
       configuration.shortcutOverrides.removeAll { $0.action == action }
     }
   }
