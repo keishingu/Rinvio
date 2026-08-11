@@ -124,12 +124,30 @@ Browserは既存のCommand文化を尊重して個別判断する。
 
 QuickDrawのSystem対象は、アプリ内部の一般的なメニュー操作ではなく、macOSが提供するワークスペース／ウインドウ操作である。Phase 1ではすべてLevel 0として扱い、QuickDrawは現在値と推奨値を表示して純正設定への導線だけを提供する。キーイベントの登録、消費、再配送やPreferenceへの書き込みはしない。
 
-| Level | QuickDrawの役割 | 例 |
+### 実行Level
+
+数字が上がるほどQuickDrawの介入度と保守コストが増える。Actionは、安定して目的を達成できる最も低いLevelで実装する。
+
+| Level | 名称 | 実行方式 | 例 |
+|---|---|---|---|
+| 0 | Reference | 現在値を参照し、編集は公式設定画面へ委譲する | macOS Mission Control |
+| 1 | Shortcut Remap | QuickDrawがTriggerを受け、公式Shortcutへリマップして対象アプリへ配送する | Finder、Zoom、Teams |
+| 2 | Adapter | 対象、画面、URLなどを判定し、アプリ固有の経路で配送する | Google Meet、Browser Adapter |
+| 3 | Accessibility | 公式ShortcutがないActionをAXで直接実行する | メニュー項目、ボタン、パネル操作 |
+
+「Level 1で公式ショートカットを上書きする」ではなく、「公式ショートカットへリマップする」と表現する。Application側のShortcut設定は変更せず、QuickDrawが入力Triggerを公式Shortcutへ変換して配送するためである。同様にLevel 3は「AXでショートカットを設定する」のではなく、「AXでActionを直接実行する」と表現する。
+
+AXでApplicationの設定画面を操作し、Shortcutなどの永続設定自体を書き換える方式は、UI変更に弱く、QuickDraw終了後も意図しない設定を残し得る。現時点では次のLevel 4候補として分離し、原則採用しない。
+
+| 暫定Level | 名称 | 実行方式 |
 |---|---|---|
-| 0 | 純正設定の参照と編集導線 | macOS Keyboard Shortcuts |
-| 1 | 公式ShortcutをQuickDraw Triggerから配送 | Finder、Meetingのネイティブアプリ |
-| 2 | Adapterが公式Shortcut／APIを設定・実行 | Google MeetなどのWebアプリ |
-| 3 | 公式経路がないActionをAXで実行 | 将来の個別Action |
+| 4 | AX Persistent Configuration | AXで別ApplicationのUIを操作し、永続設定を変更する |
+
+Level 3とLevel 4の分離は未確定である。重要な論点は「Actionをその場で実行する一時的なAX操作」と「別Applicationへ永続的な設定変更を残すAX操作」のリスク差だが、独立LevelにするかLevel 3のsubtypeにするかは今後再検討する。Level 4を前提とした実装や抽象化は行わない。
+
+現在の対応関係は、macOSがLevel 0、Finderと一般のネイティブApplicationがLevel 1、Google MeetがLevel 2である。将来Action Catalogへ`executionLevel`または`deliveryMethod`として表示できる整理だが、必要になるまでは永続化形式やCatalog schemaへ追加しない。
+
+### System Actionの対象
 
 - Mission Control
 - Application Exposé
