@@ -1,9 +1,12 @@
 # QuickDraw プロダクト・技術設計書
 
 - ステータス: Proposed / 実装前
-- 更新日: 2026-08-08
+- 更新日: 2026-08-11
 - 対象: macOS、Level 1 MVP、Level 2 PoC
 - UI参考: 添付の Haken 案を QuickDraw として解釈
+
+> [!NOTE]
+> 本文中の`⌘⌥`中心のTrigger例は、現在のPoCと初期設計を説明する。将来のSuggested Triggerの配置原則、Meeting / Development / Browserの再整理、macOS / Finderのopt-in設計は [ショートカット設計原則とSystem / Finder opt-in設計](shortcut-design-principles.ja.md) を正本とする。現行カタログはまだ変更していない。
 
 ## 先に結論
 
@@ -98,7 +101,7 @@ Levelは実装方式そのものではなく、プロダクト上の複雑さを
 
 1. 「1つのActionを複数アプリへ変換する」と短く説明する。
 2. 3つのBuilt-in Actionと検出済みApplicationを表示する。
-3. Triggerを割り当てる。Built-in ActionにはQuickDraw名前空間として`⌘⌥`+英字／数字を割り当てる。
+3. Triggerを割り当てる。現在のPoCは`⌘⌥`+英字／数字を使用するが、将来のSuggested Triggerは[ショートカット設計原則](shortcut-design-principles.ja.md)に従い、Actionの意味とTarget種別で配置する。
 4. 必要になるPermissionと理由を事前表示する。この時点では一括要求しない。
 5. 「QuickDrawを有効にする」でLevel 1に必要なPermissionを案内し、Foregroundの対応アプリでTestする。
 6. Windowを閉じてもMenu Barで常駐する。
@@ -1033,7 +1036,7 @@ User-facing privacy statementが真であることをArchitecture Acceptanceと�
 
 1. **Minimum OS:** macOS 15 minimum + current SDKを推奨し、macOS 26+ではsystem Liquid Glassへ自動適応する。Pre-Liquid-Glass対応のtest costを受け入れるか。
 2. **Distribution:** MVPはDeveloper ID + Notarization、Mac App Store feasibilityは後回しでよいか。
-3. **Trigger policy:** Built-inは`⌘⌥` namespace、OverrideはFキー/modifier chordのみ、bare alphanumericは拒否する。
+3. **Trigger policy:** bare alphanumericを拒否し、Fキーまたはmodifier chordだけを受理する。Suggested Triggerの修飾キーは一律`⌘⌥`とせず、[ショートカット設計原則](shortcut-design-principles.ja.md)に従ってActionの意味とTarget種別で決める。
 4. **Input/output mechanism:** `CGEventTap`で条件付き消費し、source marker付き`CGEvent`で出力する。必要Permissionは実機matrixで継続確認する。
 5. **Target policy:** MVP Foreground-onlyを受け入れ、Pinned/background targetを最優先のpost-MVP PoCとするか。
 6. **Meet browser scope:** Chrome-onlyをacceptance baseline（推奨）にするか、Chrome + Safariにするか。

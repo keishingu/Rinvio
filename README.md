@@ -25,7 +25,7 @@
 - Dock app and Menu Bar status, non-delivery Dry Run, copied diagnostics, and redacted unified log
 - No general key logging, polling, profiles, UI automation, or background routing
 
-設計全体は [QuickDraw プロダクト・技術設計書](docs/quickdraw-product-design.ja.md) を参照してください。Browser ExtensionをQuickDraw.appのAdapterとして段階的モノレポで管理する判断は [ADR-0001](docs/adr/0001-browser-extension-adapter-and-monorepo.md) に記録しています。
+設計全体は [QuickDraw プロダクト・技術設計書](docs/quickdraw-product-design.ja.md)、修飾キーの意味とmacOS / Finderのopt-in方針は [ショートカット設計原則とSystem / Finder opt-in設計](docs/shortcut-design-principles.ja.md) を参照してください。Browser ExtensionをQuickDraw.appのAdapterとして段階的モノレポで管理する判断は [ADR-0001](docs/adr/0001-browser-extension-adapter-and-monorepo.md) に記録しています。
 
 ## Build and test
 
