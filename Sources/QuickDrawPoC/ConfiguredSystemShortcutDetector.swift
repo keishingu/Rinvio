@@ -181,6 +181,10 @@ final class ConfiguredSystemShortcutDetector {
     default: "Key \(virtualKeyCode)"
     }
   }
+
+  static func normalizedConflictModifiers(_ modifiers: Set<ModifierKey>) -> Set<ModifierKey> {
+    modifiers.subtracting([.function])
+  }
 }
 
 private struct ShortcutIdentity: Hashable {
@@ -195,7 +199,7 @@ private struct ShortcutIdentity: Hashable {
   init(_ shortcut: KeyStroke) {
     self.init(
       virtualKeyCode: shortcut.virtualKeyCode,
-      modifiers: shortcut.modifiers
+      modifiers: ConfiguredSystemShortcutDetector.normalizedConflictModifiers(shortcut.modifiers)
     )
   }
 }

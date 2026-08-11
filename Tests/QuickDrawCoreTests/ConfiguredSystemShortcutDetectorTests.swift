@@ -1,3 +1,4 @@
+import QuickDrawCore
 import XCTest
 @testable import QuickDrawPoC
 
@@ -8,5 +9,12 @@ final class ConfiguredSystemShortcutDetectorTests: XCTestCase {
 
   func testSpaceHasReadableDisplayValue() {
     XCTAssertEqual(ConfiguredSystemShortcutDetector.keyDisplay(for: 49), "Space")
+  }
+
+  func testFunctionModifierIsIgnoredForConflictIdentity() {
+    XCTAssertEqual(
+      ConfiguredSystemShortcutDetector.normalizedConflictModifiers([.control, .function]),
+      [.control]
+    )
   }
 }
