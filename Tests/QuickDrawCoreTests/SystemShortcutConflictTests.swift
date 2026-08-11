@@ -25,13 +25,9 @@ final class SystemShortcutConflictTests: XCTestCase {
     XCTAssertNil(SystemShortcutCatalog.knownConflict(for: shortcut))
   }
 
-  func testEveryExpectedDefaultConflictIsCatalogued() throws {
+  func testNewDeveloperToolsDefaultStillUsesReservedShortcutDetection() throws {
     let expected: [Action: KnownSystemShortcut] = [
-      .mute: .minimizeAllWindows,
-      .camera: .copyStyle,
-      .raiseHand: .hideOtherApplications,
-      .toggleCaptions: .openDownloads,
-      .pictureInPicture: .showInspector,
+      .openDeveloperTools: .showInspector
     ]
 
     for (action, conflict) in expected {

@@ -51,8 +51,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     menuController.setLanguage(model.language)
 
     let updateTriggerPresentation = {
-      let triggers = Action.allCases.compactMap {
-        configurationStore.trigger(for: $0)?.displayValue
+      let triggers = Action.allCases.compactMap { action -> String? in
+        if ActionCatalog.isSystemWide(action) { return nil }
+        return configurationStore.trigger(for: action)?.displayValue
       }
       controller.triggerSummary = triggers.joined(separator: "/")
       menuController.setTriggerCount(triggers.count)
@@ -170,7 +171,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       updateTriggerPresentation()
       return result
     }
-
     menuController.onToggleEnabled = { [weak model] enabled in
       model?.setEnabled(enabled)
     }

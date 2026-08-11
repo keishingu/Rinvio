@@ -2,18 +2,18 @@
 
 アプリごとに異なる頻出操作を共通Actionへ変換し、Foregroundの対象アプリへ配送するmacOS Utilityです。
 
-- `⌘⌥M → Mute`
-- `⌘⌥C → Camera`
-- `⌘⌥H → Raise Hand`
+- `⌥M → Mute`
+- `⌥C → Camera`
+- `⌥H → Raise Hand`
 - `⌘⌥J → Jump to Conversation`
-- `⌘⌥N → New Session`
-- `⌘⌥R → Hard Reload`
+- `⌥N → New Session`
+- `⇧⌘R → Hard Reload`
 
 ## Scope
 
-- Meeting / Chat / Development / Browserに分類した56のBuilt-in Action
+- System / Finder / Meeting / Chat / Development / Browserに分類した65のBuilt-in Action
 - Microsoft Teams / Zoom Workplace / Google Meet / Slack / Discord / Cairn / Codex / Claude / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
-- Foreground target only
+- Application TargetはForeground-only。macOS操作は純正キーボードショートカットを参照し、編集はSystem Settingsへ委譲
 - Action-first native settings window with an application mapping inspector
 - Installed applications can be included in or excluded from QuickDraw individually
 - Editable global Triggers and per-application shortcut overrides with one-click default restore
@@ -46,7 +46,7 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 ## First run
 
-1. 起動時に表示されるQuickDraw Windowで、Meeting / Chat / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
+1. 起動時に表示されるQuickDraw Windowで、System / Finder / Meeting / Chat / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
    表示言語はSidebarの`Settings`から日本語／Englishを切り替えられる。QuickDraw全体の有効／停止はSidebar下部の状態表示右端にあるToggleで切り替える。
 2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
 3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
@@ -74,13 +74,13 @@ Action Inspectorから次を編集できます。
 
 > **Triggerを変更する前の注意:** `Trigger`はQuickDrawへの入力、`Application mapping`は対象Applicationへ送る出力です。対応Applicationで既存のショートカットをTriggerに割り当てると、QuickDrawがそのキーを消費するため、元の操作には使えなくなります。たとえばコマンドAの既定値が`⌘A`のとき、コマンドBのTriggerを`⌘A`にすると、そのApplicationでは`⌘A`でコマンドBが実行され、コマンドAは実行されません。既存のショートカットも残したい場合は、競合警告を確認しながら、未使用の`⌘⌥`／`⌃⌥`との組み合わせやFキーをTriggerに選んでください。QuickDrawがApplicationへ送るキーイベントはTriggerとして再処理しないため、相互に入れ替えた設定でも無限ループにはなりません。
 
-Applications一覧では、インストール済みApplicationごとに`QuickDrawの対象`をON/OFFできます。OFFにしたApplicationではTriggerを消費せず、Shortcutを配送せず、Shortcut Guideも表示しません。設定したMapping Overrideは保持されるため、再度ONにするとそのまま利用できます。Development ApplicationのAI Agent / Editor / Terminal分類は表示しますが、Shortcut変更は行いません。
+Applications一覧では、Applicationごとに`QuickDrawの対象`をON/OFFできます。OFFにしたApplicationではTriggerを消費せず、Shortcutを配送せず、Shortcut Guideも表示しません。設定したMapping Overrideは保持されるため、再度ONにするとそのまま利用できます。`System`のFinderは新規・既存ユーザーともデフォルトOFFで、ONでもFinderがForegroundの時だけ動作します。macOS行は純正設定の参照・編集導線であり、QuickDrawのSystem-wide Triggerは登録しません。Development ApplicationのAI Agent / Editor / Terminal分類は表示しますが、Shortcut変更は行いません。
 
 サイドバーのDevelopmentはAI Agent / Editor / Terminalへ展開され、それぞれのActionと対応Applicationだけを設定できます。各設定画面の`〜に寄せる`から、そのApplicationで対応済みのShortcutをQuickDraw Triggerへ一括反映できます。同じ物理Shortcutを複数Actionで使うApplicationでは、曖昧になるActionを現在のTriggerのまま維持します。
 
-設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は [`built-in-catalog.json`](Sources/QuickDrawCore/Resources/built-in-catalog.json) から読み込み、ユーザー設定にはOverride、未割り当てTrigger、対象外Applicationだけを保存します。Action IDを維持し、追加フィールドがない既存設定も読み込めるため、既存のOverrideはそのまま引き継がれます。
+設定は `~/Library/Application Support/QuickDraw/configuration.json` にschema version付きで保存されます。Built-inのDefault値は [`built-in-catalog.json`](Sources/QuickDrawCore/Resources/built-in-catalog.json) から読み込み、ユーザー設定にはOverride、未割り当てTrigger、対象外Application、Finderのopt-in状態を保存します。過去のmacOS opt-in状態は実行時に無視します。schema 1から2へのmigrationでは、既存Custom/Clear/対象外状態を保持し、変更前のSuggested Triggerを既存ユーザーのOverrideとして固定します。新しいSuggested Triggerは新規設定と明示的なRestoreにだけ適用されます。
 
-Built-in Actionには主にQuickDrawの名前空間として`⌘⌥` Triggerを割り当て、Editor拡張Actionには`⌃⌥`を割り当てています。UI領域の前後移動は各アプリの慣例に合わせて`⇧F6` / `F6`を使います。TriggerはForeground Applicationのカテゴリ内で解決し、そのActionのMappingがある場合だけQuickDrawがキーを消費します。別カテゴリ、対象外、またはMapping未対応なら元のキーイベントをそのままアプリ／macOSへ渡します。
+Built-in ActionのSuggested Triggerは[ショートカット設計原則](docs/shortcut-design-principles.ja.md)に従い、Meetingとアプリ／UI操作はOption、Editor拡張ActionはControl + Option、定着したBrowser操作はCommand文化を維持します。UI領域の前後移動は各アプリの慣例に合わせて`⇧F6` / `F6`を使います。TriggerはForeground Applicationのカテゴリ内で解決し、そのActionのMappingがある場合だけQuickDrawがキーを消費します。別カテゴリ、対象外、またはMapping未対応なら元のキーイベントをそのままアプリ／macOSへ渡します。
 
 Applicationの所属カテゴリが交差しないAction同士は、同じTriggerを再利用できます。一方、TeamsのようにMeetingとChatの両方へ所属するApplicationがあるカテゴリ間では、判定が曖昧になるため重複Triggerを設定できません。Google MeetではActive Tabを判定できるため、MeetタブならMeeting Action、それ以外のChromeタブならBrowser Actionを優先します。
 
@@ -88,26 +88,40 @@ macOS標準またはSystem Settingsで有効なショートカットと競合す
 
 ## Built-in mappings
 
+### System / Finder
+
+| Action | Trigger / 推奨値 | 実行先 |
+|---|---|---|
+| Mission Control | `⌘↑` | macOSが直接実行 |
+| Application Exposé | `⌘↓` | macOSが直接実行 |
+| Previous Desktop | `⌘←` | macOSが直接実行 |
+| Next Desktop | `⌘→` | macOSが直接実行 |
+| Parent Folder | `⌥↑` | Finder: `⌘↑` |
+| Open Selected Item | `⌥↓` | Finder: `⌘↓` |
+| Home | `⌥H` | Finder: `⇧⌘H` |
+| Desktop | `⌥D` | Finder: `⇧⌘D` |
+| Downloads | `⌥L` | Finder: `⌘⌥L` |
+
 ### Meeting
 
 | Action | Trigger | Teams | Zoom | Google Meet |
 |---|---|---|---|---|
-| Mute Toggle | `⌘⌥M` | `⌘⇧M` | `⌘⇧A` | `⌘D` |
-| Camera Toggle | `⌘⌥C` | `⌘⇧O` | `⌘⇧V` | `⌘E` |
-| Raise Hand Toggle | `⌘⌥H` | `⌘⇧K` | `⌥Y` | `⌃⌘H` |
-| Switch Camera | `⌘⌥X` | — | `⌘⇧N` | — |
-| Show Chat | `⌘⌥O` | — | `⌘⇧H` | `⌃⌘C` |
-| Show Participants | `⌘⌥P` | — | `⌘U` | `⌃⌘P` |
-| Captions Toggle | `⌘⌥L` | `⌘⇧A` | — | `C` |
-| Share Screen | `⌘⌥S` | `⌘⇧E` | `⌘⇧S` | `⌃⌘T` |
-| Picture in Picture | `⌘⌥I` | — | — | `⇧M` |
-| Leave Meeting | `⌘⌥G` | `⌘⇧H` | `⌘W` | `⌘[` |
-| Reaction: 👍 | `⌘⌥1` | — | `⌥⌘5` | — |
-| Reaction: ❤️ | `⌘⌥2` | — | `⌥⌘6` | — |
-| Reaction: 👏 | `⌘⌥3` | — | `⌥⌘4` | — |
-| Reaction: 😂 | `⌘⌥4` | — | `⌥⌘7` | — |
-| Reaction: 😮 | `⌘⌥5` | — | `⌥⌘8` | — |
-| Reaction: 🎉 | `⌘⌥6` | — | `⌥⌘9` | — |
+| Mute Toggle | `⌥M` | `⌘⇧M` | `⌘⇧A` | `⌘D` |
+| Camera Toggle | `⌥C` | `⌘⇧O` | `⌘⇧V` | `⌘E` |
+| Raise Hand Toggle | `⌥H` | `⌘⇧K` | `⌥Y` | `⌃⌘H` |
+| Switch Camera | `⌥X` | — | `⌘⇧N` | — |
+| Show Chat | `⌥O` | — | `⌘⇧H` | `⌃⌘C` |
+| Show Participants | `⌥P` | — | `⌘U` | `⌃⌘P` |
+| Captions Toggle | `⌥L` | `⌘⇧A` | — | `C` |
+| Share Screen | `⌥S` | `⌘⇧E` | `⌘⇧S` | `⌃⌘T` |
+| Picture in Picture | `⌥I` | — | — | `⇧M` |
+| Leave Meeting | `⌥G` | `⌘⇧H` | `⌘W` | `⌘[` |
+| Reaction: 👍 | `⌥1` | — | `⌥⌘5` | — |
+| Reaction: ❤️ | `⌥2` | — | `⌥⌘6` | — |
+| Reaction: 👏 | `⌥3` | — | `⌥⌘4` | — |
+| Reaction: 😂 | `⌥4` | — | `⌥⌘7` | — |
+| Reaction: 😮 | `⌥5` | — | `⌥⌘8` | — |
+| Reaction: 🎉 | `⌥6` | — | `⌥⌘9` | — |
 
 ### Chat
 
@@ -126,18 +140,18 @@ JetBrains列はIntelliJ IDEA / WebStorm / RubyMine / PyCharm / GoLand / CLion / 
 
 | Action | Trigger | Codex | Claude | VS Code / Cursor | Xcode | JetBrains |
 |---|---|---|---|---|---|---|
-| New Session | `⌘⌥N` | `⌘N` | `⌘N` | — | — | — |
+| New Session | `⌥N` | `⌘N` | `⌘N` | — | — | — |
 | Focus Previous Region | `⇧F6` | — | — | `⇧F6` | — | — |
 | Focus Next Region | `F6` | — | — | `F6` | — | — |
 | Go to Definition | `⌘⌥7` | — | — | `F12` | `⌃⌘J` | `⌘B` |
 | Navigate Back | `⌘⌥8` | — | — | `⌃-` | `⌃⌘←` | `⌘⌥←` |
 | Navigate Forward | `⌘⌥9` | — | — | `⌃⇧-` | `⌃⌘→` | `⌘⌥→` |
-| Focus Sidebar | `⌘⌥F1` | — | — | `⌘0` | — | — |
-| Focus Main Column | `⌘⌥F2` | — | — | `⌘1` | — | — |
-| Focus Terminal | `⌘⌥F3` | `⌃\`` | — | `⌃\`` | — | — |
-| Toggle Terminal | `⌘⌥T` | `⌘J` | — | `⌃\`` | — | `⌥F12` |
-| Command Palette | `⌘⌥K` | `⌘K` | — | `⌘⇧P` | — | `⌘⇧A` |
-| Quick Open | `⌘⌥Q` | `⌘P` | — | `⌘P` | `⌘⇧O` | `⌘⇧O` |
+| Focus Sidebar | `⌥F1` | — | — | `⌘0` | — | — |
+| Focus Main Column | `⌥F2` | — | — | `⌘1` | — | — |
+| Focus Terminal | `⌥F3` | `⌃\`` | — | `⌃\`` | — | — |
+| Toggle Terminal | `⌥T` | `⌘J` | — | `⌃\`` | — | `⌥F12` |
+| Command Palette | `⌥K` | `⌘K` | — | `⌘⇧P` | — | `⌘⇧A` |
+| Quick Open | `⌥O` | `⌘P` | — | `⌘P` | `⌘⇧O` | `⌘⇧O` |
 | Keyboard Shortcuts | `⌘⌥B` | `⌘/` | — | — | — | — |
 | Go to Symbol | `⌃⌥O` | — | — | `⇧⌘O` | — | `⌘⌥O` |
 | Format Document | `⌃⌥F` | — | — | `⇧⌥F` | — | `⌘⌥L` |
@@ -164,12 +178,12 @@ JetBrains列はIntelliJ IDEA / WebStorm / RubyMine / PyCharm / GoLand / CLion / 
 
 | Action | Trigger | Safari | Google Chrome |
 |---|---|---|---|
-| Hard Reload | `⌘⌥R` | `⌘⌥R` | `⌘⇧R` |
-| Next Tab | `⌘⌥]` | `⌃Tab` | `⌘⌥→` |
-| Previous Tab | `⌘⌥[` | `⌃⇧Tab` | `⌘⌥←` |
-| Reopen Closed Tab | `⌘⌥Z` | `⌘⇧T` | `⌘⇧T` |
-| Open Downloads | `⌘⌥D` | `⌘⌥L` | `⌘⇧J` |
-| Open Developer Tools | `⌘⌥E` | `⌘⌥I` | `⌘⌥I` |
+| Hard Reload | `⇧⌘R` | `⌘⌥R` | `⌘⇧R` |
+| Next Tab | `⌥]` | `⌃Tab` | `⌘⌥→` |
+| Previous Tab | `⇧⌥]` | `⌃⇧Tab` | `⌘⌥←` |
+| Reopen Closed Tab | `⇧⌘T` | `⌘⇧T` | `⌘⇧T` |
+| Open Downloads | `⌥D` | `⌘⌥L` | `⌘⇧J` |
+| Open Developer Tools | `⌘⌥I` | `⌘⌥I` | `⌘⌥I` |
 
 `—`はそのApplicationのショートカットが確認できていない状態です。実行時はキーを送らず、そのTriggerを消費せずにApplicationへ渡します。このため、たとえばJetBrains系IDEで`F6`を押すと、QuickDrawではなくIDE本来のMove Refactoringが実行されます。Codexの相対的なUI領域移動も、安定したネイティブShortcutを確認できるまでは未対応です。既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)、[Slack](https://slack.com/help/articles/201374536-Slack-keyboard-shortcuts-and-commands)、[Discord](https://support.discord.com/hc/en-us/articles/31232432266647-Discord-Commands-Shortcuts-and-Navigation-Guide)、[Visual Studio Code](https://code.visualstudio.com/docs/reference/default-keybindings)、[Xcode shortcuts](https://developer.apple.com/library/archive/documentation/IDEs/Conceptual/xcode_help-command_shortcuts/MenuCommands/MenuCommands014.html)、[JetBrains macOS Keymap](https://www.jetbrains.com/help/idea/reference-keymap-mac-default.html)、[Ghostty](https://ghostty.org/docs/config/keybind)、[Terminal](https://support.apple.com/guide/terminal/keyboard-shortcuts-trmlshtcts/mac)、[iTerm2](https://iterm2.com/documentation/2.1/documentation-highlights.html)、[Safari](https://support.apple.com/guide/safari/keyboard-and-other-shortcuts-cpsh003/mac)、[Google Chrome](https://support.google.com/chrome/answer/157179)の資料、CairnのCommand Catalog、インストール済みCodex / Xcode / GhosttyのCommand定義に基づきます。Application側でショートカットを変更した場合や独自に割り当てた場合は、QuickDrawのAction Inspectorから同じ値へOverrideできます。
 

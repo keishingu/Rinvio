@@ -462,7 +462,7 @@ final class ActionRouterTests: XCTestCase {
   }
 
   func testEveryCatalogActionHasAtLeastOneBuiltInApplicationShortcut() {
-    for action in Action.allCases {
+    for action in Action.allCases where !ActionCatalog.isSystemWide(action) {
       XCTAssertTrue(
         ActionTarget.allCases.contains {
           ActionCatalog.defaultShortcut(for: action, target: $0) != nil

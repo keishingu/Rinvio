@@ -1,10 +1,10 @@
-# QuickDraw ショートカット設計原則と System / Finder opt-in 設計
+# QuickDraw ショートカット設計原則と System Settings / Finder opt-in 設計
 
-- ステータス: Proposed / 未実装
-- 更新日: 2026-08-11
-- 対象: QuickDrawが提供するSuggested Triggerと将来のSystem / Finder Adapter
+- ステータス: Phase 1 / macOS純正設定連携・Finder opt-in 実装済み
+- 更新日: 2026-08-12
+- 対象: QuickDrawが提供するSuggested Trigger、macOS純正設定連携、Finder Target
 
-> この文書は将来の設計方針であり、現在のBuilt-in Action、Default Trigger、Adapter実装を変更したものではない。実装時は移行設計と実機検証を別途行う。
+> この文書を正本として、Phase 1のSuggested Trigger、macOS純正設定の参照・編集導線、Finder opt-inを実装した。Target-aware Trigger、Browser Adapter、未確定のSystem / Finder Actionは引き続き将来設計である。
 
 ## 1. 背景
 
@@ -185,14 +185,14 @@ Finder側はOptionへ移す。
 
 空いたCommand + 矢印をSystem操作へ割り当てる。
 
-| OS操作 | macOS標準 | macOS Target ON |
+| OS操作 | macOS標準 | 純正設定の推奨値 |
 |---|---:|---:|
 | Mission Control | `⌃↑`または`F3` | `⌘↑` |
 | Application Exposé | `⌃↓` | `⌘↓` |
 | 前のデスクトップ | `⌃←` | `⌘←` |
 | 次のデスクトップ | `⌃→` | `⌘→` |
 
-これは直感的だが、macOSユーザーに定着したテキスト移動を置き換える大胆な変更である。通常のデフォルトにはせず、後述するmacOS Targetの明示的opt-inとしてのみ提供する。
+これは直感的だが、macOSユーザーに定着したテキスト移動を置き換える大胆な変更である。QuickDrawはこれらのキーを横取り・再配送せず、ユーザーがmacOSの「キーボードショートカット」>「Mission Control」で明示的に設定した場合だけ有効になる。
 
 ウインドウ配置、最大化／復元、次のディスプレイ、デスクトップ表示、Stage ManagerのTriggerは、この文書では確定しない。既存標準、競合、対称性、実行経路を個別に監査してから決める。
 
@@ -216,22 +216,15 @@ Finderは「OS機能」ではなくネイティブアプリとして扱う。Qui
 
 Quick Lookの`Space`のように強く定着した操作は、無理にOptionへ変更しない。「Finderだから全部Option」ではなく、「QuickDrawで新しく共通化するFinder ActionはOption」が正確な境界である。
 
-## 8. Application Enablementで表現する
+## 8. System設定とApplication Enablementで表現する
 
-既存のApplication設定にmacOSとFinderを追加し、それぞれの有効／無効の組み合わせで適用範囲を表現する。
-
-| macOS | Finder | 状態 |
-|---:|---:|---|
-| OFF | OFF | 現在相当。アプリだけQuickDraw化 |
-| OFF | ON | Finder操作も原則準拠 |
-| ON | OFF | OS操作だけ原則準拠 |
-| ON | ON | 全体を原則準拠 |
+Finderは既存のApplication Enablementへ追加する。macOS操作はQuickDraw Targetとして有効化せず、純正のSystem Settingsで管理する。
 
 Applications画面には次のSystemセクションを追加する。
 
 ```text
 System
-  macOS          OFF
+  macOS          System Settingsで管理
   Finder         OFF
 ```
 
@@ -243,26 +236,27 @@ com.apple.finder
 QuickDrawの対象: OFF
 ```
 
-macOSはForegroundアプリを持たない擬似Targetとして扱う。
+macOSは実行Targetではなく、純正設定の参照・編集導線として扱う。
 
 ```text
 macOS
-System-wide
-QuickDrawの対象: OFF
+System Settings
+現在のShortcutを表示
+編集時はKeyboard Shortcuts > Mission Controlを開く
 ```
 
 ### デフォルトと互換性
 
 - Meeting、Chat、Development、Browserは従来どおり対象とする。
-- FinderとmacOSはOFFをデフォルトにする。
-- アップデート時も自動でONにしない。
-- ユーザーが明示的に有効化した状態だけを保存する。
+- FinderはOFFをデフォルトにし、アップデート時も自動でONにしない。
+- macOS ActionのTriggerはQuickDrawへ登録しない。過去に保存されたmacOS有効状態があっても無視する。
+- macOSの純正Shortcutは読み取り専用のbest-effort検出とし、QuickDrawからPreferenceを書き換えない。
 - 既存ユーザーのCustom Trigger、Clear済みTrigger、Applicationごとの有効状態を無断で上書きしない。
 - Phase 1のSuggested Trigger変更を実装するときは、既存設定の保持、変更一覧のpreview、Restore Suggested Triggerを含む移行仕様を別途決める。
 
 これにより、通常ユーザーの`⌘←`行頭移動などは一切変わらない。
 
-### ONにしたときの意味
+### 適用時の意味
 
 Finder ON:
 
@@ -271,19 +265,14 @@ Finder ON:
 - `⌥H/D/L`でHome／Desktop／Downloadsへ移動する。
 - Finder以外では完全に素通しする。
 
-macOS ON:
+macOS純正設定:
 
 - `⌘↑`でMission Controlを開く。
 - `⌘↓`でApplication Exposéを開く。
 - `⌘←/→`で前／次のデスクトップへ移動する。
-- Foregroundアプリに関係なくSystem操作を優先する。
+- Foregroundアプリに関係なくmacOS自身がSystem操作を処理する。
 - 従来の`Command + 矢印`によるテキスト移動は使えなくなる。
-
-macOSをONにするときだけ、競合の確認画面を必須にする。
-
-> macOSをQuickDrawの対象にすると、OS操作がすべてのアプリで優先されます。`⌘↑/↓/←/→`など、現在テキスト編集やFinderで使われているショートカットが置き換わります。
-
-有効化前に変更一覧を表示し、同じ画面から即座にOFFへ戻せるようにする。
+- QuickDrawは現在値と推奨値の一致を表示し、変更操作ではSystem Settingsを開く。
 
 ### ルーティング
 
@@ -295,19 +284,19 @@ Finder Action
     → 素通し
 
 macOS Action
-  macOS TargetがON
-    → Foregroundに関係なく実行して消費
-  OFF
-    → 素通し
+  QuickDrawにはTriggerを登録しない
+    → 常に素通し
+  純正Shortcutが設定済み
+    → macOSが直接実行
 ```
 
-macOSとFinderの適用状態は、現在のApplication設定で説明、保存、解除できる。
+Finderの適用状態はApplication設定で保存・解除する。macOSの現在値は`com.apple.symbolichotkeys`からbest-effortで参照し、編集はSystem Settingsへ委譲する。
 
 ## 9. 実装前に検証すること
 
 - Option + 英字が各キーボード配列の特殊文字入力と競合する影響。
-- macOS / Finderの各候補Triggerが現行macOSで登録・消費できるか。
-- `Command + 矢印`をSystem-wideで奪う警告が十分に理解されるか。
+- macOSのSymbolic Hotkey IDが各対応OSで読み取れるか。
+- System Settingsへの遷移が各対応OSでKeyboard Shortcutsへ到達するか。
 - Finderの各ActionをShortcut配送、Apple Events、Accessibilityのどれで安定実行するか。
 - Stage Manager、特定デスクトップ、次のディスプレイへの移動に安定した実行経路があるか。
 - Target-aware TriggerをAction、Target、Adapterのどの層に保持するか。

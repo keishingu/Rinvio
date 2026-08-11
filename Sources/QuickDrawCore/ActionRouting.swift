@@ -24,6 +24,8 @@ public struct KeyStroke: Codable, Equatable, Hashable, Sendable {
 }
 
 public enum ActionDomain: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
+  case system
+  case finder
   case meeting
   case chat
   case development
@@ -33,6 +35,15 @@ public enum ActionDomain: String, CaseIterable, Codable, Equatable, Identifiable
 }
 
 public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
+  case missionControl
+  case applicationExpose
+  case previousDesktop
+  case nextDesktop
+  case finderParentFolder
+  case finderOpenSelectedItem
+  case finderHome
+  case finderDesktop
+  case finderDownloads
   case mute
   case camera
   case raiseHand
@@ -98,6 +109,15 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
 
   public var displayName: String {
     switch self {
+    case .missionControl: "Mission Control"
+    case .applicationExpose: "Application Exposé"
+    case .previousDesktop: "Previous Desktop"
+    case .nextDesktop: "Next Desktop"
+    case .finderParentFolder: "Parent Folder"
+    case .finderOpenSelectedItem: "Open Selected Item"
+    case .finderHome: "Home"
+    case .finderDesktop: "Desktop"
+    case .finderDownloads: "Downloads"
     case .mute: "Mute"
     case .camera: "Camera"
     case .raiseHand: "Raise Hand"
@@ -159,6 +179,8 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
 }
 
 public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
+  case macOS
+  case finder
   case microsoftTeams
   case zoomWorkplace
   case googleMeet
@@ -190,6 +212,8 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
 
   public var displayName: String {
     switch self {
+    case .macOS: "macOS"
+    case .finder: "Finder"
     case .microsoftTeams: "Microsoft Teams"
     case .zoomWorkplace: "Zoom Workplace"
     case .googleMeet: "Google Meet"
@@ -313,6 +337,10 @@ public struct ActionRouter {
     action: Action,
     context: ForegroundContext
   ) -> Result<ActionRoute, ActionRoutingFailure> {
+    if ActionCatalog.isSystemWide(action) {
+      return routeSystemWide(action: action)
+    }
+
     guard let bundleIdentifier = context.bundleIdentifier else {
       return .failure(.missingBundleIdentifier)
     }
@@ -356,5 +384,18 @@ public struct ActionRouter {
   public func shortcut(for action: Action, target: ActionTarget) -> KeyStroke? {
     overrideProvider.shortcutOverride(for: action, target: target)
       ?? ActionCatalog.defaultShortcut(for: action, target: target)
+  }
+
+  private func routeSystemWide(
+    action: Action
+  ) -> Result<ActionRoute, ActionRoutingFailure> {
+    let target = ActionTarget.macOS
+    guard applicationEnablementProvider.isApplicationEnabled(target) else {
+      return .failure(.disabledApplication(target: target))
+    }
+    guard let shortcut = shortcut(for: action, target: target) else {
+      return .failure(.unsupportedAction(action: action, target: target))
+    }
+    return .success(ActionRoute(action: action, target: target, shortcut: shortcut))
   }
 }

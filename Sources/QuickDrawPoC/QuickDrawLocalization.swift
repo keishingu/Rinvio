@@ -59,6 +59,9 @@ struct QuickDrawCopy {
   var actionsSubtitle: String {
     text("1つの操作を、対応アプリごとの操作へ変換します。", "One action, translated for every supported application.")
   }
+  var workspace: String { text("ワークスペース", "Workspace") }
+  var finderNavigation: String { text("Finderの移動", "Finder navigation") }
+  var systemSection: String { text("System", "System") }
   var meetingControls: String { text("会議コントロール", "Meeting controls") }
   var panelsAndSharing: String { text("パネルと共有", "Panels and sharing") }
   var reactions: String { text("リアクション", "Reactions") }
@@ -118,6 +121,30 @@ struct QuickDrawCopy {
   var excluded: String { text("対象外", "Excluded") }
   var notInstalled: String { text("未インストール", "Not installed") }
   var quickDrawTarget: String { text("QuickDrawの対象", "Use with QuickDraw") }
+  var managedBySystemSettings: String {
+    text("システム設定で管理", "Managed by System Settings")
+  }
+  var systemShortcutConfiguration: String {
+    text("macOSキーボードショートカット", "macOS keyboard shortcut")
+  }
+  var currentShortcut: String { text("現在の設定", "Current setting") }
+  var suggestedShortcut: String { text("推奨", "Suggested") }
+  var notConfigured: String { text("未設定または検出不能", "Not configured or unavailable") }
+  var systemShortcutConfigured: String {
+    text("推奨どおり設定されています", "Matches the suggested shortcut")
+  }
+  var systemShortcutNeedsReview: String {
+    text("純正設定を確認してください", "Review the macOS setting")
+  }
+  var openSystemShortcutSettings: String {
+    text("システム設定で編集…", "Edit in System Settings…")
+  }
+  var systemShortcutSettingsDescription: String {
+    text(
+      "QuickDrawはOSショートカットを横取り・書き換えません。キーボードショートカットのMission Control項目で編集してください。",
+      "QuickDraw does not intercept or modify OS shortcuts. Edit them under Mission Control in Keyboard Shortcuts."
+    )
+  }
   func developmentApplicationCategoryName(
     _ category: DevelopmentApplicationCategory
   ) -> String {
@@ -342,6 +369,8 @@ struct QuickDrawCopy {
 
   func sectionTitle(_ section: QuickDrawSection) -> String {
     switch section {
+    case .system: actionDomainName(.system)
+    case .finder: actionDomainName(.finder)
     case .meeting: actionDomainName(.meeting)
     case .chat: actionDomainName(.chat)
     case .development: actionDomainName(.development)
@@ -379,6 +408,8 @@ struct QuickDrawCopy {
 
   func actionDomainName(_ domain: ActionDomain) -> String {
     switch domain {
+    case .system: text("macOS", "macOS")
+    case .finder: text("Finder", "Finder")
     case .meeting: text("Meeting", "Meeting")
     case .chat: text("Chat", "Chat")
     case .development: text("Development", "Development")
@@ -388,6 +419,16 @@ struct QuickDrawCopy {
 
   func actionDomainSubtitle(_ domain: ActionDomain) -> String {
     switch domain {
+    case .system:
+      text(
+        "macOS純正のキーボードショートカットを参照し、編集時はシステム設定を開きます。",
+        "View native macOS keyboard shortcuts and open System Settings to edit them."
+      )
+    case .finder:
+      text(
+        "FinderがForegroundで対象がONの場合だけ、Finder操作を変換します。",
+        "Translate Finder actions only while Finder is foreground and enabled."
+      )
     case .meeting:
       text(
         "会議アプリごとの操作差を、共通Actionへ変換します。",
@@ -417,6 +458,8 @@ struct QuickDrawCopy {
 
   func actionCategoryName(_ category: ActionCategory) -> String {
     switch category {
+    case .workspace: workspace
+    case .finderNavigation: finderNavigation
     case .meetingControls: meetingControls
     case .panelsAndSharing: panelsAndSharing
     case .reactions: reactions
@@ -438,6 +481,15 @@ struct QuickDrawCopy {
 
   func actionName(_ action: Action) -> String {
     switch action {
+    case .missionControl: text("Mission Control", "Mission Control")
+    case .applicationExpose: text("Application Exposé", "Application Exposé")
+    case .previousDesktop: text("前のデスクトップ", "Previous Desktop")
+    case .nextDesktop: text("次のデスクトップ", "Next Desktop")
+    case .finderParentFolder: text("親フォルダ", "Parent Folder")
+    case .finderOpenSelectedItem: text("選択項目を開く", "Open Selected Item")
+    case .finderHome: text("ホーム", "Home")
+    case .finderDesktop: text("デスクトップ", "Desktop")
+    case .finderDownloads: text("ダウンロード", "Downloads")
     case .mute: text("ミュート切替", "Mute Toggle")
     case .camera: text("カメラ切替", "Camera Toggle")
     case .raiseHand: text("挙手切替", "Raise Hand Toggle")
@@ -499,6 +551,24 @@ struct QuickDrawCopy {
 
   func actionDescription(_ action: Action) -> String {
     switch action {
+    case .missionControl:
+      text("Mission Controlを表示します", "Show Mission Control")
+    case .applicationExpose:
+      text("現在のアプリのウインドウを一覧表示します", "Show all windows for the active application")
+    case .previousDesktop:
+      text("前のデスクトップへ移動します", "Move to the previous desktop")
+    case .nextDesktop:
+      text("次のデスクトップへ移動します", "Move to the next desktop")
+    case .finderParentFolder:
+      text("Finderで親フォルダを開きます", "Open the parent folder in Finder")
+    case .finderOpenSelectedItem:
+      text("Finderで選択中の項目を開きます", "Open the selected item in Finder")
+    case .finderHome:
+      text("Finderでホームフォルダを開きます", "Open the Home folder in Finder")
+    case .finderDesktop:
+      text("Finderでデスクトップを開きます", "Open the Desktop folder in Finder")
+    case .finderDownloads:
+      text("Finderでダウンロードを開きます", "Open the Downloads folder in Finder")
     case .mute:
       text("現在の会議をミュート／ミュート解除します", "Mute or unmute the active meeting")
     case .camera:

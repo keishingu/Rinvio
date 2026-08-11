@@ -5,20 +5,36 @@ import QuickDrawCore
 
 final class ConfiguredSystemShortcutDetector {
   private var shortcuts: Set<ShortcutIdentity> = []
+  private var actionShortcuts: [Action: KeyStroke] = [:]
+
+  private static let shortcutIDByAction: [Action: String] = [
+    .missionControl: "32",
+    .applicationExpose: "33",
+    .previousDesktop: "79",
+    .nextDesktop: "81",
+  ]
 
   init() {
     refresh()
   }
 
   func refresh() {
-    shortcuts = Self.loadConfiguredShortcuts()
+    let loaded = Self.loadConfiguredShortcuts()
+    shortcuts = loaded.shortcuts
+    actionShortcuts = loaded.actionShortcuts
   }
 
   func conflicts(with shortcut: KeyStroke) -> Bool {
     shortcuts.contains(ShortcutIdentity(shortcut))
   }
 
-  private static func loadConfiguredShortcuts() -> Set<ShortcutIdentity> {
+  func shortcut(for action: Action) -> KeyStroke? {
+    actionShortcuts[action]
+  }
+
+  private static func loadConfiguredShortcuts() -> (
+    shortcuts: Set<ShortcutIdentity>, actionShortcuts: [Action: KeyStroke]
+  ) {
     guard
       let propertyList = CFPreferencesCopyValue(
         "AppleSymbolicHotKeys" as CFString,
@@ -28,13 +44,22 @@ final class ConfiguredSystemShortcutDetector {
       ),
       let entries = propertyList as? NSDictionary
     else {
-      return []
+      return ([], [:])
     }
 
-    return Set(entries.allValues.compactMap(parseEntry))
+    let parsedShortcuts = entries.allValues.compactMap(parseEntry)
+    let actionShortcuts: [Action: KeyStroke] = Dictionary(
+      uniqueKeysWithValues: shortcutIDByAction.compactMap { action, shortcutID in
+        guard let rawEntry = entries[shortcutID], let shortcut = parseEntry(rawEntry) else {
+          return nil
+        }
+        return (action, shortcut)
+      }
+    )
+    return (Set(parsedShortcuts.map(ShortcutIdentity.init)), actionShortcuts)
   }
 
-  private static func parseEntry(_ rawEntry: Any) -> ShortcutIdentity? {
+  private static func parseEntry(_ rawEntry: Any) -> KeyStroke? {
     guard
       let entry = rawEntry as? NSDictionary,
       (entry["enabled"] as? NSNumber)?.boolValue == true,
@@ -55,10 +80,29 @@ final class ConfiguredSystemShortcutDetector {
     if rawFlags & CGEventFlags.maskControl.rawValue != 0 { modifiers.insert(.control) }
     if rawFlags & CGEventFlags.maskShift.rawValue != 0 { modifiers.insert(.shift) }
 
-    return ShortcutIdentity(
+    guard let keyDisplay = keyDisplay(for: keyCodeNumber.uint16Value) else { return nil }
+    let modifierDisplay = [
+      modifiers.contains(.command) ? "⌘" : "",
+      modifiers.contains(.option) ? "⌥" : "",
+      modifiers.contains(.control) ? "⌃" : "",
+      modifiers.contains(.shift) ? "⇧" : "",
+    ].joined()
+
+    return KeyStroke(
       virtualKeyCode: keyCodeNumber.uint16Value,
-      modifiers: modifiers
+      modifiers: modifiers,
+      displayValue: modifierDisplay + keyDisplay
     )
+  }
+
+  private static func keyDisplay(for virtualKeyCode: UInt16) -> String? {
+    switch virtualKeyCode {
+    case 123: "←"
+    case 124: "→"
+    case 125: "↓"
+    case 126: "↑"
+    default: nil
+    }
   }
 }
 

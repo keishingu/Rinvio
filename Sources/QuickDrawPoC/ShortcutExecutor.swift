@@ -48,8 +48,10 @@ struct ShortcutExecutor: ShortcutDelivering {
       else {
         throw ShortcutExecutionError.eventCreationFailed
       }
-
-      event.flags = eventFlags(for: plannedEvent.modifiers)
+      event.flags = eventFlags(
+        for: plannedEvent.modifiers,
+        virtualKeyCode: plannedEvent.virtualKeyCode
+      )
       event.setIntegerValueField(
         .eventSourceUserData,
         value: plannedEvent.sourceMarker
@@ -58,7 +60,10 @@ struct ShortcutExecutor: ShortcutDelivering {
     }
   }
 
-  private func eventFlags(for modifiers: Set<ModifierKey>) -> CGEventFlags {
+  private func eventFlags(
+    for modifiers: Set<ModifierKey>,
+    virtualKeyCode: UInt16
+  ) -> CGEventFlags {
     var flags: CGEventFlags = []
     if modifiers.contains(.command) {
       flags.insert(.maskCommand)
@@ -71,6 +76,10 @@ struct ShortcutExecutor: ShortcutDelivering {
     }
     if modifiers.contains(.option) {
       flags.insert(.maskAlternate)
+    }
+    // Match physical arrow-key events for Finder and application shortcuts.
+    if [123, 124, 125, 126].contains(virtualKeyCode) {
+      flags.insert(.maskNumericPad)
     }
     return flags
   }
