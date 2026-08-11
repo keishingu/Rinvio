@@ -54,7 +54,7 @@ struct QuickDrawRootView: View {
   private var sidebar: some View {
     List(selection: $selectedSection) {
       Section(model.copy.actions) {
-        ForEach([QuickDrawSection.system, .finder, .meeting, .chat]) { section in
+        ForEach([QuickDrawSection.meeting, .chat]) { section in
           Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
             .tag(section)
         }
@@ -76,6 +76,11 @@ struct QuickDrawRootView: View {
           systemImage: QuickDrawSection.browser.systemImage
         )
         .tag(QuickDrawSection.browser)
+
+        ForEach([QuickDrawSection.finder, .system]) { section in
+          Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
+            .tag(section)
+        }
       }
 
       Section {
