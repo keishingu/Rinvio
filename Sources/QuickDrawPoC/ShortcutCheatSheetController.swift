@@ -123,7 +123,18 @@ final class ShortcutCheatSheetController {
     }
     if panel.isVisible {
       guard presentedModifiers != modifiers else { return }
-      reset()
+      pendingPresentation?.cancel()
+      pendingPresentation = nil
+      pendingModifiers = nil
+      pendingPreviewDismissal?.cancel()
+      pendingPreviewDismissal = nil
+      if !presentForForegroundApplication(
+        isPreview: false,
+        triggerModifiers: modifiers
+      ) {
+        reset()
+      }
+      return
     }
     if pendingPresentation != nil {
       guard pendingModifiers != modifiers else { return }
@@ -175,19 +186,22 @@ final class ShortcutCheatSheetController {
     DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: workItem)
   }
 
+  @discardableResult
   private func presentForForegroundApplication(
     isPreview: Bool,
     triggerModifiers: Set<ModifierKey>?
-  ) {
-    guard isQuickDrawEnabled, !isSuppressed else { return }
-    guard isPreview || isCheatSheetEnabled else { return }
-    guard isPreview || foregroundProvider.isPotentialQuickDrawTargetForeground() else { return }
+  ) -> Bool {
+    guard isQuickDrawEnabled, !isSuppressed else { return false }
+    guard isPreview || isCheatSheetEnabled else { return false }
+    guard isPreview || foregroundProvider.isPotentialQuickDrawTargetForeground() else {
+      return false
+    }
     guard
       let application = foregroundProvider.foregroundApplication(),
       let bundleIdentifier = application.bundleIdentifier,
       let foregroundTarget = ActionCatalog.target(forBundleIdentifier: bundleIdentifier)
     else {
-      return
+      return false
     }
 
     let activeTabURL =
@@ -240,7 +254,7 @@ final class ShortcutCheatSheetController {
         entries: pairs.map(\.entry)
       )
     }
-    guard !groups.isEmpty else { return }
+    guard !groups.isEmpty else { return false }
 
     let presentationTarget: ActionTarget =
       routedTargets.contains(.googleMeet) ? .googleMeet : foregroundTarget
@@ -257,15 +271,17 @@ final class ShortcutCheatSheetController {
       groups: groups
     )
 
-    present(content, triggerModifiers: triggerModifiers)
+    return present(content, triggerModifiers: triggerModifiers)
   }
 
+  @discardableResult
   private func present(
     _ content: ShortcutCheatSheetContent,
     triggerModifiers: Set<ModifierKey>?
-  ) {
+  ) -> Bool {
     let screen = screenContainingPointer() ?? NSScreen.main ?? NSScreen.screens.first
-    guard let screen else { return }
+    guard let screen else { return false }
+    let wasVisible = panel.isVisible
 
     let rowCount = content.groups.reduce(0) { $0 + $1.entries.count }
     let width = min(620.0, screen.visibleFrame.width - 48.0)
@@ -285,7 +301,7 @@ final class ShortcutCheatSheetController {
     )
     presentedModifiers = triggerModifiers
 
-    if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+    if wasVisible || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
       panel.alphaValue = 1
       panel.orderFrontRegardless()
     } else {
@@ -297,6 +313,7 @@ final class ShortcutCheatSheetController {
         panel.animator().alphaValue = 1
       }
     }
+    return true
   }
 
   private func screenContainingPointer() -> NSScreen? {

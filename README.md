@@ -56,7 +56,7 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 ## Shortcut Guide
 
-対応ApplicationをForegroundにして、QuickDraw TriggerまたはApplication Shortcutの修飾キー（`⌘⌥`や`⌘⇧`など）を約0.6秒長押しすると、その修飾キーから実行できるActionを画面中央のHUDへ表示します。QuickDraw Triggerが未割り当てでも、対象ApplicationにShortcutがあればApplication側の項目として表示します。修飾キーを離すかQuickDraw Shortcutを実行すると閉じ、実行後は修飾キーをすべて離すまで再表示しません。Modifierイベント自体は消費しません。各ActionにはQuickDraw Triggerと、対象Applicationへ配送する既定Shortcut（Mapping Overrideがあれば変更後の値）を罫線で分けて表示します。修飾キーを持たないShortcutは長押し表示の対象外ですが、`Preview`では確認できます。
+対応ApplicationをForegroundにして、QuickDraw TriggerまたはApplication Shortcutの修飾キー（`⌘⌥`や`⌘⇧`など）を約0.6秒長押しすると、その修飾キーから実行できるActionを画面中央のHUDへ表示します。QuickDraw Triggerが未割り当てでも、対象ApplicationにShortcutがあればApplication側の項目として表示します。HUD表示中に修飾キーの組み合わせを変えた場合は、閉じたり再度待ったりせず内容を即時更新します。修飾キーを離すかQuickDraw Shortcutを実行すると閉じ、実行後は修飾キーをすべて離すまで再表示しません。Modifierイベント自体は消費しません。各ActionにはQuickDraw Triggerと、対象Applicationへ配送する既定Shortcut（Mapping Overrideがあれば変更後の値）を罫線で分けて表示します。修飾キーを持たないShortcutは長押し表示の対象外ですが、`Preview`では確認できます。
 
 Sidebarの`Settings`から表示をON/OFFでき、`Preview`で最後に使った対応Application向けの内容を確認できます。設定はUserDefaultsへ保存します。
 

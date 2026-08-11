@@ -29,7 +29,7 @@
 | Native configuration window | Action-first split view, mapping inspector, Applications and Diagnostics navigation | Pass |
 | Window interactions | Sidebar navigation and Inspector show/hide verified with macOS Accessibility tree | Pass |
 | Language switching | Japanese / English updates live and the selection is persisted in UserDefaults | Pass |
-| Shortcut Guide | QuickDraw and application-shortcut modifier holds, unassigned Trigger coverage, foreground capability filtering, persistent ON/OFF setting, preview, and release dismissal | Pass |
+| Shortcut Guide | QuickDraw and application-shortcut modifier holds, immediate in-place modifier switching, unassigned Trigger coverage, foreground capability filtering, persistent ON/OFF setting, preview, and release dismissal | Pass |
 | Trigger configuration | Safe Trigger validation, overlapping-domain duplicate rejection, disjoint-domain reuse, dynamic HotKey registration, unassignment, default restore | Pass |
 | Mapping overrides | Router uses persisted Action × Application overrides; individual and Action-level restore | Pass |
 | Configuration persistence | Versioned JSON round-trip and defaults-not-copied behavior | Pass |
