@@ -29,14 +29,14 @@
 | Native configuration window | Action-first split view, mapping inspector, Applications and Diagnostics navigation | Pass |
 | Window interactions | Sidebar navigation and Inspector show/hide verified with macOS Accessibility tree | Pass |
 | Language switching | Japanese / English updates live and the selection is persisted in UserDefaults | Pass |
-| Shortcut Guide | Modifier-only hold monitoring, foreground capability filtering, persistent ON/OFF setting, preview, and release dismissal | Pass |
+| Shortcut Guide | QuickDraw and application-shortcut modifier holds, unassigned Trigger coverage, foreground capability filtering, persistent ON/OFF setting, preview, and release dismissal | Pass |
 | Trigger configuration | Safe Trigger validation, overlapping-domain duplicate rejection, disjoint-domain reuse, dynamic HotKey registration, unassignment, default restore | Pass |
 | Mapping overrides | Router uses persisted Action × Application overrides; individual and Action-level restore | Pass |
 | Configuration persistence | Versioned JSON round-trip and defaults-not-copied behavior | Pass |
 | Built-in Catalog | Bundled JSON decode, schema validation, complete Action/Application coverage | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
-| Tests | `swift test`: 77 tests, 0 failures | Pass |
+| Tests | `swift test`: 79 tests, 0 failures | Pass |
 | Idle resources | 43 seconds idle: CPU 0.0%, RSS about 20 MB | Pass (single observation) |
 
 ## Installed application identities

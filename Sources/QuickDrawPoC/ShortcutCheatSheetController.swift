@@ -105,14 +105,20 @@ final class ShortcutCheatSheetController {
       reset()
       return
     }
+    guard isCheatSheetEnabled, isQuickDrawEnabled, !isSuppressed else {
+      return
+    }
 
     let hasMatchingTrigger =
       !configurationStore.actions(withTriggerModifiers: modifiers).isEmpty
-    guard hasMatchingTrigger else {
-      reset()
-      return
+    let hasMatchingApplicationShortcut = ActionTarget.allCases.contains { target in
+      !configurationStore.actions(
+        withApplicationShortcutModifiers: modifiers,
+        for: target
+      ).isEmpty
     }
-    guard isCheatSheetEnabled, isQuickDrawEnabled, !isSuppressed else {
+    guard hasMatchingTrigger || hasMatchingApplicationShortcut else {
+      reset()
       return
     }
     if panel.isVisible {
@@ -201,9 +207,13 @@ final class ShortcutCheatSheetController {
     var routedTargets = Set<ActionTarget>()
     var routedEntries: [(domain: ActionDomain, entry: ShortcutCheatSheetEntry)] = []
     for definition in ActionDefinition.all {
-      guard let trigger = configurationStore.trigger(for: definition.action) else { continue }
-      guard triggerModifiers == nil || trigger.modifiers == triggerModifiers else { continue }
       guard case .success(let route) = router.route(action: definition.action, context: context)
+      else { continue }
+      let trigger = configurationStore.trigger(for: definition.action)
+      let matchesQuickDrawTrigger = trigger?.modifiers == triggerModifiers
+      let matchesApplicationShortcut = route.shortcut.modifiers == triggerModifiers
+      guard
+        triggerModifiers == nil || matchesQuickDrawTrigger || matchesApplicationShortcut
       else { continue }
       routedTargets.insert(route.target)
       routedEntries.append(
@@ -213,7 +223,7 @@ final class ShortcutCheatSheetController {
             ShortcutCheatSheetEntry(
               action: definition.action,
               name: copy.actionName(definition.action),
-              quickDrawShortcut: trigger.displayValue,
+              quickDrawShortcut: trigger?.displayValue ?? "—",
               applicationShortcut: route.shortcut.displayValue,
               systemImage: definition.systemImage
             )

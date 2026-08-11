@@ -74,12 +74,15 @@ struct QuickDrawCopy {
   var messaging: String { text("メッセージ", "Messaging") }
   var shortcutGuide: String { text("ショートカットガイド", "Shortcut Guide") }
   var showShortcutGuideOnHold: String {
-    text("Triggerの修飾キーを長押しで表示", "Show when holding a Trigger's modifier keys")
+    text(
+      "ショートカットの修飾キーを長押しで表示",
+      "Show when holding shortcut modifier keys"
+    )
   }
   var shortcutGuideDescription: String {
     text(
-      "登録済みTriggerの修飾キーを約0.6秒長押しすると、そこから実行できるActionとアプリ側のショートカットを表示します。キー入力は消費しません。",
-      "Hold a configured Trigger's modifier keys for about 0.6 seconds to see its Actions and their app shortcuts. The modifier keys remain available to the app."
+      "QuickDrawまたはアプリ側ショートカットの修飾キーを約0.6秒長押しすると、そこから実行できるActionを表示します。キー入力は消費しません。",
+      "Hold QuickDraw or app shortcut modifier keys for about 0.6 seconds to see the available Actions. The modifier keys remain available to the app."
     )
   }
   var previewShortcutGuide: String { text("プレビュー", "Preview") }

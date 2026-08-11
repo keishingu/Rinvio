@@ -150,6 +150,13 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
     Action.allCases.filter { trigger(for: $0)?.modifiers == modifiers }
   }
 
+  public func actions(
+    withApplicationShortcutModifiers modifiers: Set<ModifierKey>,
+    for target: ActionTarget
+  ) -> [Action] {
+    Action.allCases.filter { shortcut(for: $0, target: target)?.modifiers == modifiers }
+  }
+
   public func shortcut(for action: Action, target: ActionTarget) -> KeyStroke? {
     shortcutOverride(for: action, target: target)
       ?? ActionCatalog.defaultShortcut(for: action, target: target)

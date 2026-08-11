@@ -134,6 +134,44 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertTrue(store.actions(withTriggerModifiers: [.command, .option]).contains(.camera))
   }
 
+  func testFindsApplicationShortcutsByModifiersWhenTriggerIsUnassigned() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+
+    try store.unassignTrigger(for: .shareScreen)
+
+    XCTAssertFalse(store.actions(withTriggerModifiers: [.command, .shift]).contains(.shareScreen))
+    XCTAssertTrue(
+      store.actions(
+        withApplicationShortcutModifiers: [.command, .shift],
+        for: .microsoftTeams
+      ).contains(.shareScreen)
+    )
+  }
+
+  func testApplicationShortcutModifierLookupUsesOverride() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let override = KeyStroke(
+      virtualKeyCode: 1,
+      modifiers: [.command, .option],
+      displayValue: "⌘⌥S"
+    )
+
+    try store.setShortcutOverride(override, for: .shareScreen, target: .microsoftTeams)
+
+    XCTAssertFalse(
+      store.actions(
+        withApplicationShortcutModifiers: [.command, .shift],
+        for: .microsoftTeams
+      ).contains(.shareScreen)
+    )
+    XCTAssertTrue(
+      store.actions(
+        withApplicationShortcutModifiers: [.command, .option],
+        for: .microsoftTeams
+      ).contains(.shareScreen)
+    )
+  }
+
   func testEveryBuiltInActionHasAUniqueSafeTrigger() throws {
     let triggers = try Action.allCases.map {
       try XCTUnwrap(ActionCatalog.defaultTrigger(for: $0))
