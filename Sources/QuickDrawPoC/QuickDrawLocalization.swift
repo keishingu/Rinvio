@@ -66,6 +66,9 @@ struct QuickDrawCopy {
   var terminals: String { text("ターミナル", "Terminal") }
   var regions: String { text("UI領域", "UI regions") }
   var codeNavigation: String { text("コード移動", "Code navigation") }
+  var codeEditing: String { text("コード編集", "Code editing") }
+  var refactoring: String { text("リファクタリング", "Refactoring") }
+  var runningAndIssues: String { text("実行と問題", "Run and issues") }
   var commands: String { text("コマンド", "Commands") }
   var pageLoading: String { text("ページ読み込み", "Page loading") }
   var tabs: String { text("タブ", "Tabs") }
@@ -115,6 +118,39 @@ struct QuickDrawCopy {
   var excluded: String { text("対象外", "Excluded") }
   var notInstalled: String { text("未インストール", "Not installed") }
   var quickDrawTarget: String { text("QuickDrawの対象", "Use with QuickDraw") }
+  func developmentApplicationCategoryName(
+    _ category: DevelopmentApplicationCategory
+  ) -> String {
+    switch category {
+    case .aiAgent: text("AIエージェント", "AI Agents")
+    case .editor: text("エディタ", "Editors")
+    case .terminal: text("ターミナル", "Terminals")
+    }
+  }
+  func alignTriggersTo(_ application: ApplicationMapping) -> String {
+    text("\(application.compactName)に寄せる", "Match \(application.compactName)")
+  }
+  var alignDevelopmentTriggers: String {
+    text("ショートカットを統一", "Match shortcuts")
+  }
+  var alignDevelopmentTriggersDescription: String {
+    text(
+      "グローバルショートカットを選んだアプリに合わせます。",
+      "Match global shortcuts to the selected app."
+    )
+  }
+  func triggerAlignmentNotice(_ notice: TriggerAlignmentNotice) -> String {
+    let base = text(
+      "\(notice.target.displayName)に合わせて\(notice.appliedCount)個のTriggerを更新しました。",
+      "Updated \(notice.appliedCount) Triggers to match \(notice.target.displayName)."
+    )
+    guard notice.skippedDuplicateCount > 0 else { return base }
+    return base
+      + text(
+        " 同じショートカットの\(notice.skippedDuplicateCount)個は現在のTriggerを維持しました。",
+        " Kept \(notice.skippedDuplicateCount) existing Triggers because the app reuses the same shortcut."
+      )
+  }
   var quickDrawTargetDescription: String {
     text(
       "OFFにすると、このアプリではTriggerを消費せず、ショートカットガイドも表示しません。",
@@ -309,10 +345,35 @@ struct QuickDrawCopy {
     case .meeting: actionDomainName(.meeting)
     case .chat: actionDomainName(.chat)
     case .development: actionDomainName(.development)
+    case .developmentAIAgent: developmentApplicationCategoryName(.aiAgent)
+    case .developmentEditor: developmentApplicationCategoryName(.editor)
+    case .developmentTerminal: developmentApplicationCategoryName(.terminal)
     case .browser: actionDomainName(.browser)
     case .applications: applications
     case .settings: settings
     case .diagnostics: diagnostics
+    }
+  }
+
+  func developmentApplicationCategorySubtitle(
+    _ category: DevelopmentApplicationCategory
+  ) -> String {
+    switch category {
+    case .aiAgent:
+      text(
+        "AIエージェントのセッションや操作を共通ショートカットで扱います。",
+        "Use common shortcuts for AI agent sessions and controls."
+      )
+    case .editor:
+      text(
+        "エディタの移動・編集・リファクタリング・実行操作を統一します。",
+        "Unify editor navigation, editing, refactoring, and run actions."
+      )
+    case .terminal:
+      text(
+        "ターミナルの作成・切り替え・分割操作を統一します。",
+        "Unify terminal creation, navigation, and split actions."
+      )
     }
   }
 
@@ -363,6 +424,9 @@ struct QuickDrawCopy {
     case .terminals: terminals
     case .regions: regions
     case .codeNavigation: codeNavigation
+    case .codeEditing: codeEditing
+    case .refactoring: refactoring
+    case .runningAndIssues: runningAndIssues
     case .commands: commands
     case .pageLoading: pageLoading
     case .tabs: tabs
@@ -402,8 +466,19 @@ struct QuickDrawCopy {
     case .focusPreviousRegion: text("前のUI領域にフォーカス", "Focus Previous Region")
     case .focusNextRegion: text("次のUI領域にフォーカス", "Focus Next Region")
     case .goToDefinition: text("定義へ移動", "Go to Definition")
+    case .goToSymbol: text("シンボルへ移動", "Go to Symbol")
     case .navigateBack: text("前の場所へ戻る", "Navigate Back")
     case .navigateForward: text("次の場所へ進む", "Navigate Forward")
+    case .formatDocument: text("コードフォーマット", "Format Document")
+    case .renameSymbol: text("シンボル名を変更", "Rename Symbol")
+    case .findReferences: text("参照を検索", "Find References")
+    case .quickFix: text("クイックフィックス", "Quick Fix")
+    case .toggleLineComment: text("行コメント切替", "Toggle Line Comment")
+    case .moveLineUp: text("行を上へ移動", "Move Line Up")
+    case .moveLineDown: text("行を下へ移動", "Move Line Down")
+    case .runProject: text("プロジェクトを実行", "Run Project")
+    case .nextIssue: text("次の問題へ移動", "Next Issue")
+    case .previousIssue: text("前の問題へ移動", "Previous Issue")
     case .commandPalette: text("コマンドパレット", "Command Palette")
     case .quickOpen: text("クイックオープン", "Quick Open")
     case .showKeyboardShortcuts: text("ショートカット一覧", "Keyboard Shortcuts")
@@ -516,10 +591,32 @@ struct QuickDrawCopy {
       )
     case .goToDefinition:
       text("カーソル位置のシンボル定義へ移動します", "Go to the definition of the symbol at the cursor")
+    case .goToSymbol:
+      text("名前からシンボルを検索して移動します", "Find and navigate to a symbol by name")
     case .navigateBack:
       text("コード移動履歴の前の場所へ戻ります", "Go back in code navigation history")
     case .navigateForward:
       text("コード移動履歴の次の場所へ進みます", "Go forward in code navigation history")
+    case .formatDocument:
+      text("現在のファイルまたは選択範囲のコードを整形します", "Format the current file or selection")
+    case .renameSymbol:
+      text("カーソル位置のシンボル名を安全に変更します", "Safely rename the symbol at the cursor")
+    case .findReferences:
+      text("カーソル位置のシンボルを参照している箇所を検索します", "Find references to the symbol at the cursor")
+    case .quickFix:
+      text("カーソル位置で利用できる修正候補を表示します", "Show fixes available at the cursor")
+    case .toggleLineComment:
+      text("現在行または選択行のコメントを切り替えます", "Toggle comments for the current or selected lines")
+    case .moveLineUp:
+      text("現在行または選択行を上へ移動します", "Move the current or selected lines up")
+    case .moveLineDown:
+      text("現在行または選択行を下へ移動します", "Move the current or selected lines down")
+    case .runProject:
+      text("現在のプロジェクトまたは実行構成を実行します", "Run the current project or run configuration")
+    case .nextIssue:
+      text("次のエラーまたは警告へ移動します", "Move to the next error or warning")
+    case .previousIssue:
+      text("前のエラーまたは警告へ移動します", "Move to the previous error or warning")
     case .commandPalette:
       text(
         "現在の開発ツールでコマンドパレットを開きます",

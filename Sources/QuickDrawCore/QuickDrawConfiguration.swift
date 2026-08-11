@@ -189,10 +189,7 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
   }
 
   public func validateTrigger(_ shortcut: KeyStroke, for action: Action) throws {
-    let hasSafeModifier = !shortcut.modifiers.isDisjoint(with: [.command, .control, .option])
-    guard Self.functionKeyCodes.contains(shortcut.virtualKeyCode) || hasSafeModifier else {
-      throw QuickDrawConfigurationError.unsafeTrigger
-    }
+    try Self.validateTriggerSafety(shortcut)
 
     if let duplicate = Action.allCases.first(where: { candidate in
       candidate != action
@@ -210,6 +207,32 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
       configuration.unassignedTriggers.removeAll { $0 == action }
       if shortcut != ActionCatalog.defaultTrigger(for: action) {
         configuration.triggerOverrides.append(TriggerOverride(action: action, shortcut: shortcut))
+      }
+    }
+  }
+
+  public func setTriggerOverrides(_ shortcuts: [Action: KeyStroke]) throws {
+    try update { configuration in
+      for (action, shortcut) in shortcuts {
+        try Self.validateTriggerSafety(shortcut)
+        configuration.triggerOverrides.removeAll { $0.action == action }
+        configuration.unassignedTriggers.removeAll { $0 == action }
+        if shortcut != ActionCatalog.defaultTrigger(for: action) {
+          configuration.triggerOverrides.append(
+            TriggerOverride(action: action, shortcut: shortcut)
+          )
+        }
+      }
+
+      for (index, action) in Action.allCases.enumerated() {
+        guard let trigger = Self.trigger(for: action, in: configuration) else { continue }
+        if let duplicate = Action.allCases.dropFirst(index + 1).first(where: { candidate in
+          ActionCatalog.triggerScopesOverlap(action, candidate)
+            && Self.trigger(for: candidate, in: configuration)?
+              .matchesPhysicalShortcut(trigger) == true
+        }) {
+          throw QuickDrawConfigurationError.duplicateTrigger(duplicate)
+        }
       }
     }
   }
@@ -263,10 +286,26 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
     }
   }
 
-  private func update(_ change: (inout QuickDrawConfiguration) -> Void) throws {
+  private static func validateTriggerSafety(_ shortcut: KeyStroke) throws {
+    let hasSafeModifier = !shortcut.modifiers.isDisjoint(with: [.command, .control, .option])
+    guard functionKeyCodes.contains(shortcut.virtualKeyCode) || hasSafeModifier else {
+      throw QuickDrawConfigurationError.unsafeTrigger
+    }
+  }
+
+  private static func trigger(
+    for action: Action,
+    in configuration: QuickDrawConfiguration
+  ) -> KeyStroke? {
+    guard !configuration.unassignedTriggers.contains(action) else { return nil }
+    return configuration.triggerOverrides.first { $0.action == action }?.shortcut
+      ?? ActionCatalog.defaultTrigger(for: action)
+  }
+
+  private func update(_ change: (inout QuickDrawConfiguration) throws -> Void) throws {
     try lock.withLock {
       var next = storedConfiguration
-      change(&next)
+      try change(&next)
       try persist(next)
       storedConfiguration = next
     }

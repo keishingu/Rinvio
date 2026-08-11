@@ -168,6 +168,24 @@ final class ActionRouterTests: XCTestCase {
       try assertRoute(
         .navigateForward, bundleIdentifier: bundleIdentifier, keyCode: 27,
         modifiers: [.control, .shift], display: "⌃⇧-")
+      try assertRoute(
+        .formatDocument, bundleIdentifier: bundleIdentifier, keyCode: 3,
+        modifiers: [.option, .shift], display: "⇧⌥F")
+      try assertRoute(
+        .renameSymbol, bundleIdentifier: bundleIdentifier, keyCode: 120,
+        modifiers: [], display: "F2")
+      try assertRoute(
+        .findReferences, bundleIdentifier: bundleIdentifier, keyCode: 111,
+        modifiers: [.shift], display: "⇧F12")
+      try assertRoute(
+        .quickFix, bundleIdentifier: bundleIdentifier, keyCode: 47,
+        modifiers: [.command], display: "⌘.")
+      try assertRoute(
+        .toggleLineComment, bundleIdentifier: bundleIdentifier, keyCode: 44,
+        modifiers: [.command], display: "⌘/")
+      try assertRoute(
+        .runProject, bundleIdentifier: bundleIdentifier, keyCode: 96,
+        modifiers: [.control], display: "⌃F5")
     }
 
     try assertRoute(
@@ -179,6 +197,12 @@ final class ActionRouterTests: XCTestCase {
     try assertRoute(
       .navigateForward, bundleIdentifier: "com.apple.dt.Xcode", keyCode: 124,
       modifiers: [.command, .control], display: "⌃⌘→")
+    try assertRoute(
+      .toggleLineComment, bundleIdentifier: "com.apple.dt.Xcode", keyCode: 44,
+      modifiers: [.command], display: "⌘/")
+    try assertRoute(
+      .runProject, bundleIdentifier: "com.apple.dt.Xcode", keyCode: 15,
+      modifiers: [.command], display: "⌘R")
 
     for bundleIdentifier in [
       "com.jetbrains.intellij", "com.jetbrains.WebStorm", "com.jetbrains.RubyMine",
@@ -194,6 +218,21 @@ final class ActionRouterTests: XCTestCase {
       try assertRoute(
         .navigateForward, bundleIdentifier: bundleIdentifier, keyCode: 124,
         modifiers: [.command, .option], display: "⌘⌥→")
+      try assertRoute(
+        .formatDocument, bundleIdentifier: bundleIdentifier, keyCode: 37,
+        modifiers: [.command, .option], display: "⌘⌥L")
+      try assertRoute(
+        .renameSymbol, bundleIdentifier: bundleIdentifier, keyCode: 97,
+        modifiers: [.shift], display: "⇧F6")
+      try assertRoute(
+        .findReferences, bundleIdentifier: bundleIdentifier, keyCode: 98,
+        modifiers: [.option], display: "⌥F7")
+      try assertRoute(
+        .quickFix, bundleIdentifier: bundleIdentifier, keyCode: 36,
+        modifiers: [.option], display: "⌥Return")
+      try assertRoute(
+        .runProject, bundleIdentifier: bundleIdentifier, keyCode: 15,
+        modifiers: [.control], display: "⌃R")
     }
 
     try assertRoute(

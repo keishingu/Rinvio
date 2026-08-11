@@ -299,6 +299,105 @@
       }
     },
     {
+      "action": "goToSymbol",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 31,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥O"
+      }
+    },
+    {
+      "action": "formatDocument",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 3,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥F"
+      }
+    },
+    {
+      "action": "renameSymbol",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 15,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥R"
+      }
+    },
+    {
+      "action": "findReferences",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 32,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥U"
+      }
+    },
+    {
+      "action": "quickFix",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 47,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥."
+      }
+    },
+    {
+      "action": "toggleLineComment",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 44,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥/"
+      }
+    },
+    {
+      "action": "moveLineUp",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 126,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥↑"
+      }
+    },
+    {
+      "action": "moveLineDown",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 125,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥↓"
+      }
+    },
+    {
+      "action": "runProject",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 5,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥G"
+      }
+    },
+    {
+      "action": "nextIssue",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 30,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥]"
+      }
+    },
+    {
+      "action": "previousIssue",
+      "domain": "development",
+      "defaultTrigger": {
+        "virtualKeyCode": 33,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥["
+      }
+    },
+    {
       "action": "hardReload",
       "domain": "browser",
       "defaultTrigger": {
@@ -1119,6 +1218,182 @@
       }
     },
     {
+      "action": "goToSymbol",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 31, "modifiers": ["command", "shift"], "displayValue": "⇧⌘O"}
+      }
+    },
+    {
+      "action": "formatDocument",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["option", "shift"], "displayValue": "⇧⌥F"}
+      }
+    },
+    {
+      "action": "renameSymbol",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 120, "modifiers": [], "displayValue": "F2"}
+      }
+    },
+    {
+      "action": "findReferences",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 111, "modifiers": ["shift"], "displayValue": "⇧F12"}
+      }
+    },
+    {
+      "action": "quickFix",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 47, "modifiers": ["command"], "displayValue": "⌘."}
+      }
+    },
+    {
+      "action": "toggleLineComment",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 44, "modifiers": ["command"], "displayValue": "⌘/"}
+      }
+    },
+    {
+      "action": "moveLineUp",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 126, "modifiers": ["option"], "displayValue": "⌥↑"}
+      }
+    },
+    {
+      "action": "moveLineDown",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 125, "modifiers": ["option"], "displayValue": "⌥↓"}
+      }
+    },
+    {
+      "action": "runProject",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 96, "modifiers": ["control"], "displayValue": "⌃F5"}
+      }
+    },
+    {
+      "action": "nextIssue",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 100, "modifiers": [], "displayValue": "F8"}
+      }
+    },
+    {
+      "action": "previousIssue",
+      "target": "visualStudioCode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 100, "modifiers": ["shift"], "displayValue": "⇧F8"}
+      }
+    },
+    {
+      "action": "goToSymbol",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 31, "modifiers": ["command", "shift"], "displayValue": "⇧⌘O"}
+      }
+    },
+    {
+      "action": "formatDocument",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["option", "shift"], "displayValue": "⇧⌥F"}
+      }
+    },
+    {
+      "action": "renameSymbol",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 120, "modifiers": [], "displayValue": "F2"}
+      }
+    },
+    {
+      "action": "findReferences",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 111, "modifiers": ["shift"], "displayValue": "⇧F12"}
+      }
+    },
+    {
+      "action": "quickFix",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 47, "modifiers": ["command"], "displayValue": "⌘."}
+      }
+    },
+    {
+      "action": "toggleLineComment",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 44, "modifiers": ["command"], "displayValue": "⌘/"}
+      }
+    },
+    {
+      "action": "moveLineUp",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 126, "modifiers": ["option"], "displayValue": "⌥↑"}
+      }
+    },
+    {
+      "action": "moveLineDown",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 125, "modifiers": ["option"], "displayValue": "⌥↓"}
+      }
+    },
+    {
+      "action": "runProject",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 96, "modifiers": ["control"], "displayValue": "⌃F5"}
+      }
+    },
+    {
+      "action": "nextIssue",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 100, "modifiers": [], "displayValue": "F8"}
+      }
+    },
+    {
+      "action": "previousIssue",
+      "target": "cursor",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 100, "modifiers": ["shift"], "displayValue": "⇧F8"}
+      }
+    },
+    {
       "action": "goToDefinition",
       "target": "xcode",
       "execution": {
@@ -1148,6 +1423,54 @@
       "execution": {
         "method": "keyboardShortcut",
         "shortcut": {"virtualKeyCode": 31, "modifiers": ["command", "shift"], "displayValue": "⌘⇧O"}
+      }
+    },
+    {
+      "action": "toggleLineComment",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 44, "modifiers": ["command"], "displayValue": "⌘/"}
+      }
+    },
+    {
+      "action": "moveLineUp",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 33, "modifiers": ["command", "option"], "displayValue": "⌥⌘["}
+      }
+    },
+    {
+      "action": "moveLineDown",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 30, "modifiers": ["command", "option"], "displayValue": "⌥⌘]"}
+      }
+    },
+    {
+      "action": "runProject",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command"], "displayValue": "⌘R"}
+      }
+    },
+    {
+      "action": "nextIssue",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 39, "modifiers": ["command"], "displayValue": "⌘'"}
+      }
+    },
+    {
+      "action": "previousIssue",
+      "target": "xcode",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 39, "modifiers": ["command", "shift"], "displayValue": "⇧⌘'"}
       }
     },
     {
@@ -1196,6 +1519,78 @@
       "execution": {
         "method": "keyboardShortcut",
         "shortcut": {"virtualKeyCode": 124, "modifiers": ["command", "option"], "displayValue": "⌘⌥→"}
+      }
+    },
+    {
+      "action": "goToSymbol",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 31, "modifiers": ["command", "option"], "displayValue": "⌘⌥O"}
+      }
+    },
+    {
+      "action": "formatDocument",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 37, "modifiers": ["command", "option"], "displayValue": "⌘⌥L"}
+      }
+    },
+    {
+      "action": "renameSymbol",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 97, "modifiers": ["shift"], "displayValue": "⇧F6"}
+      }
+    },
+    {
+      "action": "findReferences",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 98, "modifiers": ["option"], "displayValue": "⌥F7"}
+      }
+    },
+    {
+      "action": "quickFix",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 36, "modifiers": ["option"], "displayValue": "⌥Return"}
+      }
+    },
+    {
+      "action": "toggleLineComment",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 44, "modifiers": ["command"], "displayValue": "⌘/"}
+      }
+    },
+    {
+      "action": "runProject",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["control"], "displayValue": "⌃R"}
+      }
+    },
+    {
+      "action": "nextIssue",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 120, "modifiers": [], "displayValue": "F2"}
+      }
+    },
+    {
+      "action": "previousIssue",
+      "target": "intellijIdea",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 120, "modifiers": ["shift"], "displayValue": "⇧F2"}
       }
     },
     {

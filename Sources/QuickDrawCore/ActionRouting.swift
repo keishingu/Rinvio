@@ -61,8 +61,19 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case focusPreviousRegion
   case focusNextRegion
   case goToDefinition
+  case goToSymbol
   case navigateBack
   case navigateForward
+  case formatDocument
+  case renameSymbol
+  case findReferences
+  case quickFix
+  case toggleLineComment
+  case moveLineUp
+  case moveLineDown
+  case runProject
+  case nextIssue
+  case previousIssue
   case commandPalette
   case quickOpen
   case showKeyboardShortcuts
@@ -115,8 +126,19 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .focusPreviousRegion: "Focus Previous Region"
     case .focusNextRegion: "Focus Next Region"
     case .goToDefinition: "Go to Definition"
+    case .goToSymbol: "Go to Symbol"
     case .navigateBack: "Navigate Back"
     case .navigateForward: "Navigate Forward"
+    case .formatDocument: "Format Document"
+    case .renameSymbol: "Rename Symbol"
+    case .findReferences: "Find References"
+    case .quickFix: "Quick Fix"
+    case .toggleLineComment: "Toggle Line Comment"
+    case .moveLineUp: "Move Line Up"
+    case .moveLineDown: "Move Line Down"
+    case .runProject: "Run Project"
+    case .nextIssue: "Next Issue"
+    case .previousIssue: "Previous Issue"
     case .commandPalette: "Command Palette"
     case .quickOpen: "Quick Open"
     case .showKeyboardShortcuts: "Keyboard Shortcuts"

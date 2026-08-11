@@ -20,8 +20,9 @@
 | Event sequence | one matching key-down/key-up pair with source marker | Pass |
 | Privacy | reports retain Meet classification but not active-tab URL or non-Meet host | Pass |
 | Latency guard | 1,000 in-process Dry Runs, p95 under 25 ms | Pass |
-| Global Triggers | 45 unique safe Triggers monitored by CGEventTap; domain-scoped override reuse and unsupported app/page/action pass-through | Pass |
-| Development navigation | VS Code / Cursor / Xcode / JetBrains code navigation; VS Code region navigation; JetBrains F6 pass-through | Pass |
+| Global Triggers | 56 unique safe Triggers monitored by CGEventTap; domain-scoped override reuse and unsupported app/page/action pass-through | Pass |
+| Development applications | Expandable AI Agent / Editor / Terminal sidebar sections with scoped Actions and atomic per-application Trigger alignment; Applications remains enablement-only | Pass |
+| Development navigation and editing | VS Code / Cursor / Xcode / JetBrains navigation, formatting, refactoring, editing, run, and issue mappings; VS Code region navigation | Pass |
 | JetBrains mapping inheritance | Eight product identities inherit one validated macOS mapping set while retaining per-app overrides | Pass |
 | Generated-event suppression | QuickDraw source marker bypasses Trigger matching | Pass |
 | Shortcut conflicts | Known macOS catalog + enabled `AppleSymbolicHotKeys` best-effort detection | Pass |
@@ -36,7 +37,7 @@
 | Built-in Catalog | Bundled JSON decode, schema validation, complete Action/Application coverage | Pass |
 | Bundle integrity | `plutil -lint`, `codesign --verify --deep --strict` | Pass |
 | Formatting | `swift format lint --recursive Sources Tests Package.swift` | Pass |
-| Tests | `swift test`: 79 tests, 0 failures | Pass |
+| Tests | `swift test`: 82 tests, 0 failures | Pass |
 | Idle resources | 43 seconds idle: CPU 0.0%, RSS about 20 MB | Pass (single observation) |
 
 ## Installed application identities

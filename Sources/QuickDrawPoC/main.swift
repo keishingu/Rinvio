@@ -156,6 +156,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       updateTriggerPresentation()
       return error
     }
+    model.onAlignDevelopmentTriggers = {
+      [weak coordinator, weak controller, weak model] target in
+      let result =
+        coordinator?.alignDevelopmentTriggers(to: target)
+        ?? TriggerAlignmentResult(
+          appliedCount: 0,
+          skippedDuplicateCount: 0,
+          error: "Global shortcut handler is unavailable"
+        )
+      controller?.areHotKeysRegistered = result.error == nil
+      model?.setHotKeysRegistered(result.error == nil)
+      updateTriggerPresentation()
+      return result
+    }
 
     menuController.onToggleEnabled = { [weak model] enabled in
       model?.setEnabled(enabled)

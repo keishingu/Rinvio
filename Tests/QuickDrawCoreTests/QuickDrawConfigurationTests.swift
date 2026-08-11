@@ -110,6 +110,48 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertTrue(store.configuration.unassignedTriggers.isEmpty)
   }
 
+  func testTriggerOverridesCanSwapShortcutsAtomically() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let muteTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .mute))
+    let cameraTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .camera))
+
+    try store.setTriggerOverrides([
+      .mute: cameraTrigger,
+      .camera: muteTrigger,
+    ])
+
+    XCTAssertEqual(store.trigger(for: .mute), cameraTrigger)
+    XCTAssertEqual(store.trigger(for: .camera), muteTrigger)
+  }
+
+  func testBatchTriggerOverrideRejectsDuplicateFinalConfiguration() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let cameraTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .camera))
+
+    XCTAssertThrowsError(
+      try store.setTriggerOverrides([.mute: cameraTrigger])
+    ) { error in
+      XCTAssertEqual(error as? QuickDrawConfigurationError, .duplicateTrigger(.camera))
+    }
+    XCTAssertEqual(store.trigger(for: .mute), ActionCatalog.defaultTrigger(for: .mute))
+  }
+
+  func testBatchTriggerOverrideClearsUnassignedStateAndPersists() throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let fileURL = directory.appendingPathComponent("configuration.json")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = QuickDrawConfigurationStore(fileURL: fileURL)
+    let custom = KeyStroke(virtualKeyCode: 103, modifiers: [], displayValue: "F11")
+
+    try store.unassignTrigger(for: .openChat)
+    try store.setTriggerOverrides([.openChat: custom])
+
+    let reloaded = QuickDrawConfigurationStore(fileURL: fileURL)
+    XCTAssertEqual(reloaded.trigger(for: .openChat), custom)
+    XCTAssertFalse(reloaded.configuration.unassignedTriggers.contains(.openChat))
+  }
+
   func testActionResetRestoresUnassignedTrigger() throws {
     let store = QuickDrawConfigurationStore(fileURL: nil)
 
@@ -186,7 +228,9 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertTrue(
       triggers.filter {
         $0.displayValue != "F6" && $0.displayValue != "⇧F6"
-      }.allSatisfy { $0.modifiers == [.command, .option] }
+      }.allSatisfy {
+        !$0.modifiers.isDisjoint(with: [.command, .control, .option])
+      }
     )
   }
 

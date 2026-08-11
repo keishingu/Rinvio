@@ -9,6 +9,7 @@ struct QuickDrawRootView: View {
   @State private var selectedActionID: String? = Action.mute.rawValue
   @State private var selectedApplicationID: String? = "meeting:microsoftTeams"
   @State private var isInspectorPresented = true
+  @State private var isDevelopmentExpanded = true
 
   var body: some View {
     NavigationSplitView {
@@ -41,18 +42,35 @@ struct QuickDrawRootView: View {
   }
 
   private var selectedAction: ActionDefinition? {
-    guard let domain = (selectedSection ?? .meeting).actionDomain else { return nil }
-    return model.actions(in: domain).first { $0.id == selectedActionID }
-      ?? model.actions(in: domain).first
+    let definitions = actionDefinitions(for: selectedSection ?? .meeting)
+    return definitions.first { $0.id == selectedActionID } ?? definitions.first
   }
 
   private var sidebar: some View {
     List(selection: $selectedSection) {
       Section(model.copy.actions) {
-        ForEach(QuickDrawSection.actionSections) { section in
+        ForEach([QuickDrawSection.meeting, .chat]) { section in
           Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
             .tag(section)
         }
+
+        DisclosureGroup(isExpanded: $isDevelopmentExpanded) {
+          ForEach(QuickDrawSection.developmentSections) { section in
+            Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
+              .tag(section)
+          }
+        } label: {
+          Label(
+            model.copy.sectionTitle(.development),
+            systemImage: QuickDrawSection.development.systemImage
+          )
+        }
+
+        Label(
+          model.copy.sectionTitle(.browser),
+          systemImage: QuickDrawSection.browser.systemImage
+        )
+        .tag(QuickDrawSection.browser)
       }
 
       Section {
@@ -107,9 +125,21 @@ struct QuickDrawRootView: View {
   @ViewBuilder
   private var detail: some View {
     switch selectedSection ?? .meeting {
-    case .meeting, .chat, .development, .browser:
-      if let domain = (selectedSection ?? .meeting).actionDomain {
-        ActionsView(domain: domain, selection: $selectedActionID, model: model)
+    case .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
+      .developmentTerminal, .browser:
+      let section = selectedSection ?? .meeting
+      if let domain = section.actionDomain {
+        ActionsView(
+          title: model.copy.sectionTitle(section),
+          subtitle: section.developmentCategory.map(
+            model.copy.developmentApplicationCategorySubtitle
+          ) ?? model.copy.actionDomainSubtitle(domain),
+          definitions: actionDefinitions(for: section),
+          applications: installedApplications(for: section),
+          alignmentCategory: section.developmentCategory,
+          selection: $selectedActionID,
+          model: model
+        )
       }
     case .applications:
       ApplicationsView(selection: $selectedApplicationID, model: model)
@@ -123,9 +153,14 @@ struct QuickDrawRootView: View {
   @ViewBuilder
   private var inspector: some View {
     switch selectedSection ?? .meeting {
-    case .meeting, .chat, .development, .browser:
+    case .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
+      .developmentTerminal, .browser:
       if let selectedAction {
-        ActionInspector(definition: selectedAction, model: model)
+        ActionInspector(
+          definition: selectedAction,
+          applications: installedApplications(for: selectedSection ?? .meeting),
+          model: model
+        )
       } else {
         ContentUnavailableView(
           model.copy.noActionsInCategory,
@@ -153,10 +188,28 @@ struct QuickDrawRootView: View {
   }
 
   private func normalizeActionSelection(for section: QuickDrawSection) {
-    guard let domain = section.actionDomain else { return }
-    let definitions = model.actions(in: domain)
+    let definitions = actionDefinitions(for: section)
     guard !definitions.contains(where: { $0.id == selectedActionID }) else { return }
     selectedActionID = definitions.first?.id
+  }
+
+  private func actionDefinitions(for section: QuickDrawSection) -> [ActionDefinition] {
+    guard let domain = section.actionDomain else { return [] }
+    let definitions = model.actions(in: domain)
+    guard let category = section.developmentCategory else { return definitions }
+    let applications = model.developmentApplications(in: category)
+    return definitions.filter { definition in
+      applications.contains { application in
+        model.shortcut(for: definition.action, target: application.target) != nil
+      }
+    }
+  }
+
+  private func installedApplications(for section: QuickDrawSection) -> [ApplicationMapping] {
+    guard let domain = section.actionDomain else { return [] }
+    let applications = model.installedApplications(in: domain)
+    guard let category = section.developmentCategory else { return applications }
+    return applications.filter { category.contains($0.target) }
   }
 }
 
@@ -219,13 +272,13 @@ private struct SettingsView: View {
 }
 
 private struct ActionsView: View {
-  let domain: ActionDomain
+  let title: String
+  let subtitle: String
+  let definitions: [ActionDefinition]
+  let applications: [ApplicationMapping]
+  let alignmentCategory: DevelopmentApplicationCategory?
   @Binding var selection: String?
   @ObservedObject var model: QuickDrawAppModel
-
-  private var definitions: [ActionDefinition] {
-    model.actions(in: domain)
-  }
 
   private var categories: [ActionCategory] {
     ActionCategory.allCases.filter { category in
@@ -236,17 +289,24 @@ private struct ActionsView: View {
   var body: some View {
     VStack(spacing: 0) {
       ContentHeader(
-        title: model.copy.actionDomainName(domain),
-        subtitle: model.copy.actionDomainSubtitle(domain)
+        title: title,
+        subtitle: subtitle
       )
+      if alignmentCategory != nil {
+        alignmentControls
+      }
       Divider()
 
       List(selection: $selection) {
         ForEach(categories) { category in
           Section(model.copy.actionCategoryName(category)) {
             ForEach(definitions.filter { $0.category == category }) { definition in
-              ActionRow(definition: definition, model: model)
-                .tag(definition.id)
+              ActionRow(
+                definition: definition,
+                applications: applications,
+                model: model
+              )
+              .tag(definition.id)
             }
           }
         }
@@ -255,10 +315,68 @@ private struct ActionsView: View {
     }
     .navigationTitle("QuickDraw")
   }
+
+  private var alignmentControls: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 4) {
+          Label(model.copy.alignDevelopmentTriggers, systemImage: "keyboard")
+            .font(.headline)
+          Text(model.copy.alignDevelopmentTriggersDescription)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+
+        Spacer(minLength: 8)
+
+        if !applications.isEmpty {
+          ViewThatFits(in: .horizontal) {
+            HStack(spacing: 4) {
+              ForEach(applications) { application in
+                alignmentButton(for: application)
+              }
+            }
+
+            Menu(model.copy.alignDevelopmentTriggers) {
+              ForEach(applications) { application in
+                Button(model.copy.alignTriggersTo(application)) {
+                  model.alignDevelopmentTriggers(to: application)
+                }
+              }
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+          }
+        }
+      }
+
+      if let error = model.shortcutEditingError {
+        Label(error, systemImage: "exclamationmark.triangle.fill")
+          .font(.caption)
+          .foregroundStyle(.red)
+      } else if let notice = model.triggerAlignmentNotice {
+        Label(model.copy.triggerAlignmentNotice(notice), systemImage: "checkmark.circle.fill")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+    }
+    .padding(.horizontal, 22)
+    .padding(.bottom, 12)
+  }
+
+  private func alignmentButton(for application: ApplicationMapping) -> some View {
+    Button(model.copy.alignTriggersTo(application)) {
+      model.alignDevelopmentTriggers(to: application)
+    }
+    .buttonStyle(.bordered)
+    .controlSize(.small)
+    .fixedSize()
+  }
 }
 
 private struct ActionRow: View {
   let definition: ActionDefinition
+  let applications: [ApplicationMapping]
   @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
@@ -311,7 +429,7 @@ private struct ActionRow: View {
         alignment: .leading,
         spacing: 7
       ) {
-        ForEach(model.installedApplications(in: definition.domain)) { application in
+        ForEach(applications) { application in
           CompactMapping(application: application, action: definition.action, model: model)
         }
       }
@@ -360,15 +478,19 @@ private struct ApplicationsView: View {
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 0) {
           ForEach(ActionDomain.allCases) { domain in
-            Text(model.copy.actionDomainName(domain))
-              .font(.caption.weight(.semibold))
-              .foregroundStyle(.secondary)
-              .padding(.horizontal, 8)
-              .padding(.top, 14)
-              .padding(.bottom, 5)
+            domainHeader(domain)
 
-            ForEach(model.applications(in: domain)) { application in
-              applicationRow(application, in: domain)
+            if domain == .development {
+              ForEach(DevelopmentApplicationCategory.allCases) { category in
+                developmentCategoryHeader(category)
+                ForEach(model.developmentApplications(in: category)) { application in
+                  applicationRow(application, in: domain)
+                }
+              }
+            } else {
+              ForEach(model.applications(in: domain)) { application in
+                applicationRow(application, in: domain)
+              }
             }
           }
         }
@@ -377,6 +499,23 @@ private struct ApplicationsView: View {
       }
     }
     .navigationTitle("QuickDraw")
+  }
+
+  private func domainHeader(_ domain: ActionDomain) -> some View {
+    Text(model.copy.actionDomainName(domain))
+      .font(.caption.weight(.semibold))
+      .foregroundStyle(.secondary)
+      .padding(.horizontal, 8)
+      .padding(.top, 14)
+      .padding(.bottom, 5)
+  }
+
+  private func developmentCategoryHeader(_ category: DevelopmentApplicationCategory) -> some View {
+    Text(model.copy.developmentApplicationCategoryName(category))
+      .font(.headline)
+      .padding(.horizontal, 8)
+      .padding(.top, 8)
+      .padding(.bottom, 4)
   }
 
   private func applicationRow(
@@ -494,6 +633,7 @@ private struct DiagnosticsView: View {
 
 private struct ActionInspector: View {
   let definition: ActionDefinition
+  let applications: [ApplicationMapping]
   @ObservedObject var model: QuickDrawAppModel
   @State private var isResetConfirmationPresented = false
 
@@ -592,12 +732,11 @@ private struct ActionInspector: View {
       }
 
       Section(model.copy.applicationMappings) {
-        let installedApplications = model.installedApplications(in: definition.domain)
-        if installedApplications.isEmpty {
+        if applications.isEmpty {
           Label(model.copy.noInstalledApplications, systemImage: "app.dashed")
             .foregroundStyle(.secondary)
         } else {
-          ForEach(installedApplications) { application in
+          ForEach(applications) { application in
             MappingRow(
               application: application,
               action: definition.action,

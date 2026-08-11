@@ -8,6 +8,9 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
   case meeting
   case chat
   case development
+  case developmentAIAgent
+  case developmentEditor
+  case developmentTerminal
   case browser
   case applications
   case settings
@@ -20,6 +23,9 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .meeting: "person.2.fill"
     case .chat: "bubble.left.and.bubble.right.fill"
     case .development: "wrench.and.screwdriver.fill"
+    case .developmentAIAgent: "cpu"
+    case .developmentEditor: "chevron.left.forwardslash.chevron.right"
+    case .developmentTerminal: "terminal.fill"
     case .browser: "globe"
     case .applications: "square.grid.2x2"
     case .settings: "gearshape"
@@ -31,13 +37,25 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     switch self {
     case .meeting: .meeting
     case .chat: .chat
-    case .development: .development
+    case .development, .developmentAIAgent, .developmentEditor, .developmentTerminal:
+      .development
     case .browser: .browser
     case .applications, .settings, .diagnostics: nil
     }
   }
 
-  static let actionSections: [QuickDrawSection] = [.meeting, .chat, .development, .browser]
+  var developmentCategory: DevelopmentApplicationCategory? {
+    switch self {
+    case .developmentAIAgent: .aiAgent
+    case .developmentEditor: .editor
+    case .developmentTerminal: .terminal
+    default: nil
+    }
+  }
+
+  static let developmentSections: [QuickDrawSection] = [
+    .developmentAIAgent, .developmentEditor, .developmentTerminal,
+  ]
   static let utilitySections: [QuickDrawSection] = [.applications, .settings, .diagnostics]
 }
 
@@ -112,6 +130,28 @@ struct ApplicationMapping: Identifiable, Equatable {
   }
 }
 
+enum DevelopmentApplicationCategory: String, CaseIterable, Identifiable {
+  case aiAgent
+  case editor
+  case terminal
+
+  var id: Self { self }
+
+  func contains(_ target: ActionTarget) -> Bool {
+    switch self {
+    case .aiAgent:
+      [.codex, .claude].contains(target)
+    case .editor:
+      [
+        .visualStudioCode, .cursor, .xcode, .intellijIdea, .webStorm, .rubyMine,
+        .pyCharm, .goLand, .cLion, .rider, .androidStudio,
+      ].contains(target)
+    case .terminal:
+      [.terminal, .iTerm2, .ghostty].contains(target)
+    }
+  }
+}
+
 enum ActionCategory: String, CaseIterable, Identifiable {
   case meetingControls
   case panelsAndSharing
@@ -120,6 +160,9 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case terminals
   case regions
   case codeNavigation
+  case codeEditing
+  case refactoring
+  case runningAndIssues
   case commands
   case pageLoading
   case tabs
@@ -252,6 +295,11 @@ struct ActionDefinition: Identifiable, Equatable {
       category: .codeNavigation
     ),
     ActionDefinition(
+      action: .goToSymbol,
+      systemImage: "number",
+      category: .codeNavigation
+    ),
+    ActionDefinition(
       action: .navigateBack,
       systemImage: "chevron.backward",
       category: .codeNavigation
@@ -260,6 +308,56 @@ struct ActionDefinition: Identifiable, Equatable {
       action: .navigateForward,
       systemImage: "chevron.forward",
       category: .codeNavigation
+    ),
+    ActionDefinition(
+      action: .formatDocument,
+      systemImage: "text.alignleft",
+      category: .codeEditing
+    ),
+    ActionDefinition(
+      action: .quickFix,
+      systemImage: "lightbulb.fill",
+      category: .codeEditing
+    ),
+    ActionDefinition(
+      action: .toggleLineComment,
+      systemImage: "text.bubble",
+      category: .codeEditing
+    ),
+    ActionDefinition(
+      action: .moveLineUp,
+      systemImage: "arrow.up.to.line",
+      category: .codeEditing
+    ),
+    ActionDefinition(
+      action: .moveLineDown,
+      systemImage: "arrow.down.to.line",
+      category: .codeEditing
+    ),
+    ActionDefinition(
+      action: .renameSymbol,
+      systemImage: "pencil",
+      category: .refactoring
+    ),
+    ActionDefinition(
+      action: .findReferences,
+      systemImage: "magnifyingglass.circle",
+      category: .refactoring
+    ),
+    ActionDefinition(
+      action: .runProject,
+      systemImage: "play.fill",
+      category: .runningAndIssues
+    ),
+    ActionDefinition(
+      action: .nextIssue,
+      systemImage: "chevron.down.circle",
+      category: .runningAndIssues
+    ),
+    ActionDefinition(
+      action: .previousIssue,
+      systemImage: "chevron.up.circle",
+      category: .runningAndIssues
     ),
     ActionDefinition(
       action: .commandPalette,
@@ -344,6 +442,12 @@ enum ShortcutRecordingDestination: Equatable {
   case application(Action, ActionTarget)
 }
 
+struct TriggerAlignmentNotice: Equatable {
+  let target: ActionTarget
+  let appliedCount: Int
+  let skippedDuplicateCount: Int
+}
+
 @MainActor
 final class QuickDrawAppModel: ObservableObject {
   private static let cheatSheetEnabledKey = "cheatSheetEnabled"
@@ -366,6 +470,7 @@ final class QuickDrawAppModel: ObservableObject {
   @Published private(set) var configuration: QuickDrawConfiguration
   @Published private(set) var recordingDestination: ShortcutRecordingDestination?
   @Published private(set) var shortcutEditingError: String?
+  @Published private(set) var triggerAlignmentNotice: TriggerAlignmentNotice?
   let actions = ActionDefinition.all
 
   private let defaults: UserDefaults
@@ -388,6 +493,7 @@ final class QuickDrawAppModel: ObservableObject {
   var onUnassignTrigger: ((Action) -> String?)?
   var onResetTrigger: ((Action) -> String?)?
   var onResetAction: ((Action) -> String?)?
+  var onAlignDevelopmentTriggers: ((ActionTarget) -> TriggerAlignmentResult)?
 
   init(
     defaults: UserDefaults = .standard,
@@ -500,6 +606,11 @@ final class QuickDrawAppModel: ObservableObject {
     applications.filter { $0.domains.contains(domain) }
   }
 
+  func developmentApplications(in category: DevelopmentApplicationCategory) -> [ApplicationMapping]
+  {
+    applications(in: .development).filter { category.contains($0.target) }
+  }
+
   func installedApplications(in domain: ActionDomain) -> [ApplicationMapping] {
     applications(in: domain).filter {
       $0.isInstalled && isApplicationEnabled($0.target)
@@ -508,6 +619,20 @@ final class QuickDrawAppModel: ObservableObject {
 
   func supportedActionCount(for target: ActionTarget) -> Int {
     actions.count { shortcut(for: $0.action, target: target) != nil }
+  }
+
+  func alignDevelopmentTriggers(to application: ApplicationMapping) {
+    guard let result = onAlignDevelopmentTriggers?(application.target) else { return }
+    shortcutEditingError = result.error
+    triggerAlignmentNotice =
+      result.error == nil
+      ? TriggerAlignmentNotice(
+        target: application.target,
+        appliedCount: result.appliedCount,
+        skippedDuplicateCount: result.skippedDuplicateCount
+      )
+      : nil
+    syncConfiguration()
   }
 
   func beginRecording(_ destination: ShortcutRecordingDestination) {
