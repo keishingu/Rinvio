@@ -523,15 +523,6 @@ private struct ApplicationsView: View {
 
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 0) {
-          domainHeader(.system)
-          ForEach(
-            model.applications.filter {
-              $0.domains.contains(.system) || $0.domains.contains(.finder)
-            }
-          ) { application in
-            applicationRow(application, in: .system)
-          }
-
           ForEach(ActionDomain.allCases.filter { ![.system, .finder].contains($0) }) { domain in
             domainHeader(domain)
 
@@ -546,6 +537,13 @@ private struct ApplicationsView: View {
               ForEach(model.applications(in: domain)) { application in
                 applicationRow(application, in: domain)
               }
+            }
+          }
+
+          domainHeader(.system)
+          ForEach([ActionTarget.finder, .macOS], id: \.rawValue) { target in
+            if let application = model.applications.first(where: { $0.target == target }) {
+              applicationRow(application, in: .system)
             }
           }
         }
