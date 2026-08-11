@@ -165,6 +165,8 @@ enum DevelopmentApplicationCategory: String, CaseIterable, Identifiable {
 
 enum ActionCategory: String, CaseIterable, Identifiable {
   case workspace
+  case systemControls
+  case windowManagement
   case finderNavigation
   case meetingControls
   case panelsAndSharing
@@ -213,6 +215,66 @@ struct ActionDefinition: Identifiable, Equatable {
       action: .nextDesktop,
       systemImage: "arrow.right",
       category: .workspace
+    ),
+    ActionDefinition(
+      action: .showDesktop,
+      systemImage: "desktopcomputer",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop1,
+      systemImage: "1.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop2,
+      systemImage: "2.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop3,
+      systemImage: "3.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop4,
+      systemImage: "4.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop5,
+      systemImage: "5.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .showNotificationCenter,
+      systemImage: "bell.fill",
+      category: .systemControls
+    ),
+    ActionDefinition(
+      action: .toggleDoNotDisturb,
+      systemImage: "moon.fill",
+      category: .systemControls
+    ),
+    ActionDefinition(
+      action: .toggleStageManager,
+      systemImage: "uiwindow.split.2x1",
+      category: .systemControls
+    ),
+    ActionDefinition(
+      action: .fillWindow,
+      systemImage: "arrow.up.left.and.arrow.down.right",
+      category: .windowManagement
+    ),
+    ActionDefinition(
+      action: .tileWindowLeft,
+      systemImage: "rectangle.lefthalf.filled",
+      category: .windowManagement
+    ),
+    ActionDefinition(
+      action: .tileWindowRight,
+      systemImage: "rectangle.righthalf.filled",
+      category: .windowManagement
     ),
     ActionDefinition(
       action: .finderParentFolder,

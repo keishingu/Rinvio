@@ -60,6 +60,8 @@ struct QuickDrawCopy {
     text("1つの操作を、対応アプリごとの操作へ変換します。", "One action, translated for every supported application.")
   }
   var workspace: String { text("ワークスペース", "Workspace") }
+  var systemControls: String { text("システム切替", "System Controls") }
+  var windowManagement: String { text("ウインドウ配置", "Window Placement") }
   var finderNavigation: String { text("Finderの移動", "Finder navigation") }
   var systemSection: String { text("System", "System") }
   var meetingControls: String { text("会議コントロール", "Meeting controls") }
@@ -141,9 +143,36 @@ struct QuickDrawCopy {
   }
   var systemShortcutSettingsDescription: String {
     text(
-      "QuickDrawはOSショートカットを横取り・書き換えません。キーボードショートカットのMission Control項目で編集してください。",
-      "QuickDraw does not intercept or modify OS shortcuts. Edit them under Mission Control in Keyboard Shortcuts."
+      "QuickDrawはOSショートカットを横取り・書き換えません。システム設定で割り当てると、同じキーを使うForegroundアプリの操作が置き換わる場合があります。",
+      "QuickDraw does not intercept or modify OS shortcuts. Assigning one in System Settings may replace the same shortcut in the foreground app."
     )
+  }
+
+  func systemShortcutReplacementWarning(for action: Action) -> String? {
+    switch action {
+    case .missionControl, .applicationExpose, .previousDesktop, .nextDesktop:
+      text(
+        "⇧⌘矢印はテキストの行頭／行末または文書先頭／末尾まで選択する標準操作を置き換えます。",
+        "Shift-Command-arrow replaces standard text selection to the start or end of a line or document."
+      )
+    case .showNotificationCenter:
+      text(
+        "⌃⌘NはFinderの「選択項目から新規フォルダ」やTerminalの「同じコマンドで新規ウインドウ」を置き換える場合があります。",
+        "⌃⌘N may replace Finder’s New Folder with Selection and Terminal’s New Window with Same Command."
+      )
+    case .toggleDoNotDisturb:
+      text(
+        "⌃⌘Dは選択中の単語を調べるmacOS標準操作を置き換えます。",
+        "⌃⌘D replaces the standard macOS shortcut for looking up the selected word."
+      )
+    case .switchDesktop1, .switchDesktop2, .switchDesktop3, .switchDesktop4, .switchDesktop5:
+      text(
+        "⌘数字はブラウザやエディタなどのタブ選択を置き換える場合があります。",
+        "Command-number may replace tab selection in browsers, editors, and other apps."
+      )
+    default:
+      nil
+    }
   }
   func developmentApplicationCategoryName(
     _ category: DevelopmentApplicationCategory
@@ -459,6 +488,8 @@ struct QuickDrawCopy {
   func actionCategoryName(_ category: ActionCategory) -> String {
     switch category {
     case .workspace: workspace
+    case .systemControls: systemControls
+    case .windowManagement: windowManagement
     case .finderNavigation: finderNavigation
     case .meetingControls: meetingControls
     case .panelsAndSharing: panelsAndSharing
@@ -485,6 +516,18 @@ struct QuickDrawCopy {
     case .applicationExpose: text("Application Exposé", "Application Exposé")
     case .previousDesktop: text("前のデスクトップ", "Previous Desktop")
     case .nextDesktop: text("次のデスクトップ", "Next Desktop")
+    case .showDesktop: text("デスクトップを表示", "Show Desktop")
+    case .showNotificationCenter: text("通知センターを表示", "Show Notification Center")
+    case .toggleDoNotDisturb: text("おやすみモード切替", "Toggle Do Not Disturb")
+    case .toggleStageManager: text("Stage Manager切替", "Toggle Stage Manager")
+    case .fillWindow: text("ウインドウを画面いっぱいにする", "Fill Window")
+    case .tileWindowLeft: text("ウインドウを左半分に配置", "Tile Window Left")
+    case .tileWindowRight: text("ウインドウを右半分に配置", "Tile Window Right")
+    case .switchDesktop1: text("デスクトップ1へ移動", "Switch to Desktop 1")
+    case .switchDesktop2: text("デスクトップ2へ移動", "Switch to Desktop 2")
+    case .switchDesktop3: text("デスクトップ3へ移動", "Switch to Desktop 3")
+    case .switchDesktop4: text("デスクトップ4へ移動", "Switch to Desktop 4")
+    case .switchDesktop5: text("デスクトップ5へ移動", "Switch to Desktop 5")
     case .finderParentFolder: text("親フォルダ", "Parent Folder")
     case .finderOpenSelectedItem: text("選択項目を開く", "Open Selected Item")
     case .finderHome: text("ホーム", "Home")
@@ -559,6 +602,36 @@ struct QuickDrawCopy {
       text("前のデスクトップへ移動します", "Move to the previous desktop")
     case .nextDesktop:
       text("次のデスクトップへ移動します", "Move to the next desktop")
+    case .showDesktop:
+      text("開いているウインドウを退避してデスクトップを表示します", "Move windows aside to show the desktop")
+    case .showNotificationCenter:
+      text("通知センターを表示します", "Show Notification Center")
+    case .toggleDoNotDisturb:
+      text("おやすみモードをオン／オフします", "Turn Do Not Disturb on or off")
+    case .toggleStageManager:
+      text("Stage Managerをオン／オフします", "Turn Stage Manager on or off")
+    case .fillWindow:
+      text(
+        "アクティブなウインドウをフルスクリーンにせず画面いっぱいにします",
+        "Fill the desktop with the active window without entering full screen"
+      )
+    case .tileWindowLeft:
+      text("アクティブなウインドウをデスクトップの左半分に配置します", "Move the active window to the left half of the desktop")
+    case .tileWindowRight:
+      text(
+        "アクティブなウインドウをデスクトップの右半分に配置します",
+        "Move the active window to the right half of the desktop"
+      )
+    case .switchDesktop1:
+      text("デスクトップ1へ直接移動します", "Switch directly to Desktop 1")
+    case .switchDesktop2:
+      text("デスクトップ2へ直接移動します", "Switch directly to Desktop 2")
+    case .switchDesktop3:
+      text("デスクトップ3へ直接移動します", "Switch directly to Desktop 3")
+    case .switchDesktop4:
+      text("デスクトップ4へ直接移動します", "Switch directly to Desktop 4")
+    case .switchDesktop5:
+      text("デスクトップ5へ直接移動します", "Switch directly to Desktop 5")
     case .finderParentFolder:
       text("Finderで親フォルダを開きます", "Open the parent folder in Finder")
     case .finderOpenSelectedItem:

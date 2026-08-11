@@ -920,6 +920,11 @@ private struct SystemActionInspector: View {
         Text(model.copy.systemShortcutSettingsDescription)
           .font(.caption)
           .foregroundStyle(.secondary)
+        if let warning = model.copy.systemShortcutReplacementWarning(for: definition.action) {
+          Label(warning, systemImage: "exclamationmark.triangle")
+            .font(.caption)
+            .foregroundStyle(.orange)
+        }
       }
     }
     .formStyle(.grouped)

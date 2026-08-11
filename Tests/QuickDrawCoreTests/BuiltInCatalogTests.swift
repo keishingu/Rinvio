@@ -85,13 +85,29 @@ final class BuiltInCatalogTests: XCTestCase {
     XCTAssertTrue(ActionCatalog.isSystemWide(.nextDesktop))
     XCTAssertFalse(ActionCatalog.isSystemWide(.finderParentFolder))
     XCTAssertEqual(ActionCatalog.application(for: .macOS).bundleIdentifiers, [])
-    for action in [
-      Action.missionControl,
-      .applicationExpose,
-      .previousDesktop,
-      .nextDesktop,
-    ] {
+    for action in Action.allCases where ActionCatalog.isSystemWide(action) {
       XCTAssertNil(ActionCatalog.defaultShortcut(for: action, target: .macOS))
+    }
+    let expectedSystemTriggers: [Action: String] = [
+      .missionControl: "⇧⌘↑",
+      .applicationExpose: "⇧⌘↓",
+      .previousDesktop: "⇧⌘←",
+      .nextDesktop: "⇧⌘→",
+      .showDesktop: "F11",
+      .showNotificationCenter: "⌃⌘N",
+      .toggleDoNotDisturb: "⌃⌘D",
+      .toggleStageManager: "⌃⌘S",
+      .fillWindow: "⌃⌘↑",
+      .tileWindowLeft: "⌃⌘←",
+      .tileWindowRight: "⌃⌘→",
+      .switchDesktop1: "⌘1",
+      .switchDesktop2: "⌘2",
+      .switchDesktop3: "⌘3",
+      .switchDesktop4: "⌘4",
+      .switchDesktop5: "⌘5",
+    ]
+    for (action, trigger) in expectedSystemTriggers {
+      XCTAssertEqual(ActionCatalog.defaultTrigger(for: action)?.displayValue, trigger)
     }
     XCTAssertEqual(ActionCatalog.application(for: .finder).bundleIdentifiers, ["com.apple.finder"])
     XCTAssertEqual(

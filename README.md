@@ -11,7 +11,7 @@
 
 ## Scope
 
-- System / Finder / Meeting / Chat / Development / Browserに分類した65のBuilt-in Action
+- System / Finder / Meeting / Chat / Development / Browserに分類した77のBuilt-in Action
 - Microsoft Teams / Zoom Workplace / Google Meet / Slack / Discord / Cairn / Codex / Claude / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
 - Application TargetはForeground-only。macOS操作は純正キーボードショートカットを参照し、編集はSystem Settingsへ委譲
 - Action-first native settings window with an application mapping inspector
@@ -86,16 +86,28 @@ Applicationの所属カテゴリが交差しないAction同士は、同じTrigge
 
 macOS標準またはSystem Settingsで有効なショートカットと競合する場合、Action Inspectorに警告を表示します。これは使用禁止ではなく、対応アプリではQuickDrawが優先されることを示します。System Settingsの検出は非公開のPreference表現を読むbest-effort方式であり、既知の標準ショートカットカタログと組み合わせています。
 
+macOS ActionはLevel 0です。QuickDrawは純正設定の現在値と推奨値を比較し、編集時にSystem Settingsを開くだけで、キーイベントを登録・消費・再配送しません。このため、macOS推奨値はQuickDrawのアプリ用Triggerとの重複設定を禁止しません。
+
+macOS推奨では`Command + Shift + 矢印`をWorkspace全体という範囲大、`Command + Control`を小さなSystem UI／現在のウインドウという範囲小として扱い、`Command + 矢印`は既存アプリへ返します。`⇧⌘矢印`はテキスト範囲選択、`⌃⌘N`はFinder／Terminalの既存操作、`⌃⌘D`は選択単語の「調べる」、`⌘1〜5`はアプリのタブ選択を置き換える場合があるため、Action Inspectorにも警告を表示します。
+
 ## Built-in mappings
 
 ### System / Finder
 
 | Action | Trigger / 推奨値 | 実行先 |
 |---|---|---|
-| Mission Control | `⌘↑` | macOSが直接実行 |
-| Application Exposé | `⌘↓` | macOSが直接実行 |
-| Previous Desktop | `⌘←` | macOSが直接実行 |
-| Next Desktop | `⌘→` | macOSが直接実行 |
+| Mission Control | `⇧⌘↑` | macOSが直接実行 |
+| Application Exposé | `⇧⌘↓` | macOSが直接実行 |
+| Previous Desktop | `⇧⌘←` | macOSが直接実行 |
+| Next Desktop | `⇧⌘→` | macOSが直接実行 |
+| Show Desktop | `F11` | macOSが直接実行 |
+| Notification Center | `⌃⌘N` | macOSが直接実行 |
+| Do Not Disturb | `⌃⌘D` | macOSが直接実行 |
+| Stage Manager | `⌃⌘S` | macOSが直接実行 |
+| Fill Window | `⌃⌘↑` | macOSが直接実行 |
+| Tile Window Left | `⌃⌘←` | macOSが直接実行 |
+| Tile Window Right | `⌃⌘→` | macOSが直接実行 |
+| Switch to Desktop 1〜5 | `⌘1〜5` | macOSが直接実行 |
 | Parent Folder | `⌥↑` | Finder: `⌘↑` |
 | Open Selected Item | `⌥↓` | Finder: `⌘↓` |
 | Home | `⌥H` | Finder: `⇧⌘H` |

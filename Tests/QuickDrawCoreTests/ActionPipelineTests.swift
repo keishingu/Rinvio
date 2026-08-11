@@ -238,9 +238,7 @@ final class ActionPipelineTests: XCTestCase {
     )
     let fixture = makeFixture(bundleIdentifier: "com.apple.TextEdit", router: router)
 
-    for action in [
-      Action.missionControl, .applicationExpose, .previousDesktop, .nextDesktop,
-    ] {
+    for action in Action.allCases where ActionCatalog.isSystemWide(action) {
       let report = fixture.pipeline.run(action: action, mode: .live)
       XCTAssertEqual(report.outcome, .failed(.routing(.disabledApplication(target: .macOS))))
       XCTAssertFalse(report.outcome.consumesTrigger)

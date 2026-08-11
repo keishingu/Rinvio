@@ -99,7 +99,10 @@ public struct BuiltInCatalog: Sendable {
   }
 
   public func triggerScopesOverlap(_ first: ActionDomain, _ second: ActionDomain) -> Bool {
-    first == .system || second == .system || first == second
+    if first == .system || second == .system {
+      return first == second
+    }
+    return first == second
       || applications.contains { application in
         application.domains.contains(first) && application.domains.contains(second)
       }

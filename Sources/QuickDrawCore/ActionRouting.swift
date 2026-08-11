@@ -5,6 +5,7 @@ public enum ModifierKey: String, Codable, Hashable, Sendable {
   case shift
   case control
   case option
+  case function
 }
 
 public struct KeyStroke: Codable, Equatable, Hashable, Sendable {
@@ -39,6 +40,18 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case applicationExpose
   case previousDesktop
   case nextDesktop
+  case showDesktop
+  case showNotificationCenter
+  case toggleDoNotDisturb
+  case toggleStageManager
+  case fillWindow
+  case tileWindowLeft
+  case tileWindowRight
+  case switchDesktop1
+  case switchDesktop2
+  case switchDesktop3
+  case switchDesktop4
+  case switchDesktop5
   case finderParentFolder
   case finderOpenSelectedItem
   case finderHome
@@ -113,6 +126,18 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .applicationExpose: "Application Exposé"
     case .previousDesktop: "Previous Desktop"
     case .nextDesktop: "Next Desktop"
+    case .showDesktop: "Show Desktop"
+    case .showNotificationCenter: "Show Notification Center"
+    case .toggleDoNotDisturb: "Toggle Do Not Disturb"
+    case .toggleStageManager: "Toggle Stage Manager"
+    case .fillWindow: "Fill Window"
+    case .tileWindowLeft: "Tile Window Left"
+    case .tileWindowRight: "Tile Window Right"
+    case .switchDesktop1: "Switch to Desktop 1"
+    case .switchDesktop2: "Switch to Desktop 2"
+    case .switchDesktop3: "Switch to Desktop 3"
+    case .switchDesktop4: "Switch to Desktop 4"
+    case .switchDesktop5: "Switch to Desktop 5"
     case .finderParentFolder: "Parent Folder"
     case .finderOpenSelectedItem: "Open Selected Item"
     case .finderHome: "Home"

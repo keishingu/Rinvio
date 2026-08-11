@@ -235,10 +235,11 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertEqual(ActionCatalog.defaultTrigger(for: .focusNextRegion)?.displayValue, "F6")
     XCTAssertEqual(ActionCatalog.defaultTrigger(for: .focusPreviousRegion)?.displayValue, "⇧F6")
     XCTAssertTrue(
-      triggers.filter {
-        $0.displayValue != "F6" && $0.displayValue != "⇧F6"
-      }.allSatisfy {
-        !$0.modifiers.isDisjoint(with: [.command, .control, .option])
+      zip(Action.allCases, triggers).filter { action, trigger in
+        action.domain != .system
+          && trigger.displayValue != "F6" && trigger.displayValue != "⇧F6"
+      }.allSatisfy { _, trigger in
+        !trigger.modifiers.isDisjoint(with: [.command, .control, .option])
       }
     )
   }
@@ -347,6 +348,13 @@ final class QuickDrawConfigurationTests: XCTestCase {
       .focusTerminal: "⌥F3", .hardReload: "⇧⌘R", .nextTab: "⌥]",
       .previousTab: "⇧⌥]", .openDownloads: "⌥D", .openDeveloperTools: "⌘⌥I",
       .reopenClosedTab: "⇧⌘T",
+      .missionControl: "⇧⌘↑", .applicationExpose: "⇧⌘↓",
+      .previousDesktop: "⇧⌘←", .nextDesktop: "⇧⌘→",
+      .showDesktop: "F11", .showNotificationCenter: "⌃⌘N",
+      .toggleDoNotDisturb: "⌃⌘D", .toggleStageManager: "⌃⌘S",
+      .fillWindow: "⌃⌘↑", .tileWindowLeft: "⌃⌘←", .tileWindowRight: "⌃⌘→",
+      .switchDesktop1: "⌘1", .switchDesktop2: "⌘2", .switchDesktop3: "⌘3",
+      .switchDesktop4: "⌘4", .switchDesktop5: "⌘5",
     ]
 
     for (action, displayValue) in expected {
@@ -418,14 +426,11 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertEqual(store.configuration.enabledOptInTargets, [.finder])
   }
 
-  func testSystemWideActionsConflictWithEveryApplicationDomain() throws {
+  func testSystemSettingsRecommendationsDoNotBlockApplicationTriggers() throws {
     let store = QuickDrawConfigurationStore(fileURL: nil)
-    let meetingTrigger = try XCTUnwrap(store.trigger(for: .mute))
+    let systemRecommendation = try XCTUnwrap(store.trigger(for: .showDesktop))
 
-    XCTAssertThrowsError(
-      try store.setTriggerOverride(meetingTrigger, for: .missionControl)
-    ) { error in
-      XCTAssertEqual(error as? QuickDrawConfigurationError, .duplicateTrigger(.mute))
-    }
+    XCTAssertNoThrow(try store.setTriggerOverride(systemRecommendation, for: .mute))
+    XCTAssertEqual(store.trigger(for: .mute), systemRecommendation)
   }
 }
