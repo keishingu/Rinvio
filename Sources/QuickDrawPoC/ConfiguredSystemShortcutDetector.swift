@@ -145,7 +145,7 @@ final class ConfiguredSystemShortcutDetector {
       modifiers.insert(.function)
     }
 
-    guard let keyDisplay = keyDisplay(for: keyCodeNumber.uint16Value) else { return nil }
+    let keyDisplay = keyDisplay(for: keyCodeNumber.uint16Value)
     let modifierDisplay = [
       modifiers.contains(.control) ? "⌃" : "",
       modifiers.contains(.option) ? "⌥" : "",
@@ -161,7 +161,7 @@ final class ConfiguredSystemShortcutDetector {
     )
   }
 
-  private static func keyDisplay(for virtualKeyCode: UInt16) -> String? {
+  static func keyDisplay(for virtualKeyCode: UInt16) -> String {
     switch virtualKeyCode {
     case 1: "S"
     case 2: "D"
@@ -177,7 +177,8 @@ final class ConfiguredSystemShortcutDetector {
     case 124: "→"
     case 125: "↓"
     case 126: "↑"
-    default: nil
+    case 49: "Space"
+    default: "Key \(virtualKeyCode)"
     }
   }
 }

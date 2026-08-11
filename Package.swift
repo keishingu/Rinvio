@@ -30,7 +30,7 @@ let package = Package(
     ),
     .testTarget(
       name: "QuickDrawCoreTests",
-      dependencies: ["QuickDrawCore"]
+      dependencies: ["QuickDrawCore", "QuickDrawPoC"]
     ),
   ],
   swiftLanguageModes: [.v5]
