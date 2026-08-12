@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var hotKeyCoordinator: HotKeyConfigurationCoordinator?
   private var actionController: ActionController?
   private var statusMenuController: StatusMenuController?
+  private var applicationMenuController: ApplicationMenuController?
   private var configurationWindowController: ConfigurationWindowController?
   private var shortcutCheatSheetController: ShortcutCheatSheetController?
   private var appModel: QuickDrawAppModel?
@@ -35,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       shortcutExecutor: shortcutExecutor
     )
     let menuController = StatusMenuController()
+    let applicationMenuController = ApplicationMenuController()
     let model = QuickDrawAppModel(configurationStore: configurationStore)
     let cheatSheetController = ShortcutCheatSheetController(
       configurationStore: configurationStore,
@@ -49,6 +51,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       store: configurationStore
     )
     menuController.setLanguage(model.language)
+    menuController.setDeveloperMode(model.isDeveloperModeEnabled)
+    applicationMenuController.setLanguage(model.language)
+    applicationMenuController.install()
 
     let updateTriggerPresentation = {
       let triggers = Action.allCases.compactMap { action -> String? in
@@ -73,9 +78,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       )
     }
     model.onSetEnabled = {
-      [weak controller, weak menuController, weak cheatSheetController] enabled in
+      [
+        weak controller, weak menuController, weak applicationMenuController,
+        weak cheatSheetController
+      ] enabled in
       controller?.isEnabled = enabled
       menuController?.setEnabled(enabled)
+      applicationMenuController?.setEnabled(enabled)
       cheatSheetController?.isQuickDrawEnabled = enabled
     }
     model.onSetDryRun = { [weak controller, weak menuController] enabled in
@@ -84,6 +93,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     model.onSetCheatSheetEnabled = { [weak cheatSheetController] enabled in
       cheatSheetController?.isCheatSheetEnabled = enabled
+    }
+    model.onSetDeveloperMode = { [weak menuController] enabled in
+      menuController?.setDeveloperMode(enabled)
     }
     model.onPreviewCheatSheet = { [weak cheatSheetController] in
       cheatSheetController?.presentPreview()
@@ -111,8 +123,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     model.onRefreshDiagnostics = { [weak controller] in
       controller?.diagnosticsText() ?? "QuickDraw Diagnostics unavailable"
     }
-    model.onLanguageChange = { [weak menuController] language in
+    model.onLanguageChange = { [weak menuController, weak applicationMenuController] language in
       menuController?.setLanguage(language)
+      applicationMenuController?.setLanguage(language)
     }
     model.onShortcutRecordingBegan = {
       [weak coordinator, weak controller, weak model, weak cheatSheetController] in
@@ -190,6 +203,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     menuController.onCopyDiagnostics = { [weak controller] in
       controller?.diagnosticsText() ?? "QuickDraw PoC Diagnostics unavailable"
     }
+    applicationMenuController.onSelectSection = { [weak model, weak windowController] section in
+      model?.selectSection(section)
+      windowController?.present()
+    }
+    applicationMenuController.onShowShortcutGuide = { [weak model] in
+      model?.previewCheatSheet()
+    }
+    applicationMenuController.onToggleEnabled = { [weak model] in
+      guard let model else { return }
+      model.setEnabled(!model.isEnabled)
+    }
+    applicationMenuController.onOpenLastApplicationSettings = {
+      [weak foregroundProvider, weak activeTabProvider, weak model, weak windowController] in
+      guard
+        let bundleIdentifier = foregroundProvider?.foregroundApplication()?.bundleIdentifier,
+        let foregroundTarget = ActionCatalog.target(forBundleIdentifier: bundleIdentifier)
+      else {
+        NSSound.beep()
+        return
+      }
+      var target = foregroundTarget
+      if foregroundTarget == .googleChrome,
+        let activeTabProvider,
+        let activeTabURL = try? activeTabProvider.activeTabURL(),
+        let webApplication = ActionCatalog.webApplication(
+          in: foregroundTarget,
+          matching: activeTabURL
+        )
+      {
+        target = webApplication.target
+      }
+      model?.openApplicationSettings(for: target)
+      windowController?.present()
+    }
 
     do {
       try coordinator.start(
@@ -210,6 +257,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
           DispatchQueue.main.async {
             cheatSheetController?.handleModifierChange(modifiers)
           }
+        },
+        nonModifierKeyHandler: { [weak cheatSheetController] in
+          cheatSheetController?.handleNonModifierKeyPress()
         }
       )
       controller.areHotKeysRegistered = true
@@ -261,6 +311,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     hotKeyCoordinator = coordinator
     actionController = controller
     statusMenuController = menuController
+    self.applicationMenuController = applicationMenuController
     configurationWindowController = windowController
     shortcutCheatSheetController = cheatSheetController
     appModel = model
@@ -274,6 +325,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidResignActive(_ notification: Notification) {
     appModel?.cancelRecording()
+  }
+
+  func applicationShouldHandleReopen(
+    _ sender: NSApplication,
+    hasVisibleWindows flag: Bool
+  ) -> Bool {
+    if !flag {
+      configurationWindowController?.present()
+    }
+    return true
   }
 }
 

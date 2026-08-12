@@ -22,6 +22,7 @@ final class StatusMenuController: NSObject {
   private let copyItem = NSMenuItem()
   private let hotKeyItem = NSMenuItem()
   private let privacyItem = NSMenuItem()
+  private let developerSectionSeparator = NSMenuItem.separator()
   private let quitItem = NSMenuItem()
   private let feedbackPopover = NSPopover()
   private let feedbackHeadline = NSTextField(labelWithString: "")
@@ -70,7 +71,6 @@ final class StatusMenuController: NSObject {
     menu.addItem(.separator())
 
     openItem.action = #selector(openWindow)
-    openItem.keyEquivalent = ","
     openItem.target = self
     menu.addItem(openItem)
 
@@ -94,7 +94,7 @@ final class StatusMenuController: NSObject {
     permissionActionItem.action = #selector(requestAccessibility)
     menu.addItem(permissionActionItem)
 
-    menu.addItem(.separator())
+    menu.addItem(developerSectionSeparator)
 
     copyItem.action = #selector(copyDiagnostics)
     copyItem.target = self
@@ -113,6 +113,7 @@ final class StatusMenuController: NSObject {
     menu.addItem(quitItem)
 
     statusItem.menu = menu
+    setDeveloperMode(false)
     applyLanguage()
   }
 
@@ -155,6 +156,15 @@ final class StatusMenuController: NSObject {
 
   func setDryRun(_ enabled: Bool) {
     dryRunItem.state = enabled ? .on : .off
+  }
+
+  func setDeveloperMode(_ enabled: Bool) {
+    dryRunItem.isHidden = !enabled
+    dryCheckItem.isHidden = !enabled
+    developerSectionSeparator.isHidden = !enabled
+    copyItem.isHidden = !enabled
+    hotKeyItem.isHidden = !enabled
+    privacyItem.isHidden = !enabled
   }
 
   func setTriggerCount(_ count: Int) {

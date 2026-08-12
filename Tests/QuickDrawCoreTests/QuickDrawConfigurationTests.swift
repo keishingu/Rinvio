@@ -20,6 +20,19 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertFalse(store.isApplicationEnabled(.finder))
   }
 
+  func testMailSuggestedTriggersPreserveCommonCommandActions() {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+
+    XCTAssertEqual(store.trigger(for: .composeEmail)?.displayValue, "⌘N")
+    XCTAssertEqual(store.trigger(for: .findInEmail)?.displayValue, "⌘F")
+    XCTAssertEqual(store.trigger(for: .searchAllEmail)?.displayValue, "⇧⌘F")
+    XCTAssertEqual(store.trigger(for: .replyEmail)?.displayValue, "⌥R")
+    XCTAssertEqual(store.trigger(for: .replyAllEmail)?.displayValue, "⇧⌥R")
+    XCTAssertEqual(store.trigger(for: .forwardEmail)?.displayValue, "⌥F")
+    XCTAssertEqual(store.trigger(for: .archiveEmail)?.displayValue, "⌥A")
+    XCTAssertEqual(store.trigger(for: .checkNewMail)?.displayValue, "⌥G")
+  }
+
   func testTriggerOverrideCanBeRestoredBySettingDefault() throws {
     let store = QuickDrawConfigurationStore(fileURL: nil)
     let custom = KeyStroke(virtualKeyCode: 103, modifiers: [], displayValue: "F11")
@@ -58,9 +71,9 @@ final class QuickDrawConfigurationTests: XCTestCase {
     let store = QuickDrawConfigurationStore(fileURL: nil)
     let meetingTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .mute))
 
-    try store.setTriggerOverride(meetingTrigger, for: .hardReload)
+    try store.setTriggerOverride(meetingTrigger, for: .toggleTerminal)
 
-    XCTAssertEqual(store.trigger(for: .hardReload), meetingTrigger)
+    XCTAssertEqual(store.trigger(for: .toggleTerminal), meetingTrigger)
   }
 
   func testRejectsSameTriggerAcrossDomainsSharedByTeams() throws {
@@ -71,6 +84,17 @@ final class QuickDrawConfigurationTests: XCTestCase {
       try store.setTriggerOverride(meetingTrigger, for: .quickSwitcher)
     ) { error in
       XCTAssertEqual(error as? QuickDrawConfigurationError, .duplicateTrigger(.mute))
+    }
+  }
+
+  func testRejectsSameTriggerAcrossBrowserAndGmail() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let browserTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .hardReload))
+
+    XCTAssertThrowsError(
+      try store.setTriggerOverride(browserTrigger, for: .replyEmail)
+    ) { error in
+      XCTAssertEqual(error as? QuickDrawConfigurationError, .duplicateTrigger(.hardReload))
     }
   }
 

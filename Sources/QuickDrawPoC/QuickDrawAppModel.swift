@@ -9,6 +9,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
   case finder
   case meeting
   case chat
+  case mail
   case development
   case developmentAIAgent
   case developmentEditor
@@ -26,6 +27,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .finder: "folder.fill"
     case .meeting: "person.2.fill"
     case .chat: "bubble.left.and.bubble.right.fill"
+    case .mail: "envelope.fill"
     case .development: "wrench.and.screwdriver.fill"
     case .developmentAIAgent: "cpu"
     case .developmentEditor: "chevron.left.forwardslash.chevron.right"
@@ -43,6 +45,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .finder: .finder
     case .meeting: .meeting
     case .chat: .chat
+    case .mail: .mail
     case .development, .developmentAIAgent, .developmentEditor, .developmentTerminal:
       .development
     case .browser: .browser
@@ -109,6 +112,9 @@ struct ApplicationMapping: Identifiable, Equatable {
       (.slack, "Slack", "bubble.left.and.bubble.right.fill"),
       (.discord, "Discord", "bubble.left.and.bubble.right.fill"),
       (.cairn, "Cairn", "mountain.2.fill"),
+      (.appleMail, "Mail", "envelope.fill"),
+      (.gmail, "Gmail", "envelope.fill"),
+      (.microsoftOutlook, "Outlook", "envelope.fill"),
     ]
 
     return presentations.map { target, compactName, systemImage in
@@ -184,6 +190,9 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case browserTools
   case conversationNavigation
   case messaging
+  case mailComposition
+  case mailSearch
+  case mailOrganization
 
   var id: Self { self }
 }
@@ -554,6 +563,46 @@ struct ActionDefinition: Identifiable, Equatable {
       systemImage: "tray.full.fill",
       category: .messaging
     ),
+    ActionDefinition(
+      action: .composeEmail,
+      systemImage: "square.and.pencil",
+      category: .mailComposition
+    ),
+    ActionDefinition(
+      action: .replyEmail,
+      systemImage: "arrowshape.turn.up.left.fill",
+      category: .mailComposition
+    ),
+    ActionDefinition(
+      action: .replyAllEmail,
+      systemImage: "arrowshape.turn.up.left.2.fill",
+      category: .mailComposition
+    ),
+    ActionDefinition(
+      action: .forwardEmail,
+      systemImage: "arrowshape.turn.up.right.fill",
+      category: .mailComposition
+    ),
+    ActionDefinition(
+      action: .findInEmail,
+      systemImage: "doc.text.magnifyingglass",
+      category: .mailSearch
+    ),
+    ActionDefinition(
+      action: .searchAllEmail,
+      systemImage: "magnifyingglass",
+      category: .mailSearch
+    ),
+    ActionDefinition(
+      action: .archiveEmail,
+      systemImage: "archivebox.fill",
+      category: .mailOrganization
+    ),
+    ActionDefinition(
+      action: .checkNewMail,
+      systemImage: "arrow.clockwise",
+      category: .mailOrganization
+    ),
   ]
 }
 
@@ -571,11 +620,13 @@ struct TriggerAlignmentNotice: Equatable {
 @MainActor
 final class QuickDrawAppModel: ObservableObject {
   private static let cheatSheetEnabledKey = "cheatSheetEnabled"
+  private static let developerModeEnabledKey = "developerModeEnabled"
 
   @Published private(set) var language: AppLanguage
   @Published private(set) var isEnabled = true
   @Published private(set) var isDryRunEnabled = false
   @Published private(set) var isCheatSheetEnabled: Bool
+  @Published private(set) var isDeveloperModeEnabled: Bool
   @Published private(set) var hasAccessibilityPermission = false
   @Published private(set) var areHotKeysRegistered = false
   @Published private(set) var status = ActionStatus(
@@ -592,6 +643,8 @@ final class QuickDrawAppModel: ObservableObject {
   @Published private(set) var shortcutEditingError: String?
   @Published private(set) var triggerAlignmentNotice: TriggerAlignmentNotice?
   @Published private(set) var configuredSystemShortcuts: [Action: KeyStroke] = [:]
+  @Published var selectedSection: QuickDrawSection? = .meeting
+  @Published var selectedApplicationID: String? = "meeting:microsoftTeams"
   let actions = ActionDefinition.all
 
   private let defaults: UserDefaults
@@ -602,6 +655,7 @@ final class QuickDrawAppModel: ObservableObject {
   var onSetEnabled: ((Bool) -> Void)?
   var onSetDryRun: ((Bool) -> Void)?
   var onSetCheatSheetEnabled: ((Bool) -> Void)?
+  var onSetDeveloperMode: ((Bool) -> Void)?
   var onPreviewCheatSheet: (() -> Void)?
   var onRunDryCheck: ((Action) -> Void)?
   var onRequestAccessibility: (() -> Void)?
@@ -628,6 +682,8 @@ final class QuickDrawAppModel: ObservableObject {
     language = AppLanguage.preferred(defaults: defaults)
     isCheatSheetEnabled =
       defaults.object(forKey: Self.cheatSheetEnabledKey) as? Bool ?? true
+    isDeveloperModeEnabled =
+      defaults.object(forKey: Self.developerModeEnabledKey) as? Bool ?? false
     configuration = configurationStore.configuration
     refreshConfiguredSystemShortcuts()
   }
@@ -675,8 +731,30 @@ final class QuickDrawAppModel: ObservableObject {
     onSetCheatSheetEnabled?(enabled)
   }
 
+  func setDeveloperModeEnabled(_ enabled: Bool) {
+    isDeveloperModeEnabled = enabled
+    defaults.set(enabled, forKey: Self.developerModeEnabledKey)
+    if !enabled, isDryRunEnabled {
+      setDryRunEnabled(false)
+    }
+    onSetDeveloperMode?(enabled)
+  }
+
   func previewCheatSheet() {
     onPreviewCheatSheet?()
+  }
+
+  func selectSection(_ section: QuickDrawSection) {
+    selectedSection = section
+  }
+
+  func openApplicationSettings(for target: ActionTarget) {
+    let domain =
+      [ActionTarget.finder, .macOS].contains(target)
+      ? ActionDomain.system
+      : ActionCatalog.application(for: target).domains.first ?? .meeting
+    selectedApplicationID = "\(domain.rawValue):\(target.rawValue)"
+    selectedSection = .applications
   }
 
   func runDryCheck(action: Action) {

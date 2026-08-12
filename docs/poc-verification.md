@@ -18,7 +18,7 @@
 | Full pipeline | routing, target revalidation, delivery, and injected failures | Pass |
 | Dry Run | route is resolved without revalidation or shortcut delivery | Pass |
 | Event sequence | one matching key-down/key-up pair with source marker | Pass |
-| Privacy | reports retain Meet classification but not active-tab URL or non-Meet host | Pass |
+| Privacy | reports retain Web Target classification but not active-tab URL or unsupported host | Pass |
 | Latency guard | 1,000 in-process Dry Runs, p95 under 25 ms | Pass |
 | Global Triggers | 56 unique safe Triggers monitored by CGEventTap; domain-scoped override reuse and unsupported app/page/action pass-through | Pass |
 | Development applications | Expandable AI Agent / Editor / Terminal sidebar sections with scoped Actions and atomic per-application Trigger alignment; Applications remains enablement-only | Pass |

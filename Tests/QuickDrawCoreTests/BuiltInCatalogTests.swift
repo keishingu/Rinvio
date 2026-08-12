@@ -174,6 +174,45 @@ final class BuiltInCatalogTests: XCTestCase {
     )
   }
 
+  func testGmailWebIdentityComesFromCatalog() throws {
+    let gmail = try XCTUnwrap(
+      ActionCatalog.webApplication(in: .googleChrome, domain: .mail)
+    )
+
+    XCTAssertEqual(gmail.target, .gmail)
+    XCTAssertEqual(gmail.webApplication?.scheme, "https")
+    XCTAssertEqual(gmail.webApplication?.host, "mail.google.com")
+    XCTAssertTrue(
+      ActionCatalog.requiresWebApplicationDetection(
+        bundleIdentifier: "com.google.Chrome",
+        domain: .mail
+      )
+    )
+  }
+
+  func testWebApplicationMatchesActiveBrowserURL() throws {
+    XCTAssertEqual(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://meet.google.com/abc-defg-hij"))
+      )?.target,
+      .googleMeet
+    )
+    XCTAssertEqual(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://mail.google.com/mail/u/0/#inbox"))
+      )?.target,
+      .gmail
+    )
+    XCTAssertNil(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://example.com"))
+      )
+    )
+  }
+
   func testRejectsUnsupportedCatalogSchema() throws {
     let data = try XCTUnwrap(
       """

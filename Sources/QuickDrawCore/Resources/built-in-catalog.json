@@ -693,6 +693,78 @@
         "modifiers": ["command", "option"],
         "displayValue": "⌘⌥U"
       }
+    },
+    {
+      "action": "composeEmail",
+      "domain": "mail",
+      "defaultTrigger": {
+        "virtualKeyCode": 45,
+        "modifiers": ["command"],
+        "displayValue": "⌘N"
+      }
+    },
+    {
+      "action": "findInEmail",
+      "domain": "mail",
+      "defaultTrigger": {
+        "virtualKeyCode": 3,
+        "modifiers": ["command"],
+        "displayValue": "⌘F"
+      }
+    },
+    {
+      "action": "searchAllEmail",
+      "domain": "mail",
+      "defaultTrigger": {
+        "virtualKeyCode": 3,
+        "modifiers": ["command", "shift"],
+        "displayValue": "⇧⌘F"
+      }
+    },
+    {
+      "action": "replyEmail",
+      "domain": "mail",
+      "defaultTrigger": {
+        "virtualKeyCode": 15,
+        "modifiers": ["option"],
+        "displayValue": "⌥R"
+      }
+    },
+    {
+      "action": "replyAllEmail",
+      "domain": "mail",
+      "defaultTrigger": {
+        "virtualKeyCode": 15,
+        "modifiers": ["option", "shift"],
+        "displayValue": "⇧⌥R"
+      }
+    },
+    {
+      "action": "forwardEmail",
+      "domain": "mail",
+      "defaultTrigger": {
+        "virtualKeyCode": 3,
+        "modifiers": ["option"],
+        "displayValue": "⌥F"
+      }
+    },
+    {
+      "action": "archiveEmail",
+      "domain": "mail",
+      "defaultTrigger": {
+        "virtualKeyCode": 0,
+        "modifiers": ["option"],
+        "displayValue": "⌥A"
+      }
+    },
+    {
+      "action": "checkNewMail",
+      "domain": "mail",
+      "defaultTrigger": {
+        "virtualKeyCode": 5,
+        "modifiers": ["option"],
+        "displayValue": "⌥G"
+      }
     }
   ],
   "applications": [
@@ -887,6 +959,29 @@
       "domains": ["chat"],
       "bundleIdentifiers": ["com.oss-cairn.desktop", "com.oss-cairn.desktop.dev"],
       "officialURL": "https://github.com/keishingu/Cairn"
+    },
+    {
+      "target": "appleMail",
+      "domains": ["mail"],
+      "bundleIdentifiers": ["com.apple.mail"],
+      "officialURL": "https://support.apple.com/guide/mail/welcome/mac"
+    },
+    {
+      "target": "gmail",
+      "domains": ["mail"],
+      "bundleIdentifiers": [],
+      "webApplication": {
+        "browserTarget": "googleChrome",
+        "scheme": "https",
+        "host": "mail.google.com"
+      },
+      "officialURL": "https://mail.google.com/"
+    },
+    {
+      "target": "microsoftOutlook",
+      "domains": ["mail"],
+      "bundleIdentifiers": ["com.microsoft.Outlook"],
+      "officialURL": "https://www.microsoft.com/microsoft-365/outlook/outlook-for-mac"
     }
   ],
   "mappings": [
@@ -2304,6 +2399,198 @@
       "execution": {
         "method": "keyboardShortcut",
         "shortcut": {"virtualKeyCode": 125, "modifiers": ["option"], "displayValue": "⌥↓"}
+      }
+    },
+    {
+      "action": "composeEmail",
+      "target": "appleMail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "findInEmail",
+      "target": "appleMail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command"], "displayValue": "⌘F"}
+      }
+    },
+    {
+      "action": "searchAllEmail",
+      "target": "appleMail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command", "option"], "displayValue": "⌘⌥F"}
+      }
+    },
+    {
+      "action": "replyEmail",
+      "target": "appleMail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command"], "displayValue": "⌘R"}
+      }
+    },
+    {
+      "action": "replyAllEmail",
+      "target": "appleMail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command", "shift"], "displayValue": "⇧⌘R"}
+      }
+    },
+    {
+      "action": "forwardEmail",
+      "target": "appleMail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command", "shift"], "displayValue": "⇧⌘F"}
+      }
+    },
+    {
+      "action": "archiveEmail",
+      "target": "appleMail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 0, "modifiers": ["command", "control"], "displayValue": "⌃⌘A"}
+      }
+    },
+    {
+      "action": "checkNewMail",
+      "target": "appleMail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command", "shift"], "displayValue": "⇧⌘N"}
+      }
+    },
+    {
+      "action": "composeEmail",
+      "target": "gmail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 8, "modifiers": [], "displayValue": "C"}
+      }
+    },
+    {
+      "action": "findInEmail",
+      "target": "gmail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command"], "displayValue": "⌘F"}
+      }
+    },
+    {
+      "action": "searchAllEmail",
+      "target": "gmail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 44, "modifiers": [], "displayValue": "/"}
+      }
+    },
+    {
+      "action": "replyEmail",
+      "target": "gmail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": [], "displayValue": "R"}
+      }
+    },
+    {
+      "action": "replyAllEmail",
+      "target": "gmail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 0, "modifiers": [], "displayValue": "A"}
+      }
+    },
+    {
+      "action": "forwardEmail",
+      "target": "gmail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": [], "displayValue": "F"}
+      }
+    },
+    {
+      "action": "archiveEmail",
+      "target": "gmail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 14, "modifiers": [], "displayValue": "E"}
+      }
+    },
+    {
+      "action": "checkNewMail",
+      "target": "gmail",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command"], "displayValue": "⌘R"}
+      }
+    },
+    {
+      "action": "composeEmail",
+      "target": "microsoftOutlook",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "findInEmail",
+      "target": "microsoftOutlook",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command"], "displayValue": "⌘F"}
+      }
+    },
+    {
+      "action": "searchAllEmail",
+      "target": "microsoftOutlook",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command", "shift"], "displayValue": "⇧⌘F"}
+      }
+    },
+    {
+      "action": "replyEmail",
+      "target": "microsoftOutlook",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command"], "displayValue": "⌘R"}
+      }
+    },
+    {
+      "action": "replyAllEmail",
+      "target": "microsoftOutlook",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 15, "modifiers": ["command", "shift"], "displayValue": "⇧⌘R"}
+      }
+    },
+    {
+      "action": "forwardEmail",
+      "target": "microsoftOutlook",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 38, "modifiers": ["command"], "displayValue": "⌘J"}
+      }
+    },
+    {
+      "action": "archiveEmail",
+      "target": "microsoftOutlook",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 14, "modifiers": ["control"], "displayValue": "⌃E"}
+      }
+    },
+    {
+      "action": "checkNewMail",
+      "target": "microsoftOutlook",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 40, "modifiers": ["command", "control"], "displayValue": "⌃⌘K"}
       }
     }
   ]

@@ -33,17 +33,21 @@ final class ShortcutCheatSheetController {
   private static let holdDelay: TimeInterval = 0.6
 
   private let configurationStore: QuickDrawConfigurationStore
-  private let foregroundProvider: ForegroundApplicationProvider
+  private let foregroundProvider: any ForegroundApplicationProviding
   private let activeTabProvider: ChromeActiveTabProvider
   private let languageProvider: () -> AppLanguage
   private let panel: NSPanel
 
   private var currentModifiers = Set<ModifierKey>()
-  private var isAwaitingModifierRelease = false
+  private(set) var isAwaitingModifierRelease = false
   private var presentedModifiers: Set<ModifierKey>?
   private var pendingModifiers: Set<ModifierKey>?
   private var pendingPresentation: DispatchWorkItem?
   private var pendingPreviewDismissal: DispatchWorkItem?
+
+  var isPreviewVisible: Bool {
+    pendingPreviewDismissal != nil && panel.isVisible
+  }
 
   var isCheatSheetEnabled = true {
     didSet {
@@ -65,7 +69,7 @@ final class ShortcutCheatSheetController {
 
   init(
     configurationStore: QuickDrawConfigurationStore,
-    foregroundProvider: ForegroundApplicationProvider,
+    foregroundProvider: any ForegroundApplicationProviding,
     activeTabProvider: ChromeActiveTabProvider,
     languageProvider: @escaping () -> AppLanguage
   ) {
@@ -98,7 +102,7 @@ final class ShortcutCheatSheetController {
 
     if modifiers.isEmpty {
       isAwaitingModifierRelease = false
-      reset()
+      if pendingPreviewDismissal == nil { reset() }
       return
     }
     guard !isAwaitingModifierRelease else {
@@ -164,6 +168,10 @@ final class ShortcutCheatSheetController {
   func handleShortcutExecution() {
     isAwaitingModifierRelease = !currentModifiers.isEmpty
     reset()
+  }
+
+  func handleNonModifierKeyPress() {
+    handleShortcutExecution()
   }
 
   func reset() {
@@ -256,8 +264,10 @@ final class ShortcutCheatSheetController {
     }
     guard !groups.isEmpty else { return false }
 
-    let presentationTarget: ActionTarget =
-      routedTargets.contains(.googleMeet) ? .googleMeet : foregroundTarget
+    let presentationTarget =
+      routedTargets.first {
+        ActionCatalog.application(for: $0).webApplication != nil
+      } ?? foregroundTarget
     let applicationPresentation = ApplicationMapping.current().first {
       $0.target == presentationTarget
     }

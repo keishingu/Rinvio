@@ -47,11 +47,26 @@ struct QuickDrawCopy {
   var quickDrawPaused: String { text("QuickDraw 停止中", "QuickDraw paused") }
   var actions: String { text("アクション", "Actions") }
   var applications: String { text("アプリケーション", "Applications") }
+  var lastUsedApplicationSettings: String {
+    text("最後に使ったアプリのTarget設定", "Last Used Application Target Settings")
+  }
+  var fileMenu: String { text("ファイル", "File") }
+  var navigateMenu: String { text("移動", "Navigate") }
+  var helpMenu: String { text("ヘルプ", "Help") }
+  var closeWindow: String { text("ウインドウを閉じる", "Close Window") }
   var settings: String { text("設定", "Settings") }
   var settingsSubtitle: String {
     text("QuickDrawの表示と動作を設定します。", "Configure QuickDraw's appearance and behavior.")
   }
-  var diagnostics: String { text("診断", "Diagnostics") }
+  var developerMode: String { text("開発者モード", "Developer Mode") }
+  var developerModeDescription: String {
+    text(
+      "ドライラン、Actionテスト、ルーティングログを表示します。",
+      "Shows Dry Run, Action testing, and routing logs."
+    )
+  }
+  var developerTools: String { text("開発者ツール", "Developer Tools") }
+  var diagnostics: String { text("情報", "Information") }
   var noApplications: String { text("アプリケーションがありません", "No Applications") }
   var noActionsInCategory: String {
     text("このカテゴリにはActionがありません", "No Actions in this category")
@@ -80,6 +95,9 @@ struct QuickDrawCopy {
   var browserTools: String { text("ブラウザツール", "Browser tools") }
   var conversationNavigation: String { text("会話の移動", "Conversation navigation") }
   var messaging: String { text("メッセージ", "Messaging") }
+  var mailComposition: String { text("作成と返信", "Compose and reply") }
+  var mailSearch: String { text("検索", "Search") }
+  var mailOrganization: String { text("受信と整理", "Receive and organize") }
   var shortcutGuide: String { text("ショートカットガイド", "Shortcut Guide") }
   var showShortcutGuideOnHold: String {
     text(
@@ -108,10 +126,16 @@ struct QuickDrawCopy {
     )
   }
   var holdToKeepGuideVisible: String {
-    text("修飾キーを離すと閉じます", "Release the modifier keys to close")
+    text(
+      "修飾キーを離すか、通常キーを押すと閉じます",
+      "Release the modifier keys or press another key to close"
+    )
   }
   func releaseModifiersToClose(_ modifiers: String) -> String {
-    text("\(modifiers)を離すと閉じます", "Release \(modifiers) to close")
+    text(
+      "\(modifiers)を離すか、通常キーを押すと閉じます",
+      "Release \(modifiers) or press another key to close"
+    )
   }
   var applicationsSubtitle: String {
     text(
@@ -232,8 +256,8 @@ struct QuickDrawCopy {
 
   var diagnosticsSubtitle: String {
     text(
-      "ルーティングに必要な情報だけを表示します。キー入力や会議URLは記録しません。",
-      "Routing metadata only. QuickDraw does not record your keystrokes or meeting URLs."
+      "QuickDrawの状態、権限、プライバシーを確認できます。",
+      "Review QuickDraw's status, permissions, and privacy."
     )
   }
   var currentStatus: String { text("現在の状態", "Current status") }
@@ -383,8 +407,8 @@ struct QuickDrawCopy {
   }
   var privacyMenu: String {
     text(
-      "プライバシー: Meet判定のみ・キー入力記録なし",
-      "Privacy: Meet classification only; no key logging"
+      "プライバシー: Web Target判定のみ・キー入力記録なし",
+      "Privacy: Web Target classification only; no key logging"
     )
   }
   var quitQuickDraw: String { text("QuickDraw PoCを終了", "Quit QuickDraw PoC") }
@@ -402,6 +426,7 @@ struct QuickDrawCopy {
     case .finder: actionDomainName(.finder)
     case .meeting: actionDomainName(.meeting)
     case .chat: actionDomainName(.chat)
+    case .mail: actionDomainName(.mail)
     case .development: actionDomainName(.development)
     case .developmentAIAgent: developmentApplicationCategoryName(.aiAgent)
     case .developmentEditor: developmentApplicationCategoryName(.editor)
@@ -441,6 +466,7 @@ struct QuickDrawCopy {
     case .finder: text("Finder", "Finder")
     case .meeting: text("Meeting", "Meeting")
     case .chat: text("Chat", "Chat")
+    case .mail: text("Mail", "Mail")
     case .development: text("Development", "Development")
     case .browser: text("Browser", "Browser")
     }
@@ -468,6 +494,11 @@ struct QuickDrawCopy {
         "チャットサービスごとの移動・検索・作成操作を統一します。",
         "Unify navigation, search, and compose Actions across chat services."
       )
+    case .mail:
+      text(
+        "メールアプリごとの作成・返信・検索・整理操作を統一します。",
+        "Unify compose, reply, search, and organization Actions across mail apps."
+      )
     case .development:
       text(
         "開発ツールやエージェントを、共通の操作で扱います。",
@@ -482,7 +513,8 @@ struct QuickDrawCopy {
   }
 
   func executionDetail(for application: ApplicationMapping) -> String {
-    application.id == "googleMeet" ? activeTabAndShortcut : officialKeyboardShortcut
+    ActionCatalog.application(for: application.target).webApplication != nil
+      ? activeTabAndShortcut : officialKeyboardShortcut
   }
 
   func actionCategoryName(_ category: ActionCategory) -> String {
@@ -507,6 +539,9 @@ struct QuickDrawCopy {
     case .browserTools: browserTools
     case .conversationNavigation: conversationNavigation
     case .messaging: messaging
+    case .mailComposition: mailComposition
+    case .mailSearch: mailSearch
+    case .mailOrganization: mailOrganization
     }
   }
 
@@ -589,6 +624,14 @@ struct QuickDrawCopy {
     case .previousConversation: text("前の会話", "Previous Conversation")
     case .nextConversation: text("次の会話", "Next Conversation")
     case .openUnreads: text("未読を表示", "Open Unreads")
+    case .composeEmail: text("新規メッセージ", "New Message")
+    case .findInEmail: text("メール内を検索", "Find in Message")
+    case .searchAllEmail: text("全メールを検索", "Search All Mail")
+    case .replyEmail: text("返信", "Reply")
+    case .replyAllEmail: text("全員に返信", "Reply All")
+    case .forwardEmail: text("転送", "Forward")
+    case .archiveEmail: text("アーカイブ", "Archive")
+    case .checkNewMail: text("新着メールを確認", "Check for New Mail")
     }
   }
 
@@ -805,6 +848,22 @@ struct QuickDrawCopy {
       text("次のチャンネルまたは会話へ移動します", "Move to the next channel or conversation")
     case .openUnreads:
       text("未読メッセージの一覧を開きます", "Open the unread messages view")
+    case .composeEmail:
+      text("新しいメールの作成画面を開きます", "Open a new email composer")
+    case .findInEmail:
+      text("開いているメール本文内の文字列を検索します", "Find text in the open email message")
+    case .searchAllEmail:
+      text("メールボックス全体を対象に検索を開始します", "Start a search across mail")
+    case .replyEmail:
+      text("選択中または開いているメールへ返信します", "Reply to the selected or open email")
+    case .replyAllEmail:
+      text("選択中または開いているメールの全員へ返信します", "Reply to everyone on the selected or open email")
+    case .forwardEmail:
+      text("選択中または開いているメールを転送します", "Forward the selected or open email")
+    case .archiveEmail:
+      text("選択中または開いているメールをアーカイブします", "Archive the selected or open email")
+    case .checkNewMail:
+      text("新着メールを確認して受信状態を更新します", "Check for new mail and update the inbox")
     }
   }
 

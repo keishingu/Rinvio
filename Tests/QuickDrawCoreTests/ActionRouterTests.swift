@@ -48,6 +48,99 @@ final class ActionRouterTests: XCTestCase {
       modifiers: [.command, .control], display: "⌃⌘H")
   }
 
+  func testRoutesMailActionsForAppleMail() throws {
+    let bundleIdentifier = "com.apple.mail"
+    try assertRoute(
+      .composeEmail, bundleIdentifier: bundleIdentifier, keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+    try assertRoute(
+      .findInEmail, bundleIdentifier: bundleIdentifier, keyCode: 3,
+      modifiers: [.command], display: "⌘F")
+    try assertRoute(
+      .searchAllEmail, bundleIdentifier: bundleIdentifier, keyCode: 3,
+      modifiers: [.command, .option], display: "⌘⌥F")
+    try assertRoute(
+      .replyEmail, bundleIdentifier: bundleIdentifier, keyCode: 15,
+      modifiers: [.command], display: "⌘R")
+    try assertRoute(
+      .replyAllEmail, bundleIdentifier: bundleIdentifier, keyCode: 15,
+      modifiers: [.command, .shift], display: "⇧⌘R")
+    try assertRoute(
+      .forwardEmail, bundleIdentifier: bundleIdentifier, keyCode: 3,
+      modifiers: [.command, .shift], display: "⇧⌘F")
+    try assertRoute(
+      .archiveEmail, bundleIdentifier: bundleIdentifier, keyCode: 0,
+      modifiers: [.command, .control], display: "⌃⌘A")
+    try assertRoute(
+      .checkNewMail, bundleIdentifier: bundleIdentifier, keyCode: 45,
+      modifiers: [.command, .shift], display: "⇧⌘N")
+  }
+
+  func testRoutesMailActionsForGmail() throws {
+    let url = URL(string: "https://mail.google.com/mail/u/0/#inbox")
+    try assertRoute(
+      .composeEmail, bundleIdentifier: "com.google.Chrome", activeTabURL: url,
+      keyCode: 8, modifiers: [], display: "C")
+    try assertRoute(
+      .findInEmail, bundleIdentifier: "com.google.Chrome", activeTabURL: url,
+      keyCode: 3, modifiers: [.command], display: "⌘F")
+    try assertRoute(
+      .searchAllEmail, bundleIdentifier: "com.google.Chrome", activeTabURL: url,
+      keyCode: 44, modifiers: [], display: "/")
+    try assertRoute(
+      .replyEmail, bundleIdentifier: "com.google.Chrome", activeTabURL: url,
+      keyCode: 15, modifiers: [], display: "R")
+    try assertRoute(
+      .replyAllEmail, bundleIdentifier: "com.google.Chrome", activeTabURL: url,
+      keyCode: 0, modifiers: [], display: "A")
+    try assertRoute(
+      .forwardEmail, bundleIdentifier: "com.google.Chrome", activeTabURL: url,
+      keyCode: 3, modifiers: [], display: "F")
+    try assertRoute(
+      .archiveEmail, bundleIdentifier: "com.google.Chrome", activeTabURL: url,
+      keyCode: 14, modifiers: [], display: "E")
+    try assertRoute(
+      .checkNewMail, bundleIdentifier: "com.google.Chrome", activeTabURL: url,
+      keyCode: 15, modifiers: [.command], display: "⌘R")
+  }
+
+  func testRoutesMailActionsForOutlook() throws {
+    let bundleIdentifier = "com.microsoft.Outlook"
+    try assertRoute(
+      .composeEmail, bundleIdentifier: bundleIdentifier, keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+    try assertRoute(
+      .findInEmail, bundleIdentifier: bundleIdentifier, keyCode: 3,
+      modifiers: [.command], display: "⌘F")
+    try assertRoute(
+      .searchAllEmail, bundleIdentifier: bundleIdentifier, keyCode: 3,
+      modifiers: [.command, .shift], display: "⇧⌘F")
+    try assertRoute(
+      .replyEmail, bundleIdentifier: bundleIdentifier, keyCode: 15,
+      modifiers: [.command], display: "⌘R")
+    try assertRoute(
+      .replyAllEmail, bundleIdentifier: bundleIdentifier, keyCode: 15,
+      modifiers: [.command, .shift], display: "⇧⌘R")
+    try assertRoute(
+      .forwardEmail, bundleIdentifier: bundleIdentifier, keyCode: 38,
+      modifiers: [.command], display: "⌘J")
+    try assertRoute(
+      .archiveEmail, bundleIdentifier: bundleIdentifier, keyCode: 14,
+      modifiers: [.control], display: "⌃E")
+    try assertRoute(
+      .checkNewMail, bundleIdentifier: bundleIdentifier, keyCode: 40,
+      modifiers: [.command, .control], display: "⌃⌘K")
+  }
+
+  func testMailActionPassesThroughOutsideGmail() {
+    assertFailure(
+      action: .composeEmail,
+      bundleIdentifier: "com.google.Chrome",
+      activeTabURL: URL(string: "https://example.com/"),
+      expected: .unsupportedWebPage(host: "example.com")
+    )
+  }
+
   func testRoutesExpandedMeetingActions() throws {
     try assertRoute(
       .toggleCaptions, bundleIdentifier: "com.microsoft.teams2", keyCode: 0,
@@ -530,7 +623,7 @@ final class ActionRouterTests: XCTestCase {
   func testUnsupportedWebPageMessageDoesNotExposeHost() {
     let failure = ActionRoutingFailure.unsupportedWebPage(host: "private.example.com")
 
-    XCTAssertEqual(failure.userMessage, "Active Chrome tab is not Google Meet")
+    XCTAssertEqual(failure.userMessage, "Active Chrome tab is not supported for this Action")
     XCTAssertFalse(failure.userMessage.contains("private.example.com"))
   }
 
