@@ -29,6 +29,7 @@ public enum ActionDomain: String, CaseIterable, Codable, Equatable, Identifiable
   case finder
   case meeting
   case chat
+  case mail
   case development
   case browser
 
@@ -113,6 +114,14 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case previousConversation
   case nextConversation
   case openUnreads
+  case composeEmail
+  case findInEmail
+  case searchAllEmail
+  case replyEmail
+  case replyAllEmail
+  case forwardEmail
+  case archiveEmail
+  case checkNewMail
 
   public var id: Self { self }
 
@@ -199,6 +208,14 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .previousConversation: "Previous Conversation"
     case .nextConversation: "Next Conversation"
     case .openUnreads: "Open Unreads"
+    case .composeEmail: "New Message"
+    case .findInEmail: "Find in Message"
+    case .searchAllEmail: "Search All Mail"
+    case .replyEmail: "Reply"
+    case .replyAllEmail: "Reply All"
+    case .forwardEmail: "Forward"
+    case .archiveEmail: "Archive"
+    case .checkNewMail: "Check for New Mail"
     }
   }
 }
@@ -234,6 +251,9 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
   case slack
   case discord
   case cairn
+  case appleMail
+  case gmail
+  case microsoftOutlook
 
   public var displayName: String {
     switch self {
@@ -267,6 +287,9 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
     case .slack: "Slack"
     case .discord: "Discord"
     case .cairn: "Cairn"
+    case .appleMail: "Apple Mail"
+    case .gmail: "Gmail"
+    case .microsoftOutlook: "Microsoft Outlook"
     }
   }
 }
@@ -333,7 +356,7 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
     case .browserContextUnavailable:
       "Chrome active tab could not be read"
     case .unsupportedWebPage:
-      "Active Chrome tab is not Google Meet"
+      "Active Chrome tab is not supported for this Action"
     case .unsupportedApplication(let bundleIdentifier):
       "Unsupported foreground application (\(bundleIdentifier))"
     case .disabledApplication(let target):

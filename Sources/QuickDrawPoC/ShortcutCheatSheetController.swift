@@ -260,8 +260,10 @@ final class ShortcutCheatSheetController {
     }
     guard !groups.isEmpty else { return false }
 
-    let presentationTarget: ActionTarget =
-      routedTargets.contains(.googleMeet) ? .googleMeet : foregroundTarget
+    let presentationTarget =
+      routedTargets.first {
+        ActionCatalog.application(for: $0).webApplication != nil
+      } ?? foregroundTarget
     let applicationPresentation = ApplicationMapping.current().first {
       $0.target == presentationTarget
     }

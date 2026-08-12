@@ -52,7 +52,7 @@ struct QuickDrawRootView: View {
   private var sidebar: some View {
     List(selection: $model.selectedSection) {
       Section(model.copy.actions) {
-        ForEach([QuickDrawSection.meeting, .chat]) { section in
+        ForEach([QuickDrawSection.meeting, .chat, .mail]) { section in
           Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
             .tag(section)
         }
@@ -145,7 +145,7 @@ struct QuickDrawRootView: View {
           model: model
         )
       }
-    case .finder, .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
+    case .finder, .meeting, .chat, .mail, .development, .developmentAIAgent, .developmentEditor,
       .developmentTerminal, .browser:
       let section = model.selectedSection ?? .meeting
       if let domain = section.actionDomain {
@@ -182,7 +182,7 @@ struct QuickDrawRootView: View {
           systemImage: QuickDrawSection.system.systemImage
         )
       }
-    case .finder, .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
+    case .finder, .meeting, .chat, .mail, .development, .developmentAIAgent, .developmentEditor,
       .developmentTerminal, .browser:
       if let selectedAction {
         ActionInspector(

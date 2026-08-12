@@ -39,6 +39,20 @@ final class ActionPipelineTests: XCTestCase {
     XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["⌘E"])
   }
 
+  func testGmailLiveRunQueriesTabAndDeliversRequestedAction() {
+    let fixture = makeFixture(
+      bundleIdentifier: "com.google.Chrome",
+      activeTabURL: URL(string: "https://mail.google.com/mail/u/0/#inbox")!
+    )
+
+    let report = fixture.pipeline.run(action: .searchAllEmail, mode: .live)
+
+    XCTAssertEqual(report.outcome.route?.target, .gmail)
+    XCTAssertEqual(report.browserClassification, .gmail)
+    XCTAssertEqual(fixture.activeTabProvider.queryCount, 1)
+    XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["/"])
+  }
+
   func testNonBrowserTargetDoesNotQueryActiveTab() {
     let fixture = makeFixture(bundleIdentifier: "com.microsoft.teams2")
 

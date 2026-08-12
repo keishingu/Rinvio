@@ -9,6 +9,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
   case finder
   case meeting
   case chat
+  case mail
   case development
   case developmentAIAgent
   case developmentEditor
@@ -26,6 +27,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .finder: "folder.fill"
     case .meeting: "person.2.fill"
     case .chat: "bubble.left.and.bubble.right.fill"
+    case .mail: "envelope.fill"
     case .development: "wrench.and.screwdriver.fill"
     case .developmentAIAgent: "cpu"
     case .developmentEditor: "chevron.left.forwardslash.chevron.right"
@@ -43,6 +45,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .finder: .finder
     case .meeting: .meeting
     case .chat: .chat
+    case .mail: .mail
     case .development, .developmentAIAgent, .developmentEditor, .developmentTerminal:
       .development
     case .browser: .browser
@@ -109,6 +112,9 @@ struct ApplicationMapping: Identifiable, Equatable {
       (.slack, "Slack", "bubble.left.and.bubble.right.fill"),
       (.discord, "Discord", "bubble.left.and.bubble.right.fill"),
       (.cairn, "Cairn", "mountain.2.fill"),
+      (.appleMail, "Mail", "envelope.fill"),
+      (.gmail, "Gmail", "envelope.fill"),
+      (.microsoftOutlook, "Outlook", "envelope.fill"),
     ]
 
     return presentations.map { target, compactName, systemImage in
@@ -184,6 +190,9 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case browserTools
   case conversationNavigation
   case messaging
+  case mailComposition
+  case mailSearch
+  case mailOrganization
 
   var id: Self { self }
 }
@@ -553,6 +562,46 @@ struct ActionDefinition: Identifiable, Equatable {
       action: .openUnreads,
       systemImage: "tray.full.fill",
       category: .messaging
+    ),
+    ActionDefinition(
+      action: .composeEmail,
+      systemImage: "square.and.pencil",
+      category: .mailComposition
+    ),
+    ActionDefinition(
+      action: .replyEmail,
+      systemImage: "arrowshape.turn.up.left.fill",
+      category: .mailComposition
+    ),
+    ActionDefinition(
+      action: .replyAllEmail,
+      systemImage: "arrowshape.turn.up.left.2.fill",
+      category: .mailComposition
+    ),
+    ActionDefinition(
+      action: .forwardEmail,
+      systemImage: "arrowshape.turn.up.right.fill",
+      category: .mailComposition
+    ),
+    ActionDefinition(
+      action: .findInEmail,
+      systemImage: "doc.text.magnifyingglass",
+      category: .mailSearch
+    ),
+    ActionDefinition(
+      action: .searchAllEmail,
+      systemImage: "magnifyingglass",
+      category: .mailSearch
+    ),
+    ActionDefinition(
+      action: .archiveEmail,
+      systemImage: "archivebox.fill",
+      category: .mailOrganization
+    ),
+    ActionDefinition(
+      action: .checkNewMail,
+      systemImage: "arrow.clockwise",
+      category: .mailOrganization
     ),
   ]
 }

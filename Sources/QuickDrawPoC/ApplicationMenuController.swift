@@ -19,6 +19,7 @@ final class ApplicationMenuController: NSObject {
   private let closeWindowItem = NSMenuItem()
   private let meetingItem = NSMenuItem()
   private let chatItem = NSMenuItem()
+  private let mailItem = NSMenuItem()
   private let developmentItem = NSMenuItem()
   private let browserItem = NSMenuItem()
   private let finderItem = NSMenuItem()
@@ -76,6 +77,7 @@ final class ApplicationMenuController: NSObject {
 
     configure(meetingItem, section: .meeting, key: "m")
     configure(chatItem, section: .chat, key: "c")
+    configure(mailItem, section: .mail, key: "e")
     configure(developmentItem, section: .development, key: "d")
     configure(browserItem, section: .browser, key: "b")
     configure(finderItem, section: .finder, key: "f")
@@ -90,6 +92,7 @@ final class ApplicationMenuController: NSObject {
     )
     navigateMenu.addItem(meetingItem)
     navigateMenu.addItem(chatItem)
+    navigateMenu.addItem(mailItem)
     navigateMenu.addItem(developmentItem)
     navigateMenu.addItem(browserItem)
     navigateMenu.addItem(.separator())
@@ -144,6 +147,7 @@ final class ApplicationMenuController: NSObject {
     closeWindowItem.title = copy.closeWindow
     meetingItem.title = copy.sectionTitle(.meeting)
     chatItem.title = copy.sectionTitle(.chat)
+    mailItem.title = copy.sectionTitle(.mail)
     developmentItem.title = copy.sectionTitle(.development)
     browserItem.title = copy.sectionTitle(.browser)
     finderItem.title = copy.sectionTitle(.finder)

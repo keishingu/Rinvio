@@ -918,7 +918,7 @@ QuickDraw/
 - ActionID。
 - TriggerBinding ID。一般keystreamは不可。
 - Detected Application ID / bundle ID。
-- Browser IDとclassified host (`meet.google.com` / `other`)。Full URL不可。
+- Browser IDとclassified Web Target (`meet.google.com` / `mail.google.com` / `other`)。Full URL不可。
 - Adapter、Execution Method、Permission state。
 - Result/Error category、stage duration、catalog/adapter/app version。
 
@@ -1026,7 +1026,7 @@ Telemetryはdefault none。将来opt-inする場合もAction/Application/Result/
 
 User-facing privacy statementが真であることをArchitecture Acceptanceとする。
 
-> QuickDrawは登録したShortcutだけを待ち受けます。BrowserがActiveな時はGoogle Meetか判断するため選択中TabのSiteだけを確認します。入力内容、閲覧履歴、Meeting content、Audio、Videoは記録しません。
+> QuickDrawは登録したShortcutだけを待ち受けます。BrowserがActiveな時はGoogle MeetやGmailなど対応Web Targetか判断するため選択中TabのSiteだけを確認します。入力内容、閲覧履歴、Meeting content、Audio、Videoは記録しません。
 
 ---
 

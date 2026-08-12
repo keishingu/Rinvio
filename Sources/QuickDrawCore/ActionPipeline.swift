@@ -43,12 +43,14 @@ public enum ActionExecutionMode: String, Equatable, Sendable {
 
 public enum BrowserClassification: String, Equatable, Sendable {
   case googleMeet
+  case gmail
   case other
   case unavailable
 
   public var displayName: String {
     switch self {
     case .googleMeet: "Google Meet"
+    case .gmail: "Gmail"
     case .other: "Other web page"
     case .unavailable: "Unavailable"
     }
@@ -264,10 +266,12 @@ public final class ActionPipeline {
 
   private static func classifyBrowserURL(_ url: URL?) -> BrowserClassification {
     guard let url else { return .unavailable }
-    return url.scheme?.lowercased() == "https"
-      && url.host?.lowercased() == "meet.google.com"
-      ? .googleMeet
-      : .other
+    guard url.scheme?.lowercased() == "https" else { return .other }
+    return switch url.host?.lowercased() {
+    case "meet.google.com": .googleMeet
+    case "mail.google.com": .gmail
+    default: .other
+    }
   }
 
   private func report(

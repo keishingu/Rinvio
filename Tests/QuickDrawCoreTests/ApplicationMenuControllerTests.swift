@@ -12,6 +12,7 @@ final class ApplicationMenuControllerTests: XCTestCase {
     let expected: [(String, NSEvent.ModifierFlags)] = [
       ("m", [.option]),
       ("c", [.option]),
+      ("e", [.option]),
       ("d", [.option]),
       ("b", [.option]),
       ("f", [.option]),
@@ -90,7 +91,7 @@ final class ApplicationMenuControllerTests: XCTestCase {
     controller.onSelectSection = { sections.append($0) }
 
     let items = controller.mainMenu.items.flatMap { $0.submenu?.items ?? [] }
-    for key in ["m", "c", "d", "b", "f", "s", "a", "i"] {
+    for key in ["m", "c", "e", "d", "b", "f", "s", "a", "i"] {
       let item = try XCTUnwrap(
         items.first {
           $0.keyEquivalent == key && $0.keyEquivalentModifierMask == [.option]
@@ -101,7 +102,10 @@ final class ApplicationMenuControllerTests: XCTestCase {
 
     XCTAssertEqual(
       sections,
-      [.meeting, .chat, .development, .browser, .finder, .system, .applications, .diagnostics]
+      [
+        .meeting, .chat, .mail, .development, .browser, .finder, .system, .applications,
+        .diagnostics,
+      ]
     )
   }
 

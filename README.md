@@ -11,8 +11,8 @@
 
 ## Scope
 
-- System / Finder / Meeting / Chat / Development / Browserに分類した77のBuilt-in Action
-- Microsoft Teams / Zoom Workplace / Google Meet / Slack / Discord / Cairn / Codex / Claude / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
+- System / Finder / Meeting / Chat / Mail / Development / Browserに分類した85のBuilt-in Action
+- Microsoft Teams / Zoom Workplace / Google Meet / Slack / Discord / Cairn / Apple Mail / Gmail / Microsoft Outlook / Codex / Claude / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
 - Application TargetはForeground-only。macOS操作は純正キーボードショートカットを参照し、編集はSystem Settingsへ委譲
 - Action-first native settings window with an application mapping inspector
 - Installed applications can be included in or excluded from QuickDraw individually
@@ -46,13 +46,13 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 ## First run
 
-1. 起動時に表示されるQuickDraw Windowで、System / Finder / Meeting / Chat / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
+1. 起動時に表示されるQuickDraw Windowで、System / Finder / Meeting / Chat / Mail / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
    表示言語はSidebarの`Settings`から日本語／Englishを切り替えられる。QuickDraw全体の有効／停止はSidebar下部の状態表示右端にあるToggleで切り替える。
-2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
+2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
 3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
 4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。
-5. Google Meetを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
-6. Dry Runを無効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。
+5. Google MeetまたはGmailを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
+6. Dry Runを無効にし、対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。
 
 ## Shortcut Guide
 
@@ -62,6 +62,7 @@ QuickDraw自身がForegroundの間は、通常のApplication Shortcutで画面�
 |---|---|
 | Meeting | `⌥M` |
 | Chat | `⌥C` |
+| Mail | `⌥E` |
 | Development | `⌥D` |
 | Browser | `⌥B` |
 | Finder | `⌥F` |
@@ -101,7 +102,7 @@ Applications一覧では、Applicationごとに`QuickDrawの対象`をON/OFFで�
 
 Built-in ActionのSuggested Triggerは[ショートカット設計原則](docs/shortcut-design-principles.ja.md)に従い、Meetingとアプリ／UI操作はOption、Editor拡張ActionはControl + Option、定着したBrowser操作はCommand文化を維持します。UI領域の前後移動は各アプリの慣例に合わせて`⇧F6` / `F6`を使います。TriggerはForeground Applicationのカテゴリ内で解決し、そのActionのMappingがある場合だけQuickDrawがキーを消費します。別カテゴリ、対象外、またはMapping未対応なら元のキーイベントをそのままアプリ／macOSへ渡します。
 
-Applicationの所属カテゴリが交差しないAction同士は、同じTriggerを再利用できます。一方、TeamsのようにMeetingとChatの両方へ所属するApplicationがあるカテゴリ間では、判定が曖昧になるため重複Triggerを設定できません。Google MeetではActive Tabを判定できるため、MeetタブならMeeting Action、それ以外のChromeタブならBrowser Actionを優先します。
+Applicationの所属カテゴリが交差しないAction同士は、同じTriggerを再利用できます。一方、TeamsのようにMeetingとChatの両方へ所属するApplicationがあるカテゴリ間では、判定が曖昧になるため重複Triggerを設定できません。Google MeetとGmailではActive Tabを判定し、`meet.google.com`ではMeeting Action、`mail.google.com`ではMail Action、それ以外のChromeタブではBrowser Actionだけを配送します。
 
 macOS標準またはSystem Settingsで有効なショートカットと競合する場合、Action Inspectorに警告を表示します。これは使用禁止ではなく、対応アプリではQuickDrawが優先されることを示します。System Settingsの検出は非公開のPreference表現を読むbest-effort方式であり、既知の標準ショートカットカタログと組み合わせています。
 
@@ -165,6 +166,21 @@ macOS推奨では`Command + Shift + 矢印`をWorkspace全体という範囲大�
 | Next Conversation | `⌘⌥Page Down` | `⌥↓` | — | `⌥↓` | `⌥↓` |
 | Open Unreads | `⌘⌥U` | `⌘⇧A` | — | — | — |
 
+### Mail
+
+| Action | Trigger | Apple Mail | Gmail | Microsoft Outlook |
+|---|---|---|---|---|
+| New Message | `⌘N` | `⌘N` | `C` | `⌘N` |
+| Find in Message | `⌘F` | `⌘F` | `⌘F` | `⌘F` |
+| Search All Mail | `⇧⌘F` | `⌘⌥F` | `/` | `⇧⌘F` |
+| Reply | `⌥R` | `⌘R` | `R` | `⌘R` |
+| Reply All | `⇧⌥R` | `⇧⌘R` | `A` | `⇧⌘R` |
+| Forward | `⌥F` | `⇧⌘F` | `F` | `⌘J` |
+| Archive | `⌥A` | `⌃⌘A` | `E` | `⌃E` |
+| Check for New Mail | `⌥G` | `⇧⌘N` | `⌘R` | `⌃⌘K` |
+
+GmailはChromeのForeground Tabが`mail.google.com`の時だけ対象です。`C / R / A / F / E`を使うにはGmailの設定でキーボードショートカットをONにしてください。設定がOFFの場合、QuickDrawはキーを配送しますがGmail側でActionが実行されません。新着確認はGmail専用Shortcutがないため、ページの再読み込み`⌘R`へ変換します。Gmail以外のTabではMail Triggerを消費せず、そのままChromeへ渡します。
+
 ### Development
 
 JetBrains列はIntelliJ IDEA / WebStorm / RubyMine / PyCharm / GoLand / CLion / Rider / Android StudioのmacOS既定キーマップを共有します。各製品はApplication設定では個別に表示・Overrideできます。
@@ -216,7 +232,7 @@ JetBrains列はIntelliJ IDEA / WebStorm / RubyMine / PyCharm / GoLand / CLion / 
 | Open Downloads | `⌥D` | `⌘⌥L` | `⌘⇧J` |
 | Open Developer Tools | `⌘⌥I` | `⌘⌥I` | `⌘⌥I` |
 
-`—`はそのApplicationのショートカットが確認できていない状態です。実行時はキーを送らず、そのTriggerを消費せずにApplicationへ渡します。このため、たとえばJetBrains系IDEで`F6`を押すと、QuickDrawではなくIDE本来のMove Refactoringが実行されます。Codexの相対的なUI領域移動も、安定したネイティブShortcutを確認できるまでは未対応です。既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)、[Slack](https://slack.com/help/articles/201374536-Slack-keyboard-shortcuts-and-commands)、[Discord](https://support.discord.com/hc/en-us/articles/31232432266647-Discord-Commands-Shortcuts-and-Navigation-Guide)、[Visual Studio Code](https://code.visualstudio.com/docs/reference/default-keybindings)、[Xcode shortcuts](https://developer.apple.com/library/archive/documentation/IDEs/Conceptual/xcode_help-command_shortcuts/MenuCommands/MenuCommands014.html)、[JetBrains macOS Keymap](https://www.jetbrains.com/help/idea/reference-keymap-mac-default.html)、[Ghostty](https://ghostty.org/docs/config/keybind)、[Terminal](https://support.apple.com/guide/terminal/keyboard-shortcuts-trmlshtcts/mac)、[iTerm2](https://iterm2.com/documentation/2.1/documentation-highlights.html)、[Safari](https://support.apple.com/guide/safari/keyboard-and-other-shortcuts-cpsh003/mac)、[Google Chrome](https://support.google.com/chrome/answer/157179)の資料、CairnのCommand Catalog、インストール済みCodex / Xcode / GhosttyのCommand定義に基づきます。Application側でショートカットを変更した場合や独自に割り当てた場合は、QuickDrawのAction Inspectorから同じ値へOverrideできます。
+`—`はそのApplicationのショートカットが確認できていない状態です。実行時はキーを送らず、そのTriggerを消費せずにApplicationへ渡します。このため、たとえばJetBrains系IDEで`F6`を押すと、QuickDrawではなくIDE本来のMove Refactoringが実行されます。Codexの相対的なUI領域移動も、安定したネイティブShortcutを確認できるまでは未対応です。既定値は[Microsoft Teams](https://support.microsoft.com/en-US/Accessibility/teams/keyboard-shortcuts-for-microsoft-teams)、[Zoom Workplace](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0067050)、[Google Meet](https://support.google.com/meet/answer/9298571)、[Slack](https://slack.com/help/articles/201374536-Slack-keyboard-shortcuts-and-commands)、[Discord](https://support.discord.com/hc/en-us/articles/31232432266647-Discord-Commands-Shortcuts-and-Navigation-Guide)、[Apple Mail](https://support.apple.com/guide/mail/keyboard-shortcuts-mlhlb94f262b/mac)、[Gmail](https://support.google.com/mail/answer/6594)、[Microsoft Outlook](https://support.microsoft.com/en-us/office/keyboard-shortcuts-for-outlook-3cdeb221-7ae5-4c1d-8c1d-9e63216c1efd)、[Visual Studio Code](https://code.visualstudio.com/docs/reference/default-keybindings)、[Xcode shortcuts](https://developer.apple.com/library/archive/documentation/IDEs/Conceptual/xcode_help-command_shortcuts/MenuCommands/MenuCommands014.html)、[JetBrains macOS Keymap](https://www.jetbrains.com/help/idea/reference-keymap-mac-default.html)、[Ghostty](https://ghostty.org/docs/config/keybind)、[Terminal](https://support.apple.com/guide/terminal/keyboard-shortcuts-trmlshtcts/mac)、[iTerm2](https://iterm2.com/documentation/2.1/documentation-highlights.html)、[Safari](https://support.apple.com/guide/safari/keyboard-and-other-shortcuts-cpsh003/mac)、[Google Chrome](https://support.google.com/chrome/answer/157179)の資料、CairnのCommand Catalog、インストール済みCodex / Xcode / GhosttyのCommand定義に基づきます。Application側でショートカットを変更した場合や独自に割り当てた場合は、QuickDrawのAction Inspectorから同じ値へOverrideできます。
 
 SafariのDeveloper Toolsは、Safari設定の「Webデベロッパ用の機能を表示」が有効な場合に利用できます。VS CodeのKeyboard Shortcutsは既定値が2段階のChord (`⌘K` → `⌘S`) のため、単一Shortcutのみを配送する現在のCatalogでは未対応です。Application側で単一Shortcutを割り当てればQuickDrawからOverrideできます。
 
@@ -229,10 +245,13 @@ SafariのDeveloper Toolsは、Safari設定の「Webデベロッパ用の機能�
 | Teams | Teams meeting window | Mute / Camera / Raise Hand |  |  |  |
 | Zoom | Zoom meeting window | Mute / Camera / Raise Hand |  |  |  |
 | Meet | Chrome active tab host = `meet.google.com` | Mute / Camera / Raise Hand |  |  |  |
+| Apple Mail | Mail foreground | New / Find / Search / Reply / Reply All / Forward / Archive / Check |  |  |  |
+| Gmail | Chrome active tab host = `mail.google.com` | New / Find / Search / Reply / Reply All / Forward / Archive / Check |  |  |  |
+| Outlook | Outlook foreground | New / Find / Search / Reply / Reply All / Forward / Archive / Check |  |  |  |
 
 追加のfailure checks:
 
-- Chromeの非Meet Tabでは配送されない。
+- Chromeの非Meet／非Gmail Tabでは、それぞれのWeb Application Actionが配送されない。
 - TextEdit等の非対応Appでは配送されない。
 - Accessibility拒否時はMenu Barに理由が表示される。
 - Chrome Automation拒否時はMeetだけ失敗し、Teams/Zoomには影響しない。

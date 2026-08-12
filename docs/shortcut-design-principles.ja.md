@@ -120,7 +120,26 @@ Browserは既存のCommand文化を尊重して個別判断する。
 
 `⌘R`、`⌘W`、`⌘Q`、`⌘T`のように意味が定着しているものは、QuickDrawの原則より既存文化を優先する。
 
-## 6. OS操作
+## 6. Mail
+
+メールの新規作成と検索は多くのmacOS Applicationで定着したCommand文化を維持する。`Shift`は検索範囲を広げる意味として扱い、返信・整理などメール固有のActionはOption領域へ置く。
+
+| Action | Suggested Trigger | 意味 |
+|---|---|---|
+| New Message | `⌘N` | Application共通の新規作成 |
+| Find in Message | `⌘F` | 現在のメール内検索 |
+| Search All Mail | `⇧⌘F` | 全メール／広域検索 |
+| Reply | `⌥R` | メール固有の返信 |
+| Reply All | `⇧⌥R` | Replyの範囲大 |
+| Forward | `⌥F` | メール固有の転送 |
+| Archive | `⌥A` | メール固有の整理 |
+| Check for New Mail | `⌥G` | Get Mail。メール固有の受信確認 |
+
+Apple MailとMicrosoft OutlookはForeground Applicationへ公式Shortcutを配送するLevel 1とする。GmailはChromeのActive Tabが`mail.google.com`の場合だけ公式Shortcutへ配送するLevel 2とし、それ以外のTabではTriggerを消費しない。Gmailの文字キーShortcutは、Gmail側のキーボードショートカット設定がONであることを前提とする。
+
+新着確認のApplication MappingはApple Mailの`⇧⌘N`、Microsoft Outlookの`⌃⌘K`を使う。Gmail Webには受信確認専用の公式Shortcutがないため、ページ再読み込みの`⌘R`を配送する。`⌘R`は各メールクライアントで返信操作として定着しているためSuggested Triggerにはせず、QuickDrawのOption領域にある`⌥G`からのみ変換する。
+
+## 7. OS操作
 
 QuickDrawのSystem対象は、アプリ内部の一般的なメニュー操作ではなく、macOSが提供するワークスペース／ウインドウ操作である。Phase 1ではすべてLevel 0として扱い、QuickDrawは現在値と推奨値を表示して純正設定への導線だけを提供する。キーイベントの登録、消費、再配送やPreferenceへの書き込みはしない。
 
@@ -134,6 +153,7 @@ QuickDraw自身の画面操作は外部Applicationへ配送するActionではな
 |---|---|
 | Meeting | `⌥M` |
 | Chat | `⌥C` |
+| Mail | `⌥E` |
 | Development | `⌥D` |
 | Browser | `⌥B` |
 | Finder | `⌥F` |
@@ -166,7 +186,7 @@ AXでApplicationの設定画面を操作し、Shortcutなどの永続設定自�
 
 Level 3とLevel 4の分離は未確定である。重要な論点は「Actionをその場で実行する一時的なAX操作」と「別Applicationへ永続的な設定変更を残すAX操作」のリスク差だが、独立LevelにするかLevel 3のsubtypeにするかは今後再検討する。Level 4を前提とした実装や抽象化は行わない。
 
-現在の対応関係は、macOSがLevel 0、Finderと一般のネイティブApplicationがLevel 1、Google MeetがLevel 2である。将来Action Catalogへ`executionLevel`または`deliveryMethod`として表示できる整理だが、必要になるまでは永続化形式やCatalog schemaへ追加しない。
+現在の対応関係は、macOSがLevel 0、Finderと一般のネイティブApplicationがLevel 1、Google MeetとGmailがLevel 2である。将来Action Catalogへ`executionLevel`または`deliveryMethod`として表示できる整理だが、必要になるまでは永続化形式やCatalog schemaへ追加しない。
 
 ### System Actionの対象
 
@@ -259,7 +279,7 @@ Workspace全体へ作用する操作は、Shiftの「範囲大」を使って`Sh
 
 QuickDrawはこれらを実行しないため、Level 0の推奨値とQuickDrawのアプリ用Triggerは重複設定を禁止しない。実際の競合と優先順位はmacOS純正設定側で決まる。`⌃⌘N`はFinderの「選択項目から新規フォルダ」やTerminalの「同じコマンドで新規ウインドウ」、`⌃⌘D`は選択単語の「調べる」を置き換える可能性がある。最大化／復元のトグル、次のディスプレイ、Desktop 6以降は今回追加しない。
 
-## 7. Finder
+## 8. Finder
 
 Finderは「OS機能」ではなくネイティブアプリとして扱う。QuickDrawが新しく共通化するFinder ActionはOption領域に置く。
 
@@ -279,7 +299,7 @@ Finderは「OS機能」ではなくネイティブアプリとして扱う。Qui
 
 Quick Lookの`Space`のように強く定着した操作は、無理にOptionへ変更しない。「Finderだから全部Option」ではなく、「QuickDrawで新しく共通化するFinder ActionはOption」が正確な境界である。
 
-## 8. System設定とApplication Enablementで表現する
+## 9. System設定とApplication Enablementで表現する
 
 Finderは既存のApplication Enablementへ追加する。macOS操作はQuickDraw Targetとして有効化せず、純正のSystem Settingsで管理する。
 
@@ -310,7 +330,7 @@ System Settings
 
 ### デフォルトと互換性
 
-- Meeting、Chat、Development、Browserは従来どおり対象とする。
+- Meeting、Chat、Mail、Development、Browserは通常のForeground Application Targetとして扱う。
 - FinderはOFFをデフォルトにし、アップデート時も自動でONにしない。
 - macOS ActionのTriggerはQuickDrawへ登録しない。過去に保存されたmacOS有効状態があっても無視する。
 - macOSの純正Shortcutは読み取り専用のbest-effort検出とし、QuickDrawからPreferenceを書き換えない。
@@ -357,7 +377,7 @@ macOS Action
 
 Finderの適用状態はApplication設定で保存・解除する。macOSの現在値は`com.apple.symbolichotkeys`からbest-effortで参照し、編集はSystem Settingsへ委譲する。
 
-## 9. 実装前に検証すること
+## 10. 実装前に検証すること
 
 - Option + 英字が各キーボード配列の特殊文字入力と競合する影響。
 - macOSのSymbolic Hotkey IDが各対応OSで読み取れるか。
@@ -366,7 +386,7 @@ Finderの適用状態はApplication設定で保存・解除する。macOSの現�
 - Level 0から先へ進める場合に、Stage Manager、特定デスクトップ、次のディスプレイへの移動に安定した実行経路があるか。
 - Target-aware TriggerをAction、Target、Adapterのどの層に保持するか。
 
-## 10. 参考資料
+## 11. 参考資料
 
 - [Apple: Mac keyboard shortcuts](https://support.apple.com/en-us/102650)
 - [Apple: Work in multiple spaces on Mac](https://support.apple.com/guide/mac-help/work-in-multiple-spaces-mh14112/mac)
