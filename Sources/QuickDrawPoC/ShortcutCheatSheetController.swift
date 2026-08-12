@@ -39,7 +39,7 @@ final class ShortcutCheatSheetController {
   private let panel: NSPanel
 
   private var currentModifiers = Set<ModifierKey>()
-  private var isAwaitingModifierRelease = false
+  private(set) var isAwaitingModifierRelease = false
   private var presentedModifiers: Set<ModifierKey>?
   private var pendingModifiers: Set<ModifierKey>?
   private var pendingPresentation: DispatchWorkItem?
@@ -164,6 +164,10 @@ final class ShortcutCheatSheetController {
   func handleShortcutExecution() {
     isAwaitingModifierRelease = !currentModifiers.isEmpty
     reset()
+  }
+
+  func handleNonModifierKeyPress() {
+    handleShortcutExecution()
   }
 
   func reset() {

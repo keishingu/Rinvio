@@ -31,17 +31,20 @@ final class GlobalHotKeyRegistrar {
   private var runLoopSource: CFRunLoopSource?
   private var handler: (([Action]) -> Bool)?
   private var modifierHandler: ((Set<ModifierKey>) -> Void)?
+  private var nonModifierKeyHandler: (() -> Void)?
   private var actionsByShortcut: [ShortcutIdentity: [Action]] = [:]
   private var consumedKeyCodes: Set<UInt16> = []
 
   func register(
     bindings: [Action: KeyStroke],
     handler: @escaping ([Action]) -> Bool,
-    modifierHandler: @escaping (Set<ModifierKey>) -> Void
+    modifierHandler: @escaping (Set<ModifierKey>) -> Void,
+    nonModifierKeyHandler: @escaping () -> Void
   ) throws {
     unregister()
     self.handler = handler
     self.modifierHandler = modifierHandler
+    self.nonModifierKeyHandler = nonModifierKeyHandler
     let actionOrder = Dictionary(
       uniqueKeysWithValues: Action.allCases.enumerated().map { ($0.element, $0.offset) }
     )
@@ -106,6 +109,7 @@ final class GlobalHotKeyRegistrar {
     handler = nil
     modifierHandler?([])
     modifierHandler = nil
+    nonModifierKeyHandler = nil
     actionsByShortcut = [:]
     consumedKeyCodes = []
   }
@@ -140,6 +144,8 @@ final class GlobalHotKeyRegistrar {
     guard eventType == .keyDown else {
       return Unmanaged.passUnretained(event)
     }
+
+    nonModifierKeyHandler?()
 
     let shortcut = ShortcutIdentity(
       KeyStroke(

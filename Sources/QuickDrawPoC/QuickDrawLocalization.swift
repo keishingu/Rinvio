@@ -123,10 +123,16 @@ struct QuickDrawCopy {
     )
   }
   var holdToKeepGuideVisible: String {
-    text("修飾キーを離すと閉じます", "Release the modifier keys to close")
+    text(
+      "修飾キーを離すか、通常キーを押すと閉じます",
+      "Release the modifier keys or press another key to close"
+    )
   }
   func releaseModifiersToClose(_ modifiers: String) -> String {
-    text("\(modifiers)を離すと閉じます", "Release \(modifiers) to close")
+    text(
+      "\(modifiers)を離すか、通常キーを押すと閉じます",
+      "Release \(modifiers) or press another key to close"
+    )
   }
   var applicationsSubtitle: String {
     text(

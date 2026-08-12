@@ -246,6 +246,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
           DispatchQueue.main.async {
             cheatSheetController?.handleModifierChange(modifiers)
           }
+        },
+        nonModifierKeyHandler: { [weak cheatSheetController] in
+          cheatSheetController?.handleNonModifierKeyPress()
         }
       )
       controller.areHotKeysRegistered = true
