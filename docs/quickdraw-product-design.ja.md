@@ -6,7 +6,7 @@
 - UI参考: 添付の Haken 案を QuickDraw として解釈
 
 > [!NOTE]
-> 本文中の`⌘⌥`中心のTrigger例は、現在のPoCと初期設計を説明する。将来のSuggested Triggerの配置原則、Meeting / Development / Browserの再整理、macOS / Finderのopt-in設計は [ショートカット設計原則とSystem / Finder opt-in設計](shortcut-design-principles.ja.md) を正本とする。現行カタログはまだ変更していない。
+> 本文中の`⌘⌥`中心のTrigger例は、初期PoCを説明する履歴的な例である。現在のSuggested Trigger、Meeting / Development / Browserの再整理、macOS純正設定への委譲、Finderのopt-in設計は [ショートカット設計原則とSystem / Finder opt-in設計](shortcut-design-principles.ja.md) を正本とする。
 
 ## 先に結論
 

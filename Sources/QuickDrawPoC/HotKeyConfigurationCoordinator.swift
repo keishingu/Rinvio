@@ -61,7 +61,9 @@ final class HotKeyConfigurationCoordinator {
     }
 
     var nextBindings = currentBindings()
-    nextBindings[action] = shortcut
+    if !ActionCatalog.isSystemWide(action) {
+      nextBindings[action] = shortcut
+    }
     guard let handler, let modifierHandler else {
       return "Global shortcut handler is unavailable"
     }
@@ -90,7 +92,9 @@ final class HotKeyConfigurationCoordinator {
       return "Global shortcut handler is unavailable"
     }
     var nextBindings = currentBindings()
-    nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
+    if !ActionCatalog.isSystemWide(action) {
+      nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
+    }
     do {
       try registrar.register(
         bindings: nextBindings,
@@ -191,7 +195,9 @@ final class HotKeyConfigurationCoordinator {
       return "Global shortcut handler is unavailable"
     }
     var nextBindings = currentBindings()
-    nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
+    if !ActionCatalog.isSystemWide(action) {
+      nextBindings[action] = ActionCatalog.defaultTrigger(for: action)
+    }
     do {
       try registrar.register(
         bindings: nextBindings,
@@ -209,7 +215,8 @@ final class HotKeyConfigurationCoordinator {
   private func currentBindings() -> [Action: KeyStroke] {
     Dictionary(
       uniqueKeysWithValues: Action.allCases.compactMap { action in
-        store.trigger(for: action).map { (action, $0) }
+        if ActionCatalog.isSystemWide(action) { return nil }
+        return store.trigger(for: action).map { (action, $0) }
       }
     )
   }

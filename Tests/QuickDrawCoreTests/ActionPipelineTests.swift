@@ -172,6 +172,80 @@ final class ActionPipelineTests: XCTestCase {
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
   }
 
+  func testFinderEnabledRoutesOnlyWhileFinderIsForeground() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    try store.setApplicationEnabled(true, for: .finder)
+    let router = ActionRouter(
+      overrideProvider: store,
+      applicationEnablementProvider: store
+    )
+    let finder = makeFixture(bundleIdentifier: "com.apple.finder", router: router)
+    let otherApplication = makeFixture(bundleIdentifier: "com.apple.TextEdit", router: router)
+
+    for action in [
+      Action.finderParentFolder, .finderOpenSelectedItem, .finderHome, .finderDesktop,
+      .finderDownloads,
+    ] {
+      let finderReport = finder.pipeline.run(action: action, mode: .live)
+      XCTAssertEqual(finderReport.outcome.route?.target, .finder)
+    }
+    let otherReport = otherApplication.pipeline.run(action: .finderParentFolder, mode: .live)
+
+    XCTAssertEqual(
+      finder.deliverer.shortcuts.map(\.displayValue),
+      ["⌘↑", "⌘↓", "⇧⌘H", "⇧⌘D", "⌘⌥L"]
+    )
+    XCTAssertFalse(otherReport.outcome.consumesTrigger)
+    XCTAssertTrue(otherApplication.deliverer.shortcuts.isEmpty)
+  }
+
+  func testFinderDisabledPassesThroughEvenWhileFinderIsForeground() {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let router = ActionRouter(
+      overrideProvider: store,
+      applicationEnablementProvider: store
+    )
+    let fixture = makeFixture(bundleIdentifier: "com.apple.finder", router: router)
+
+    let report = fixture.pipeline.run(action: .finderOpenSelectedItem, mode: .live)
+
+    XCTAssertEqual(report.outcome, .failed(.routing(.disabledApplication(target: .finder))))
+    XCTAssertFalse(report.outcome.consumesTrigger)
+    XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
+  }
+
+  func testMacOSDisabledPassesCommandArrowThrough() {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let router = ActionRouter(
+      overrideProvider: store,
+      applicationEnablementProvider: store
+    )
+    let fixture = makeFixture(bundleIdentifier: "com.apple.TextEdit", router: router)
+
+    let report = fixture.pipeline.run(action: .missionControl, mode: .live)
+
+    XCTAssertEqual(report.outcome, .failed(.routing(.disabledApplication(target: .macOS))))
+    XCTAssertFalse(report.outcome.consumesTrigger)
+    XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
+  }
+
+  func testMacOSRemainsPassThroughWhenEnablementIsRequested() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    try store.setApplicationEnabled(true, for: .macOS)
+    let router = ActionRouter(
+      overrideProvider: store,
+      applicationEnablementProvider: store
+    )
+    let fixture = makeFixture(bundleIdentifier: "com.apple.TextEdit", router: router)
+
+    for action in Action.allCases where ActionCatalog.isSystemWide(action) {
+      let report = fixture.pipeline.run(action: action, mode: .live)
+      XCTAssertEqual(report.outcome, .failed(.routing(.disabledApplication(target: .macOS))))
+      XCTAssertFalse(report.outcome.consumesTrigger)
+    }
+    XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
+  }
+
   func testActionFromInactiveDomainPassesTriggerThrough() {
     let fixture = makeFixture(bundleIdentifier: "com.tinyspeck.slackmacgap")
 

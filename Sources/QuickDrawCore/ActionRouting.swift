@@ -5,6 +5,7 @@ public enum ModifierKey: String, Codable, Hashable, Sendable {
   case shift
   case control
   case option
+  case function
 }
 
 public struct KeyStroke: Codable, Equatable, Hashable, Sendable {
@@ -24,6 +25,8 @@ public struct KeyStroke: Codable, Equatable, Hashable, Sendable {
 }
 
 public enum ActionDomain: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
+  case system
+  case finder
   case meeting
   case chat
   case development
@@ -33,6 +36,27 @@ public enum ActionDomain: String, CaseIterable, Codable, Equatable, Identifiable
 }
 
 public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
+  case missionControl
+  case applicationExpose
+  case previousDesktop
+  case nextDesktop
+  case showDesktop
+  case showNotificationCenter
+  case toggleDoNotDisturb
+  case toggleStageManager
+  case fillWindow
+  case tileWindowLeft
+  case tileWindowRight
+  case switchDesktop1
+  case switchDesktop2
+  case switchDesktop3
+  case switchDesktop4
+  case switchDesktop5
+  case finderParentFolder
+  case finderOpenSelectedItem
+  case finderHome
+  case finderDesktop
+  case finderDownloads
   case mute
   case camera
   case raiseHand
@@ -98,6 +122,27 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
 
   public var displayName: String {
     switch self {
+    case .missionControl: "Mission Control"
+    case .applicationExpose: "Application Exposé"
+    case .previousDesktop: "Previous Desktop"
+    case .nextDesktop: "Next Desktop"
+    case .showDesktop: "Show Desktop"
+    case .showNotificationCenter: "Show Notification Center"
+    case .toggleDoNotDisturb: "Toggle Do Not Disturb"
+    case .toggleStageManager: "Toggle Stage Manager"
+    case .fillWindow: "Fill Window"
+    case .tileWindowLeft: "Tile Window Left"
+    case .tileWindowRight: "Tile Window Right"
+    case .switchDesktop1: "Switch to Desktop 1"
+    case .switchDesktop2: "Switch to Desktop 2"
+    case .switchDesktop3: "Switch to Desktop 3"
+    case .switchDesktop4: "Switch to Desktop 4"
+    case .switchDesktop5: "Switch to Desktop 5"
+    case .finderParentFolder: "Parent Folder"
+    case .finderOpenSelectedItem: "Open Selected Item"
+    case .finderHome: "Home"
+    case .finderDesktop: "Desktop"
+    case .finderDownloads: "Downloads"
     case .mute: "Mute"
     case .camera: "Camera"
     case .raiseHand: "Raise Hand"
@@ -159,6 +204,8 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
 }
 
 public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
+  case macOS
+  case finder
   case microsoftTeams
   case zoomWorkplace
   case googleMeet
@@ -190,6 +237,8 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
 
   public var displayName: String {
     switch self {
+    case .macOS: "macOS"
+    case .finder: "Finder"
     case .microsoftTeams: "Microsoft Teams"
     case .zoomWorkplace: "Zoom Workplace"
     case .googleMeet: "Google Meet"
@@ -313,6 +362,10 @@ public struct ActionRouter {
     action: Action,
     context: ForegroundContext
   ) -> Result<ActionRoute, ActionRoutingFailure> {
+    if ActionCatalog.isSystemWide(action) {
+      return .failure(.disabledApplication(target: .macOS))
+    }
+
     guard let bundleIdentifier = context.bundleIdentifier else {
       return .failure(.missingBundleIdentifier)
     }
@@ -357,4 +410,5 @@ public struct ActionRouter {
     overrideProvider.shortcutOverride(for: action, target: target)
       ?? ActionCatalog.defaultShortcut(for: action, target: target)
   }
+
 }

@@ -6,11 +6,13 @@ final class BuiltInCatalogTests: XCTestCase {
   func testBundledCatalogDefinesEveryActionAndApplication() throws {
     for action in Action.allCases {
       XCTAssertNotNil(ActionCatalog.defaultTrigger(for: action))
-      XCTAssertTrue(
-        ActionTarget.allCases.contains {
-          ActionCatalog.defaultShortcut(for: action, target: $0) != nil
-        }
-      )
+      if !ActionCatalog.isSystemWide(action) {
+        XCTAssertTrue(
+          ActionTarget.allCases.contains {
+            ActionCatalog.defaultShortcut(for: action, target: $0) != nil
+          }
+        )
+      }
     }
 
     for target in ActionTarget.allCases {
@@ -19,6 +21,7 @@ final class BuiltInCatalogTests: XCTestCase {
   }
 
   func testApplicationIdentityComesFromCatalog() {
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.finder"), .finder)
     XCTAssertEqual(
       ActionCatalog.target(forBundleIdentifier: "com.microsoft.teams2"),
       .microsoftTeams
@@ -75,6 +78,46 @@ final class BuiltInCatalogTests: XCTestCase {
     XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.oss-cairn.desktop.dev"), .cairn)
     XCTAssertNil(ActionCatalog.target(forBundleIdentifier: "jp.naver.line.mac"))
     XCTAssertNil(ActionCatalog.target(forBundleIdentifier: "com.apple.TextEdit"))
+  }
+
+  func testSystemActionsAreNativeSettingsAndFinderMappingsRemainOptIn() {
+    XCTAssertTrue(ActionCatalog.isSystemWide(.missionControl))
+    XCTAssertTrue(ActionCatalog.isSystemWide(.nextDesktop))
+    XCTAssertFalse(ActionCatalog.isSystemWide(.finderParentFolder))
+    XCTAssertEqual(ActionCatalog.application(for: .macOS).bundleIdentifiers, [])
+    for action in Action.allCases where ActionCatalog.isSystemWide(action) {
+      XCTAssertNil(ActionCatalog.defaultShortcut(for: action, target: .macOS))
+    }
+    let expectedSystemTriggers: [Action: String] = [
+      .missionControl: "⇧⌘↑",
+      .applicationExpose: "⇧⌘↓",
+      .previousDesktop: "⇧⌘←",
+      .nextDesktop: "⇧⌘→",
+      .showDesktop: "F11",
+      .showNotificationCenter: "⌃⌘N",
+      .toggleDoNotDisturb: "⌃⌘D",
+      .toggleStageManager: "⌃⌘S",
+      .fillWindow: "⌃⌘↑",
+      .tileWindowLeft: "⌃⌘←",
+      .tileWindowRight: "⌃⌘→",
+      .switchDesktop1: "⌘1",
+      .switchDesktop2: "⌘2",
+      .switchDesktop3: "⌘3",
+      .switchDesktop4: "⌘4",
+      .switchDesktop5: "⌘5",
+    ]
+    for (action, trigger) in expectedSystemTriggers {
+      XCTAssertEqual(ActionCatalog.defaultTrigger(for: action)?.displayValue, trigger)
+    }
+    XCTAssertEqual(ActionCatalog.application(for: .finder).bundleIdentifiers, ["com.apple.finder"])
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .finderParentFolder, target: .finder)?.displayValue,
+      "⌘↑"
+    )
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .finderDownloads, target: .finder)?.displayValue,
+      "⌘⌥L"
+    )
   }
 
   func testEveryApplicationHasAnOfficialURL() {

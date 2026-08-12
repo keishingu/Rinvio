@@ -5,6 +5,8 @@ import Foundation
 import QuickDrawCore
 
 enum QuickDrawSection: String, CaseIterable, Identifiable {
+  case system
+  case finder
   case meeting
   case chat
   case development
@@ -20,6 +22,8 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
 
   var systemImage: String {
     switch self {
+    case .system: "macwindow.on.rectangle"
+    case .finder: "folder.fill"
     case .meeting: "person.2.fill"
     case .chat: "bubble.left.and.bubble.right.fill"
     case .development: "wrench.and.screwdriver.fill"
@@ -35,6 +39,8 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
 
   var actionDomain: ActionDomain? {
     switch self {
+    case .system: .system
+    case .finder: .finder
     case .meeting: .meeting
     case .chat: .chat
     case .development, .developmentAIAgent, .developmentEditor, .developmentTerminal:
@@ -73,6 +79,8 @@ struct ApplicationMapping: Identifiable, Equatable {
   static func current() -> [ApplicationMapping] {
     let workspace = NSWorkspace.shared
     let presentations: [(ActionTarget, compactName: String, systemImage: String)] = [
+      (.macOS, "macOS", "macwindow.on.rectangle"),
+      (.finder, "Finder", "folder.fill"),
       (.microsoftTeams, "Teams", "person.2.fill"),
       (.zoomWorkplace, "Zoom", "video.fill"),
       (.googleMeet, "Meet", "globe"),
@@ -109,7 +117,9 @@ struct ApplicationMapping: Identifiable, Equatable {
       let installationBundleIdentifiers =
         ActionCatalog.application(for: installationTarget).bundleIdentifiers
       let identity =
-        application.webApplication.map {
+        target == .macOS
+        ? "System Settings"
+        : application.webApplication.map {
           "\($0.host) in \($0.browserTarget.displayName)"
         } ?? application.bundleIdentifiers.first ?? target.rawValue
 
@@ -120,9 +130,10 @@ struct ApplicationMapping: Identifiable, Equatable {
         compactName: compactName,
         systemImage: systemImage,
         identity: identity,
-        isInstalled: installationBundleIdentifiers.contains {
-          workspace.urlForApplication(withBundleIdentifier: $0) != nil
-        },
+        isInstalled: target == .macOS || target == .finder
+          || installationBundleIdentifiers.contains {
+            workspace.urlForApplication(withBundleIdentifier: $0) != nil
+          },
         domains: application.domains,
         officialURL: application.officialURL
       )
@@ -153,6 +164,10 @@ enum DevelopmentApplicationCategory: String, CaseIterable, Identifiable {
 }
 
 enum ActionCategory: String, CaseIterable, Identifiable {
+  case workspace
+  case systemControls
+  case windowManagement
+  case finderNavigation
   case meetingControls
   case panelsAndSharing
   case reactions
@@ -181,6 +196,111 @@ struct ActionDefinition: Identifiable, Equatable {
   var id: String { action.rawValue }
   var domain: ActionDomain { action.domain }
   static let all: [ActionDefinition] = [
+    ActionDefinition(
+      action: .missionControl,
+      systemImage: "rectangle.3.group",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .applicationExpose,
+      systemImage: "rectangle.stack",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .previousDesktop,
+      systemImage: "arrow.left",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .nextDesktop,
+      systemImage: "arrow.right",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .showDesktop,
+      systemImage: "desktopcomputer",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop1,
+      systemImage: "1.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop2,
+      systemImage: "2.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop3,
+      systemImage: "3.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop4,
+      systemImage: "4.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .switchDesktop5,
+      systemImage: "5.square.fill",
+      category: .workspace
+    ),
+    ActionDefinition(
+      action: .showNotificationCenter,
+      systemImage: "bell.fill",
+      category: .systemControls
+    ),
+    ActionDefinition(
+      action: .toggleDoNotDisturb,
+      systemImage: "moon.fill",
+      category: .systemControls
+    ),
+    ActionDefinition(
+      action: .toggleStageManager,
+      systemImage: "uiwindow.split.2x1",
+      category: .systemControls
+    ),
+    ActionDefinition(
+      action: .fillWindow,
+      systemImage: "arrow.up.left.and.arrow.down.right",
+      category: .windowManagement
+    ),
+    ActionDefinition(
+      action: .tileWindowLeft,
+      systemImage: "rectangle.lefthalf.filled",
+      category: .windowManagement
+    ),
+    ActionDefinition(
+      action: .tileWindowRight,
+      systemImage: "rectangle.righthalf.filled",
+      category: .windowManagement
+    ),
+    ActionDefinition(
+      action: .finderParentFolder,
+      systemImage: "arrow.up",
+      category: .finderNavigation
+    ),
+    ActionDefinition(
+      action: .finderOpenSelectedItem,
+      systemImage: "arrow.down",
+      category: .finderNavigation
+    ),
+    ActionDefinition(
+      action: .finderHome,
+      systemImage: "house.fill",
+      category: .finderNavigation
+    ),
+    ActionDefinition(
+      action: .finderDesktop,
+      systemImage: "desktopcomputer",
+      category: .finderNavigation
+    ),
+    ActionDefinition(
+      action: .finderDownloads,
+      systemImage: "arrow.down.circle.fill",
+      category: .finderNavigation
+    ),
     ActionDefinition(action: .mute, systemImage: "mic.slash.fill", category: .meetingControls),
     ActionDefinition(action: .camera, systemImage: "video.fill", category: .meetingControls),
     ActionDefinition(
@@ -471,6 +591,7 @@ final class QuickDrawAppModel: ObservableObject {
   @Published private(set) var recordingDestination: ShortcutRecordingDestination?
   @Published private(set) var shortcutEditingError: String?
   @Published private(set) var triggerAlignmentNotice: TriggerAlignmentNotice?
+  @Published private(set) var configuredSystemShortcuts: [Action: KeyStroke] = [:]
   let actions = ActionDefinition.all
 
   private let defaults: UserDefaults
@@ -508,6 +629,7 @@ final class QuickDrawAppModel: ObservableObject {
     isCheatSheetEnabled =
       defaults.object(forKey: Self.cheatSheetEnabledKey) as? Bool ?? true
     configuration = configurationStore.configuration
+    refreshConfiguredSystemShortcuts()
   }
 
   var copy: QuickDrawCopy {
@@ -519,11 +641,16 @@ final class QuickDrawAppModel: ObservableObject {
   }
 
   var triggerSummary: String {
-    copy.assignedTriggerCount(Action.allCases.count { trigger(for: $0) != nil })
+    copy.assignedTriggerCount(
+      Action.allCases.count { !ActionCatalog.isSystemWide($0) && trigger(for: $0) != nil }
+    )
   }
 
   var registeredTriggerSummary: String {
-    Action.allCases.compactMap { trigger(for: $0)?.displayValue }.joined(separator: "／")
+    Action.allCases.compactMap {
+      if ActionCatalog.isSystemWide($0) { return nil }
+      return trigger(for: $0)?.displayValue
+    }.joined(separator: "／")
   }
 
   func setLanguage(_ language: AppLanguage) {
@@ -580,6 +707,35 @@ final class QuickDrawAppModel: ObservableObject {
     configurationStore.shortcut(for: action, target: target)
   }
 
+  func configuredSystemShortcut(for action: Action) -> KeyStroke? {
+    configuredSystemShortcuts[action]
+  }
+
+  func refreshConfiguredSystemShortcuts() {
+    configuredSystemShortcutDetector.refresh()
+    configuredSystemShortcuts = Dictionary(
+      uniqueKeysWithValues: Action.allCases.compactMap { action in
+        guard ActionCatalog.isSystemWide(action),
+          let shortcut = configuredSystemShortcutDetector.shortcut(for: action)
+        else {
+          return nil
+        }
+        return (action, shortcut)
+      }
+    )
+  }
+
+  func openSystemShortcutSettings() {
+    let urls = [
+      "x-apple.systempreferences:com.apple.Keyboard-Settings.extension?KeyboardShortcuts",
+      "x-apple.systempreferences:com.apple.Keyboard-Settings.extension",
+    ]
+    for value in urls {
+      guard let url = URL(string: value) else { continue }
+      if NSWorkspace.shared.open(url) { return }
+    }
+  }
+
   func isShortcutOverridden(for action: Action, target: ActionTarget) -> Bool {
     configurationStore.isShortcutOverridden(for: action, target: target)
   }
@@ -589,6 +745,10 @@ final class QuickDrawAppModel: ObservableObject {
   }
 
   func setApplicationEnabled(_ enabled: Bool, for target: ActionTarget) {
+    if target == .macOS {
+      openSystemShortcutSettings()
+      return
+    }
     do {
       try configurationStore.setApplicationEnabled(enabled, for: target)
       shortcutEditingError = nil
@@ -618,7 +778,10 @@ final class QuickDrawAppModel: ObservableObject {
   }
 
   func supportedActionCount(for target: ActionTarget) -> Int {
-    actions.count { shortcut(for: $0.action, target: target) != nil }
+    if target == .macOS {
+      return actions.count { ActionCatalog.isSystemWide($0.action) }
+    }
+    return actions.count { shortcut(for: $0.action, target: target) != nil }
   }
 
   func alignDevelopmentTriggers(to application: ApplicationMapping) {
@@ -709,7 +872,7 @@ final class QuickDrawAppModel: ObservableObject {
 
   func refreshEnvironment() {
     applications = ApplicationMapping.current()
-    configuredSystemShortcutDetector.refresh()
+    refreshConfiguredSystemShortcuts()
     syncConfiguration()
     refreshPermission()
   }

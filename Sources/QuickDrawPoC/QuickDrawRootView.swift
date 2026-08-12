@@ -39,6 +39,11 @@ struct QuickDrawRootView: View {
     .onChange(of: selectedSection) { _, section in
       normalizeActionSelection(for: section ?? .meeting)
     }
+    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification))
+    {
+      _ in
+      model.refreshConfiguredSystemShortcuts()
+    }
   }
 
   private var selectedAction: ActionDefinition? {
@@ -71,6 +76,11 @@ struct QuickDrawRootView: View {
           systemImage: QuickDrawSection.browser.systemImage
         )
         .tag(QuickDrawSection.browser)
+
+        ForEach([QuickDrawSection.finder, .system]) { section in
+          Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
+            .tag(section)
+        }
       }
 
       Section {
@@ -125,7 +135,19 @@ struct QuickDrawRootView: View {
   @ViewBuilder
   private var detail: some View {
     switch selectedSection ?? .meeting {
-    case .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
+    case .system:
+      if let domain = QuickDrawSection.system.actionDomain {
+        ActionsView(
+          title: model.copy.sectionTitle(.system),
+          subtitle: model.copy.actionDomainSubtitle(domain),
+          definitions: actionDefinitions(for: .system),
+          applications: [],
+          alignmentCategory: nil,
+          selection: $selectedActionID,
+          model: model
+        )
+      }
+    case .finder, .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
       .developmentTerminal, .browser:
       let section = selectedSection ?? .meeting
       if let domain = section.actionDomain {
@@ -153,7 +175,16 @@ struct QuickDrawRootView: View {
   @ViewBuilder
   private var inspector: some View {
     switch selectedSection ?? .meeting {
-    case .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
+    case .system:
+      if let selectedAction {
+        SystemActionInspector(definition: selectedAction, model: model)
+      } else {
+        ContentUnavailableView(
+          model.copy.noActionsInCategory,
+          systemImage: QuickDrawSection.system.systemImage
+        )
+      }
+    case .finder, .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
       .developmentTerminal, .browser:
       if let selectedAction {
         ActionInspector(
@@ -173,10 +204,14 @@ struct QuickDrawRootView: View {
       })
         ?? model.applications.first
       {
-        ApplicationInspector(
-          application: application,
-          model: model
-        )
+        if application.target == .macOS {
+          SystemSettingsApplicationInspector(application: application, model: model)
+        } else {
+          ApplicationInspector(
+            application: application,
+            model: model
+          )
+        }
       } else {
         ContentUnavailableView(model.copy.noApplications, systemImage: "square.grid.2x2")
       }
@@ -379,6 +414,12 @@ private struct ActionRow: View {
   let applications: [ApplicationMapping]
   @ObservedObject var model: QuickDrawAppModel
 
+  private var displayedShortcut: KeyStroke? {
+    ActionCatalog.isSystemWide(definition.action)
+      ? model.configuredSystemShortcut(for: definition.action)
+      : model.trigger(for: definition.action)
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 14) {
@@ -393,13 +434,15 @@ private struct ActionRow: View {
           HStack(spacing: 8) {
             Text(model.copy.actionName(definition.action))
               .font(.headline)
-            if let trigger = model.trigger(for: definition.action) {
+            if let trigger = displayedShortcut {
               KeyBadge(
                 text: trigger.displayValue,
                 accessibilityLabel:
                   "\(model.copy.shortcutAccessibilityPrefix) \(trigger.displayValue)"
               )
-              if !model.triggerConflicts(for: definition.action).isEmpty {
+              if !ActionCatalog.isSystemWide(definition.action)
+                && !model.triggerConflicts(for: definition.action).isEmpty
+              {
                 Image(systemName: "exclamationmark.triangle.fill")
                   .font(.caption)
                   .foregroundStyle(.orange)
@@ -411,9 +454,12 @@ private struct ActionRow: View {
                   .accessibilityLabel(model.copy.shortcutConflict)
               }
             } else {
-              Text(model.copy.unassigned)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+              Text(
+                ActionCatalog.isSystemWide(definition.action)
+                  ? model.copy.notConfigured : model.copy.unassigned
+              )
+              .font(.caption)
+              .foregroundStyle(.tertiary)
             }
           }
           Text(model.copy.actionDescription(definition.action))
@@ -477,7 +523,7 @@ private struct ApplicationsView: View {
 
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 0) {
-          ForEach(ActionDomain.allCases) { domain in
+          ForEach(ActionDomain.allCases.filter { ![.system, .finder].contains($0) }) { domain in
             domainHeader(domain)
 
             if domain == .development {
@@ -493,6 +539,13 @@ private struct ApplicationsView: View {
               }
             }
           }
+
+          domainHeader(.system)
+          ForEach([ActionTarget.finder, .macOS], id: \.rawValue) { target in
+            if let application = model.applications.first(where: { $0.target == target }) {
+              applicationRow(application, in: .system)
+            }
+          }
         }
         .padding(.horizontal, 10)
         .padding(.bottom, 12)
@@ -502,7 +555,7 @@ private struct ApplicationsView: View {
   }
 
   private func domainHeader(_ domain: ActionDomain) -> some View {
-    Text(model.copy.actionDomainName(domain))
+    Text(domain == .system ? model.copy.systemSection : model.copy.actionDomainName(domain))
       .font(.caption.weight(.semibold))
       .foregroundStyle(.secondary)
       .padding(.horizontal, 8)
@@ -525,6 +578,7 @@ private struct ApplicationsView: View {
     let rowID = "\(domain.rawValue):\(application.id)"
     let isSelected = selection == rowID
     let isEnabled = model.isApplicationEnabled(application.target)
+    let isManagedBySystemSettings = application.target == .macOS
 
     return HStack(spacing: 8) {
       Button {
@@ -553,9 +607,11 @@ private struct ApplicationsView: View {
           VStack(alignment: .trailing, spacing: 3) {
             Text(model.copy.actionCount(model.supportedActionCount(for: application.target)))
             Text(
-              application.isInstalled
-                ? (isEnabled ? model.copy.detected : model.copy.excluded)
-                : model.copy.notInstalled
+              isManagedBySystemSettings
+                ? model.copy.managedBySystemSettings
+                : application.isInstalled
+                  ? (isEnabled ? model.copy.detected : model.copy.excluded)
+                  : model.copy.notInstalled
             )
             .font(.caption)
             .foregroundStyle(isSelected ? Color.white.opacity(0.78) : Color.secondary)
@@ -569,7 +625,13 @@ private struct ApplicationsView: View {
       }
       .buttonStyle(.plain)
 
-      if application.isInstalled {
+      if isManagedBySystemSettings {
+        Button(model.copy.openSystemShortcutSettings) {
+          model.openSystemShortcutSettings()
+        }
+        .controlSize(.small)
+        .padding(.trailing, 8)
+      } else if application.isInstalled {
         Toggle(
           model.copy.quickDrawTarget,
           isOn: Binding(
@@ -584,7 +646,7 @@ private struct ApplicationsView: View {
         .padding(.trailing, 8)
       }
     }
-    .opacity(application.isInstalled && !isEnabled ? 0.65 : 1)
+    .opacity(application.isInstalled && !isEnabled && !isManagedBySystemSettings ? 0.65 : 1)
     .background(
       isSelected ? Color.accentColor : Color.clear,
       in: RoundedRectangle(cornerRadius: 8)
@@ -794,6 +856,81 @@ private struct ActionInspector: View {
   }
 }
 
+private struct SystemActionInspector: View {
+  let definition: ActionDefinition
+  @ObservedObject var model: QuickDrawAppModel
+
+  private var configuredShortcut: KeyStroke? {
+    model.configuredSystemShortcut(for: definition.action)
+  }
+
+  private var suggestedShortcut: KeyStroke? {
+    ActionCatalog.defaultTrigger(for: definition.action)
+  }
+
+  var body: some View {
+    Form {
+      Section {
+        HStack(spacing: 12) {
+          Image(systemName: definition.systemImage)
+            .font(.title)
+            .symbolRenderingMode(.hierarchical)
+            .frame(width: 46, height: 46)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+          VStack(alignment: .leading, spacing: 3) {
+            Text(model.copy.actionName(definition.action))
+              .font(.title3.weight(.semibold))
+            Text(model.copy.managedBySystemSettings)
+              .foregroundStyle(.secondary)
+          }
+        }
+      }
+
+      Section(model.copy.systemShortcutConfiguration) {
+        LabeledContent(model.copy.currentShortcut) {
+          if let configuredShortcut {
+            KeyBadge(text: configuredShortcut.displayValue)
+          } else {
+            Text(model.copy.notConfigured)
+              .foregroundStyle(.secondary)
+          }
+        }
+        LabeledContent(model.copy.suggestedShortcut) {
+          if let suggestedShortcut {
+            KeyBadge(text: suggestedShortcut.displayValue)
+          }
+        }
+
+        if let configuredShortcut, let suggestedShortcut,
+          configuredShortcut.matchesPhysicalShortcut(suggestedShortcut)
+        {
+          Label(model.copy.systemShortcutConfigured, systemImage: "checkmark.circle.fill")
+            .foregroundStyle(.green)
+        } else {
+          Label(model.copy.systemShortcutNeedsReview, systemImage: "exclamationmark.triangle.fill")
+            .foregroundStyle(.orange)
+        }
+
+        Button(model.copy.openSystemShortcutSettings) {
+          model.openSystemShortcutSettings()
+        }
+        Button(model.copy.refresh) {
+          model.refreshConfiguredSystemShortcuts()
+        }
+        Text(model.copy.systemShortcutSettingsDescription)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+        if let warning = model.copy.systemShortcutReplacementWarning(for: definition.action) {
+          Label(warning, systemImage: "exclamationmark.triangle")
+            .font(.caption)
+            .foregroundStyle(.orange)
+        }
+      }
+    }
+    .formStyle(.grouped)
+  }
+}
+
 private struct MappingRow: View {
   let application: ApplicationMapping
   let action: Action
@@ -966,6 +1103,43 @@ private struct ApplicationInspector: View {
         )
         Text(model.copy.executionDetail(for: application))
           .foregroundStyle(.secondary)
+      }
+    }
+    .formStyle(.grouped)
+  }
+}
+
+private struct SystemSettingsApplicationInspector: View {
+  let application: ApplicationMapping
+  @ObservedObject var model: QuickDrawAppModel
+
+  var body: some View {
+    Form {
+      Section {
+        HStack(spacing: 12) {
+          Image(systemName: application.systemImage)
+            .font(.title)
+            .symbolRenderingMode(.hierarchical)
+            .frame(width: 46, height: 46)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+          VStack(alignment: .leading, spacing: 3) {
+            Text(application.name)
+              .font(.title3.weight(.semibold))
+            Text(model.copy.managedBySystemSettings)
+              .foregroundStyle(.secondary)
+          }
+        }
+      }
+
+      Section(model.copy.systemShortcutConfiguration) {
+        Text(model.copy.systemShortcutSettingsDescription)
+          .foregroundStyle(.secondary)
+        Button(model.copy.openSystemShortcutSettings) {
+          model.openSystemShortcutSettings()
+        }
+        Button(model.copy.refresh) {
+          model.refreshConfiguredSystemShortcuts()
+        }
       }
     }
     .formStyle(.grouped)

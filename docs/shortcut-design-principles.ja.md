@@ -1,10 +1,10 @@
-# QuickDraw ショートカット設計原則と System / Finder opt-in 設計
+# QuickDraw ショートカット設計原則と System Settings / Finder opt-in 設計
 
-- ステータス: Proposed / 未実装
-- 更新日: 2026-08-11
-- 対象: QuickDrawが提供するSuggested Triggerと将来のSystem / Finder Adapter
+- ステータス: Phase 1 / macOS純正設定連携・Finder opt-in 実装済み
+- 更新日: 2026-08-12
+- 対象: QuickDrawが提供するSuggested Trigger、macOS純正設定連携、Finder Target
 
-> この文書は将来の設計方針であり、現在のBuilt-in Action、Default Trigger、Adapter実装を変更したものではない。実装時は移行設計と実機検証を別途行う。
+> この文書を正本として、Phase 1のSuggested Trigger、macOS純正設定の参照・編集導線、Finder opt-inを実装した。Target-aware Trigger、Browser Adapter、未確定のFinder Actionは引き続き将来設計である。
 
 ## 1. 背景
 
@@ -20,6 +20,7 @@ QuickDrawでは、Optionを「アプリ内のあらゆるメニュー操作」�
 |---|---|---|
 | `Control` | テキスト、CUI、カーソル、エディタ操作 | 行移動、コメント、Format、Rename |
 | `Command` | 定着したOS / GUI共通操作 | Copy、Reload、Close、Quit |
+| `Command + Control` | Command領域のうち範囲が小さいSystem UI／現在のウインドウ操作 | 通知センター、おやすみモード、ウインドウ配置 |
 | `Option` | QuickDrawが統一するネイティブアプリ操作 | Mute、New Session、Finder操作 |
 | `Command + Option` | Webアプリ、ネストされたアプリ／サブシステム | 将来のGoogle Meet、Web版Zoom、DevTools |
 | `Shift` | 逆方向、範囲、反転、強制版 | Previous、選択範囲、Redo、Hard Reload、Close All |
@@ -28,11 +29,12 @@ QuickDrawでは、Optionを「アプリ内のあらゆるメニュー操作」�
 
 1. Actionの意味がテキスト編集、CUI、カーソル、エディタ操作ならControl領域に置く。
 2. Copy、Reload、Close、Quitのように定着したGUI共通操作はCommand文化を尊重する。
-3. QuickDrawが複数のネイティブアプリ間で意味を統一するActionはOption領域に置く。
-4. Webアプリやアプリ内サブシステムのActionはCommand + Option領域を候補とする。
-5. Shiftは「逆方向」だけでなく、範囲、反転、Rubyの `!` に相当する強制版を表す。
-6. FinderはOSそのものではなく、ネイティブアプリとしてOption領域に置く。
-7. 既存アプリの内部メニューを網羅的に再配置しない。QuickDrawが扱わない既存ショートカットは、競合検出の予約情報として認識する。
+3. Command領域のうち、小さなSystem UIや現在のウインドウだけへ作用するActionはCommand + Control領域に置く。
+4. QuickDrawが複数のネイティブアプリ間で意味を統一するActionはOption領域に置く。
+5. Webアプリやアプリ内サブシステムのActionはCommand + Option領域を候補とする。
+6. Shiftは「逆方向」だけでなく、範囲、反転、Rubyの `!` に相当する強制版を表す。
+7. FinderはOSそのものではなく、ネイティブアプリとしてOption領域に置く。
+8. 既存アプリの内部メニューを網羅的に再配置しない。QuickDrawが扱わない既存ショートカットは、競合検出の予約情報として認識する。
 
 ## 3. Meeting
 
@@ -118,14 +120,39 @@ Browserは既存のCommand文化を尊重して個別判断する。
 
 `⌘R`、`⌘W`、`⌘Q`、`⌘T`のように意味が定着しているものは、QuickDrawの原則より既存文化を優先する。
 
-## 6. OS操作として検討する対象
+## 6. OS操作
 
-QuickDrawのSystem拡張対象は、アプリ内部の一般的なメニュー操作ではなく、macOSが提供するワークスペース／ウインドウ操作である。
+QuickDrawのSystem対象は、アプリ内部の一般的なメニュー操作ではなく、macOSが提供するワークスペース／ウインドウ操作である。Phase 1ではすべてLevel 0として扱い、QuickDrawは現在値と推奨値を表示して純正設定への導線だけを提供する。キーイベントの登録、消費、再配送やPreferenceへの書き込みはしない。
+
+### 実行Level
+
+数字が上がるほどQuickDrawの介入度と保守コストが増える。Actionは、安定して目的を達成できる最も低いLevelで実装する。
+
+| Level | 名称 | 実行方式 | 例 |
+|---|---|---|---|
+| 0 | Reference | 現在値を参照し、編集は公式設定画面へ委譲する | macOS Mission Control |
+| 1 | Shortcut Remap | QuickDrawがTriggerを受け、公式Shortcutへリマップして対象アプリへ配送する | Finder、Zoom、Teams |
+| 2 | Adapter | 対象、画面、URLなどを判定し、アプリ固有の経路で配送する | Google Meet、Browser Adapter |
+| 3 | Accessibility | 公式ShortcutがないActionをAXで直接実行する | メニュー項目、ボタン、パネル操作 |
+
+「Level 1で公式ショートカットを上書きする」ではなく、「公式ショートカットへリマップする」と表現する。Application側のShortcut設定は変更せず、QuickDrawが入力Triggerを公式Shortcutへ変換して配送するためである。同様にLevel 3は「AXでショートカットを設定する」のではなく、「AXでActionを直接実行する」と表現する。
+
+AXでApplicationの設定画面を操作し、Shortcutなどの永続設定自体を書き換える方式は、UI変更に弱く、QuickDraw終了後も意図しない設定を残し得る。現時点では次のLevel 4候補として分離し、原則採用しない。
+
+| 暫定Level | 名称 | 実行方式 |
+|---|---|---|
+| 4 | AX Persistent Configuration | AXで別ApplicationのUIを操作し、永続設定を変更する |
+
+Level 3とLevel 4の分離は未確定である。重要な論点は「Actionをその場で実行する一時的なAX操作」と「別Applicationへ永続的な設定変更を残すAX操作」のリスク差だが、独立LevelにするかLevel 3のsubtypeにするかは今後再検討する。Level 4を前提とした実装や抽象化は行わない。
+
+現在の対応関係は、macOSがLevel 0、Finderと一般のネイティブApplicationがLevel 1、Google MeetがLevel 2である。将来Action Catalogへ`executionLevel`または`deliveryMethod`として表示できる整理だが、必要になるまでは永続化形式やCatalog schemaへ追加しない。
+
+### System Actionの対象
 
 - Mission Control
 - Application Exposé
 - 前／次のデスクトップ
-- 特定デスクトップへの移動
+- 特定デスクトップへの移動（今回のUIはDesktop 1〜5）
 - ウインドウを左／右半分へ配置
 - 最大化／復元
 - 次のディスプレイへ移動
@@ -183,18 +210,33 @@ Finder側はOptionへ移す。
 | 行頭まで選択 | `⇧⌘←` | `⇧⌃A`相当 |
 | 行末まで選択 | `⇧⌘→` | `⇧⌃E`相当 |
 
-空いたCommand + 矢印をSystem操作へ割り当てる。
+Workspace全体へ作用する操作は、Shiftの「範囲大」を使って`Shift + Command + 矢印`へ割り当てる。`Command + 矢印`は既存のテキスト／アプリ操作へ返す。
 
-| OS操作 | macOS標準 | macOS Target ON |
+| OS操作 | macOS標準 | 純正設定の推奨値 |
 |---|---:|---:|
-| Mission Control | `⌃↑`または`F3` | `⌘↑` |
-| Application Exposé | `⌃↓` | `⌘↓` |
-| 前のデスクトップ | `⌃←` | `⌘←` |
-| 次のデスクトップ | `⌃→` | `⌘→` |
+| Mission Control | `⌃↑`または`F3` | `⇧⌘↑` |
+| Application Exposé | `⌃↓` | `⇧⌘↓` |
+| 前のデスクトップ | `⌃←` | `⇧⌘←` |
+| 次のデスクトップ | `⌃→` | `⇧⌘→` |
 
-これは直感的だが、macOSユーザーに定着したテキスト移動を置き換える大胆な変更である。通常のデフォルトにはせず、後述するmacOS Targetの明示的opt-inとしてのみ提供する。
+これはWorkspaceを「範囲大」として一貫して表現する一方、macOSユーザーに定着した`Shift + Command + 矢印`のテキスト範囲選択を置き換える大胆な変更である。QuickDrawはこれらのキーを横取り・再配送せず、ユーザーがmacOSの「キーボードショートカット」で明示的に設定した場合だけ有効になる。
 
-ウインドウ配置、最大化／復元、次のディスプレイ、デスクトップ表示、Stage ManagerのTriggerは、この文書では確定しない。既存標準、競合、対称性、実行経路を個別に監査してから決める。
+### 追加するLevel 0推奨値
+
+純正デフォルトを出発点にはせず、修正版の境界へActionの意味を当てはめて推奨値を決める。Workspaceの移動は既存4 Actionと同じ`Command`領域、小さなSystem UIと現在のウインドウだけへ作用する配置操作は`Command + Control`領域に置く。広く定着したデスクトップ表示の`F11`だけは既存文化を優先する。
+
+| OS操作 | 純正設定の推奨値 | 方針 |
+|---|---:|---|
+| デスクトップを表示 | `F11` | 定着した既存文化を優先 |
+| 通知センター | `⌃⌘N` | 小さなSystem UIを`Command + Control`へ配置 |
+| おやすみモード | `⌃⌘D` | 小さなSystem UIを`Command + Control`へ配置 |
+| Stage Manager | `⌃⌘S` | System UI切替を`Command + Control`へ配置 |
+| ウインドウを画面いっぱいにする | `⌃⌘↑` | 現在のウインドウという範囲小と拡張方向を合成 |
+| ウインドウを左半分に配置 | `⌃⌘←` | 現在のウインドウと配置方向を合成 |
+| ウインドウを右半分に配置 | `⌃⌘→` | 現在のウインドウと配置方向を合成 |
+| Desktop 1〜5へ直接移動 | `⌘1〜5` | Workspaceの直接移動を`Command`領域に配置 |
+
+QuickDrawはこれらを実行しないため、Level 0の推奨値とQuickDrawのアプリ用Triggerは重複設定を禁止しない。実際の競合と優先順位はmacOS純正設定側で決まる。`⌃⌘N`はFinderの「選択項目から新規フォルダ」やTerminalの「同じコマンドで新規ウインドウ」、`⌃⌘D`は選択単語の「調べる」を置き換える可能性がある。最大化／復元のトグル、次のディスプレイ、Desktop 6以降は今回追加しない。
 
 ## 7. Finder
 
@@ -216,22 +258,15 @@ Finderは「OS機能」ではなくネイティブアプリとして扱う。Qui
 
 Quick Lookの`Space`のように強く定着した操作は、無理にOptionへ変更しない。「Finderだから全部Option」ではなく、「QuickDrawで新しく共通化するFinder ActionはOption」が正確な境界である。
 
-## 8. Application Enablementで表現する
+## 8. System設定とApplication Enablementで表現する
 
-既存のApplication設定にmacOSとFinderを追加し、それぞれの有効／無効の組み合わせで適用範囲を表現する。
-
-| macOS | Finder | 状態 |
-|---:|---:|---|
-| OFF | OFF | 現在相当。アプリだけQuickDraw化 |
-| OFF | ON | Finder操作も原則準拠 |
-| ON | OFF | OS操作だけ原則準拠 |
-| ON | ON | 全体を原則準拠 |
+Finderは既存のApplication Enablementへ追加する。macOS操作はQuickDraw Targetとして有効化せず、純正のSystem Settingsで管理する。
 
 Applications画面には次のSystemセクションを追加する。
 
 ```text
 System
-  macOS          OFF
+  macOS          System Settingsで管理
   Finder         OFF
 ```
 
@@ -243,26 +278,27 @@ com.apple.finder
 QuickDrawの対象: OFF
 ```
 
-macOSはForegroundアプリを持たない擬似Targetとして扱う。
+macOSは実行Targetではなく、純正設定の参照・編集導線として扱う。
 
 ```text
 macOS
-System-wide
-QuickDrawの対象: OFF
+System Settings
+現在のShortcutを表示
+編集時はKeyboard Shortcuts > Mission Controlを開く
 ```
 
 ### デフォルトと互換性
 
 - Meeting、Chat、Development、Browserは従来どおり対象とする。
-- FinderとmacOSはOFFをデフォルトにする。
-- アップデート時も自動でONにしない。
-- ユーザーが明示的に有効化した状態だけを保存する。
+- FinderはOFFをデフォルトにし、アップデート時も自動でONにしない。
+- macOS ActionのTriggerはQuickDrawへ登録しない。過去に保存されたmacOS有効状態があっても無視する。
+- macOSの純正Shortcutは読み取り専用のbest-effort検出とし、QuickDrawからPreferenceを書き換えない。
 - 既存ユーザーのCustom Trigger、Clear済みTrigger、Applicationごとの有効状態を無断で上書きしない。
 - Phase 1のSuggested Trigger変更を実装するときは、既存設定の保持、変更一覧のpreview、Restore Suggested Triggerを含む移行仕様を別途決める。
 
 これにより、通常ユーザーの`⌘←`行頭移動などは一切変わらない。
 
-### ONにしたときの意味
+### 適用時の意味
 
 Finder ON:
 
@@ -271,19 +307,16 @@ Finder ON:
 - `⌥H/D/L`でHome／Desktop／Downloadsへ移動する。
 - Finder以外では完全に素通しする。
 
-macOS ON:
+macOS純正設定:
 
-- `⌘↑`でMission Controlを開く。
-- `⌘↓`でApplication Exposéを開く。
-- `⌘←/→`で前／次のデスクトップへ移動する。
-- Foregroundアプリに関係なくSystem操作を優先する。
-- 従来の`Command + 矢印`によるテキスト移動は使えなくなる。
-
-macOSをONにするときだけ、競合の確認画面を必須にする。
-
-> macOSをQuickDrawの対象にすると、OS操作がすべてのアプリで優先されます。`⌘↑/↓/←/→`など、現在テキスト編集やFinderで使われているショートカットが置き換わります。
-
-有効化前に変更一覧を表示し、同じ画面から即座にOFFへ戻せるようにする。
+- `⇧⌘↑`でMission Controlを開く。
+- `⇧⌘↓`でApplication Exposéを開く。
+- `⇧⌘←/→`で前／次のデスクトップへ移動する。
+- Workspace、System切替、ウインドウ配置、Desktop 1〜5の現在値と推奨値を比較する。
+- Foregroundアプリに関係なくmacOS自身がSystem操作を処理する。
+- `Command + 矢印`による既存のテキスト／アプリ操作は維持する。
+- `Shift + Command + 矢印`によるテキスト範囲選択は使えなくなる。
+- QuickDrawは現在値と推奨値の一致を表示し、変更操作ではSystem Settingsを開く。
 
 ### ルーティング
 
@@ -295,21 +328,21 @@ Finder Action
     → 素通し
 
 macOS Action
-  macOS TargetがON
-    → Foregroundに関係なく実行して消費
-  OFF
-    → 素通し
+  QuickDrawにはTriggerを登録しない
+    → 常に素通し
+  純正Shortcutが設定済み
+    → macOSが直接実行
 ```
 
-macOSとFinderの適用状態は、現在のApplication設定で説明、保存、解除できる。
+Finderの適用状態はApplication設定で保存・解除する。macOSの現在値は`com.apple.symbolichotkeys`からbest-effortで参照し、編集はSystem Settingsへ委譲する。
 
 ## 9. 実装前に検証すること
 
 - Option + 英字が各キーボード配列の特殊文字入力と競合する影響。
-- macOS / Finderの各候補Triggerが現行macOSで登録・消費できるか。
-- `Command + 矢印`をSystem-wideで奪う警告が十分に理解されるか。
+- macOSのSymbolic Hotkey IDが各対応OSで読み取れるか。
+- System Settingsへの遷移が各対応OSでKeyboard Shortcutsへ到達するか。
 - Finderの各ActionをShortcut配送、Apple Events、Accessibilityのどれで安定実行するか。
-- Stage Manager、特定デスクトップ、次のディスプレイへの移動に安定した実行経路があるか。
+- Level 0から先へ進める場合に、Stage Manager、特定デスクトップ、次のディスプレイへの移動に安定した実行経路があるか。
 - Target-aware TriggerをAction、Target、Adapterのどの層に保持するか。
 
 ## 10. 参考資料

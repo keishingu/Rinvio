@@ -99,7 +99,10 @@ public struct BuiltInCatalog: Sendable {
   }
 
   public func triggerScopesOverlap(_ first: ActionDomain, _ second: ActionDomain) -> Bool {
-    first == second
+    if first == .system || second == .system {
+      return first == second
+    }
+    return first == second
       || applications.contains { application in
         application.domains.contains(first) && application.domains.contains(second)
       }
@@ -116,6 +119,10 @@ public struct BuiltInCatalog: Sendable {
     applications.first {
       $0.domains.contains(domain) && $0.webApplication?.browserTarget == browserTarget
     }
+  }
+
+  public func isSystemWide(_ action: Action) -> Bool {
+    domain(for: action) == .system
   }
 
   private static func validate(_ document: Document) throws {
@@ -261,5 +268,9 @@ public enum ActionCatalog {
   ) -> Bool {
     guard let target = target(forBundleIdentifier: bundleIdentifier) else { return false }
     return webApplication(in: target, domain: domain) != nil
+  }
+
+  public static func isSystemWide(_ action: Action) -> Bool {
+    builtIn.isSystemWide(action)
   }
 }

@@ -2,12 +2,201 @@
   "schemaVersion": 2,
   "actions": [
     {
+      "action": "missionControl",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 126,
+        "modifiers": ["shift", "command"],
+        "displayValue": "⇧⌘↑"
+      }
+    },
+    {
+      "action": "applicationExpose",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 125,
+        "modifiers": ["shift", "command"],
+        "displayValue": "⇧⌘↓"
+      }
+    },
+    {
+      "action": "previousDesktop",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 123,
+        "modifiers": ["shift", "command"],
+        "displayValue": "⇧⌘←"
+      }
+    },
+    {
+      "action": "nextDesktop",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 124,
+        "modifiers": ["shift", "command"],
+        "displayValue": "⇧⌘→"
+      }
+    },
+    {
+      "action": "showDesktop",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 103,
+        "modifiers": [],
+        "displayValue": "F11"
+      }
+    },
+    {
+      "action": "showNotificationCenter",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 45,
+        "modifiers": ["control", "command"],
+        "displayValue": "⌃⌘N"
+      }
+    },
+    {
+      "action": "toggleDoNotDisturb",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 2,
+        "modifiers": ["control", "command"],
+        "displayValue": "⌃⌘D"
+      }
+    },
+    {
+      "action": "toggleStageManager",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 1,
+        "modifiers": ["control", "command"],
+        "displayValue": "⌃⌘S"
+      }
+    },
+    {
+      "action": "fillWindow",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 126,
+        "modifiers": ["control", "command"],
+        "displayValue": "⌃⌘↑"
+      }
+    },
+    {
+      "action": "tileWindowLeft",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 123,
+        "modifiers": ["control", "command"],
+        "displayValue": "⌃⌘←"
+      }
+    },
+    {
+      "action": "tileWindowRight",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 124,
+        "modifiers": ["control", "command"],
+        "displayValue": "⌃⌘→"
+      }
+    },
+    {
+      "action": "switchDesktop1",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 18,
+        "modifiers": ["command"],
+        "displayValue": "⌘1"
+      }
+    },
+    {
+      "action": "switchDesktop2",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 19,
+        "modifiers": ["command"],
+        "displayValue": "⌘2"
+      }
+    },
+    {
+      "action": "switchDesktop3",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 20,
+        "modifiers": ["command"],
+        "displayValue": "⌘3"
+      }
+    },
+    {
+      "action": "switchDesktop4",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 21,
+        "modifiers": ["command"],
+        "displayValue": "⌘4"
+      }
+    },
+    {
+      "action": "switchDesktop5",
+      "domain": "system",
+      "defaultTrigger": {
+        "virtualKeyCode": 23,
+        "modifiers": ["command"],
+        "displayValue": "⌘5"
+      }
+    },
+    {
+      "action": "finderParentFolder",
+      "domain": "finder",
+      "defaultTrigger": {
+        "virtualKeyCode": 126,
+        "modifiers": ["option"],
+        "displayValue": "⌥↑"
+      }
+    },
+    {
+      "action": "finderOpenSelectedItem",
+      "domain": "finder",
+      "defaultTrigger": {
+        "virtualKeyCode": 125,
+        "modifiers": ["option"],
+        "displayValue": "⌥↓"
+      }
+    },
+    {
+      "action": "finderHome",
+      "domain": "finder",
+      "defaultTrigger": {
+        "virtualKeyCode": 4,
+        "modifiers": ["option"],
+        "displayValue": "⌥H"
+      }
+    },
+    {
+      "action": "finderDesktop",
+      "domain": "finder",
+      "defaultTrigger": {
+        "virtualKeyCode": 2,
+        "modifiers": ["option"],
+        "displayValue": "⌥D"
+      }
+    },
+    {
+      "action": "finderDownloads",
+      "domain": "finder",
+      "defaultTrigger": {
+        "virtualKeyCode": 37,
+        "modifiers": ["option"],
+        "displayValue": "⌥L"
+      }
+    },
+    {
       "action": "mute",
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 46,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥M"
+        "modifiers": ["option"],
+        "displayValue": "⌥M"
       }
     },
     {
@@ -15,8 +204,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 8,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥C"
+        "modifiers": ["option"],
+        "displayValue": "⌥C"
       }
     },
     {
@@ -24,8 +213,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 4,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥H"
+        "modifiers": ["option"],
+        "displayValue": "⌥H"
       }
     },
     {
@@ -33,8 +222,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 31,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥O"
+        "modifiers": ["option"],
+        "displayValue": "⌥O"
       }
     },
     {
@@ -42,8 +231,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 35,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥P"
+        "modifiers": ["option"],
+        "displayValue": "⌥P"
       }
     },
     {
@@ -51,8 +240,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 37,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥L"
+        "modifiers": ["option"],
+        "displayValue": "⌥L"
       }
     },
     {
@@ -60,8 +249,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 1,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥S"
+        "modifiers": ["option"],
+        "displayValue": "⌥S"
       }
     },
     {
@@ -69,8 +258,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 7,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥X"
+        "modifiers": ["option"],
+        "displayValue": "⌥X"
       }
     },
     {
@@ -78,8 +267,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 34,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥I"
+        "modifiers": ["option"],
+        "displayValue": "⌥I"
       }
     },
     {
@@ -87,8 +276,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 5,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥G"
+        "modifiers": ["option"],
+        "displayValue": "⌥G"
       }
     },
     {
@@ -96,8 +285,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 18,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥1"
+        "modifiers": ["option"],
+        "displayValue": "⌥1"
       }
     },
     {
@@ -105,8 +294,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 19,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥2"
+        "modifiers": ["option"],
+        "displayValue": "⌥2"
       }
     },
     {
@@ -114,8 +303,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 20,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥3"
+        "modifiers": ["option"],
+        "displayValue": "⌥3"
       }
     },
     {
@@ -123,8 +312,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 21,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥4"
+        "modifiers": ["option"],
+        "displayValue": "⌥4"
       }
     },
     {
@@ -132,8 +321,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 23,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥5"
+        "modifiers": ["option"],
+        "displayValue": "⌥5"
       }
     },
     {
@@ -141,8 +330,8 @@
       "domain": "meeting",
       "defaultTrigger": {
         "virtualKeyCode": 22,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥6"
+        "modifiers": ["option"],
+        "displayValue": "⌥6"
       }
     },
     {
@@ -150,8 +339,8 @@
       "domain": "development",
       "defaultTrigger": {
         "virtualKeyCode": 45,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥N"
+        "modifiers": ["option"],
+        "displayValue": "⌥N"
       }
     },
     {
@@ -159,8 +348,8 @@
       "domain": "development",
       "defaultTrigger": {
         "virtualKeyCode": 17,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥T"
+        "modifiers": ["option"],
+        "displayValue": "⌥T"
       }
     },
     {
@@ -204,8 +393,8 @@
       "domain": "development",
       "defaultTrigger": {
         "virtualKeyCode": 122,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥F1"
+        "modifiers": ["option"],
+        "displayValue": "⌥F1"
       }
     },
     {
@@ -213,8 +402,8 @@
       "domain": "development",
       "defaultTrigger": {
         "virtualKeyCode": 120,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥F2"
+        "modifiers": ["option"],
+        "displayValue": "⌥F2"
       }
     },
     {
@@ -222,8 +411,8 @@
       "domain": "development",
       "defaultTrigger": {
         "virtualKeyCode": 99,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥F3"
+        "modifiers": ["option"],
+        "displayValue": "⌥F3"
       }
     },
     {
@@ -276,17 +465,17 @@
       "domain": "development",
       "defaultTrigger": {
         "virtualKeyCode": 40,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥K"
+        "modifiers": ["option"],
+        "displayValue": "⌥K"
       }
     },
     {
       "action": "quickOpen",
       "domain": "development",
       "defaultTrigger": {
-        "virtualKeyCode": 12,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥Q"
+        "virtualKeyCode": 31,
+        "modifiers": ["option"],
+        "displayValue": "⌥O"
       }
     },
     {
@@ -402,8 +591,8 @@
       "domain": "browser",
       "defaultTrigger": {
         "virtualKeyCode": 15,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥R"
+        "modifiers": ["command", "shift"],
+        "displayValue": "⇧⌘R"
       }
     },
     {
@@ -411,17 +600,17 @@
       "domain": "browser",
       "defaultTrigger": {
         "virtualKeyCode": 30,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥]"
+        "modifiers": ["option"],
+        "displayValue": "⌥]"
       }
     },
     {
       "action": "previousTab",
       "domain": "browser",
       "defaultTrigger": {
-        "virtualKeyCode": 33,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥["
+        "virtualKeyCode": 30,
+        "modifiers": ["option", "shift"],
+        "displayValue": "⇧⌥]"
       }
     },
     {
@@ -429,26 +618,26 @@
       "domain": "browser",
       "defaultTrigger": {
         "virtualKeyCode": 2,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥D"
+        "modifiers": ["option"],
+        "displayValue": "⌥D"
       }
     },
     {
       "action": "openDeveloperTools",
       "domain": "browser",
       "defaultTrigger": {
-        "virtualKeyCode": 14,
+        "virtualKeyCode": 34,
         "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥E"
+        "displayValue": "⌘⌥I"
       }
     },
     {
       "action": "reopenClosedTab",
       "domain": "browser",
       "defaultTrigger": {
-        "virtualKeyCode": 6,
-        "modifiers": ["command", "option"],
-        "displayValue": "⌘⌥Z"
+        "virtualKeyCode": 17,
+        "modifiers": ["command", "shift"],
+        "displayValue": "⇧⌘T"
       }
     },
     {
@@ -507,6 +696,18 @@
     }
   ],
   "applications": [
+    {
+      "target": "macOS",
+      "domains": ["system"],
+      "bundleIdentifiers": [],
+      "officialURL": "https://support.apple.com/guide/mac-help/work-in-multiple-spaces-mh14112/mac"
+    },
+    {
+      "target": "finder",
+      "domains": ["finder"],
+      "bundleIdentifiers": ["com.apple.finder"],
+      "officialURL": "https://support.apple.com/guide/mac-help/organize-files-with-folders-mh26885/mac"
+    },
     {
       "target": "microsoftTeams",
       "domains": ["meeting", "chat"],
@@ -689,6 +890,46 @@
     }
   ],
   "mappings": [
+    {
+      "action": "finderParentFolder",
+      "target": "finder",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 126, "modifiers": ["command"], "displayValue": "⌘↑"}
+      }
+    },
+    {
+      "action": "finderOpenSelectedItem",
+      "target": "finder",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 125, "modifiers": ["command"], "displayValue": "⌘↓"}
+      }
+    },
+    {
+      "action": "finderHome",
+      "target": "finder",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 4, "modifiers": ["command", "shift"], "displayValue": "⇧⌘H"}
+      }
+    },
+    {
+      "action": "finderDesktop",
+      "target": "finder",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 2, "modifiers": ["command", "shift"], "displayValue": "⇧⌘D"}
+      }
+    },
+    {
+      "action": "finderDownloads",
+      "target": "finder",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 37, "modifiers": ["command", "option"], "displayValue": "⌘⌥L"}
+      }
+    },
     {
       "action": "mute",
       "target": "microsoftTeams",

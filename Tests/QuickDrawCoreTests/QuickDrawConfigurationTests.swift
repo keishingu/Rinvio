@@ -6,15 +6,18 @@ final class QuickDrawConfigurationTests: XCTestCase {
   func testDefaultsComeFromCatalogWithoutStoredOverrides() {
     let store = QuickDrawConfigurationStore(fileURL: nil)
 
-    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "⌘⌥M")
+    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "⌥M")
     XCTAssertEqual(store.shortcut(for: .camera, target: .zoomWorkplace)?.displayValue, "⌘⇧V")
-    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
+    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌥O")
     XCTAssertNil(store.shortcut(for: .openChat, target: .microsoftTeams))
     XCTAssertTrue(store.configuration.triggerOverrides.isEmpty)
     XCTAssertTrue(store.configuration.unassignedTriggers.isEmpty)
     XCTAssertTrue(store.configuration.shortcutOverrides.isEmpty)
     XCTAssertTrue(store.configuration.disabledApplications.isEmpty)
+    XCTAssertTrue(store.configuration.enabledOptInTargets.isEmpty)
     XCTAssertTrue(store.isApplicationEnabled(.zoomWorkplace))
+    XCTAssertFalse(store.isApplicationEnabled(.macOS))
+    XCTAssertFalse(store.isApplicationEnabled(.finder))
   }
 
   func testTriggerOverrideCanBeRestoredBySettingDefault() throws {
@@ -27,7 +30,7 @@ final class QuickDrawConfigurationTests: XCTestCase {
 
     let defaultTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .mute))
     try store.setTriggerOverride(defaultTrigger, for: .mute)
-    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "⌘⌥M")
+    XCTAssertEqual(store.trigger(for: .mute)?.displayValue, "⌥M")
     XCTAssertFalse(store.isTriggerOverridden(for: .mute))
   }
 
@@ -80,7 +83,7 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertTrue(store.isTriggerOverridden(for: .openChat))
 
     try store.resetTrigger(for: .openChat)
-    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
+    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌥O")
     XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
   }
 
@@ -94,7 +97,7 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertFalse(store.actions(withTriggerModifiers: [.command, .option]).contains(.openChat))
 
     try store.resetTrigger(for: .openChat)
-    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
+    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌥O")
     XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
     XCTAssertTrue(store.configuration.unassignedTriggers.isEmpty)
   }
@@ -158,7 +161,7 @@ final class QuickDrawConfigurationTests: XCTestCase {
     try store.unassignTrigger(for: .openChat)
     try store.resetAction(.openChat)
 
-    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌘⌥O")
+    XCTAssertEqual(store.trigger(for: .openChat)?.displayValue, "⌥O")
     XCTAssertFalse(store.isTriggerOverridden(for: .openChat))
   }
 
@@ -171,9 +174,9 @@ final class QuickDrawConfigurationTests: XCTestCase {
     )
     try store.setTriggerOverride(commandShift, for: .mute)
 
-    XCTAssertEqual(store.actions(withTriggerModifiers: [.command, .shift]), [.mute])
+    XCTAssertTrue(store.actions(withTriggerModifiers: [.command, .shift]).contains(.mute))
     XCTAssertFalse(store.actions(withTriggerModifiers: [.command, .option]).contains(.mute))
-    XCTAssertTrue(store.actions(withTriggerModifiers: [.command, .option]).contains(.camera))
+    XCTAssertTrue(store.actions(withTriggerModifiers: [.option]).contains(.camera))
   }
 
   func testFindsApplicationShortcutsByModifiersWhenTriggerIsUnassigned() throws {
@@ -214,22 +217,29 @@ final class QuickDrawConfigurationTests: XCTestCase {
     )
   }
 
-  func testEveryBuiltInActionHasAUniqueSafeTrigger() throws {
+  func testEveryBuiltInActionHasASafeTriggerUniqueWithinItsRoutingScope() throws {
     let triggers = try Action.allCases.map {
       try XCTUnwrap(ActionCatalog.defaultTrigger(for: $0))
     }
 
-    XCTAssertEqual(
-      Set(triggers.map { "\($0.virtualKeyCode)-\($0.modifiers)" }).count,
-      Action.allCases.count
-    )
+    for (index, action) in Action.allCases.enumerated() {
+      let trigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: action))
+      for candidate in Action.allCases.dropFirst(index + 1)
+      where ActionCatalog.triggerScopesOverlap(action, candidate) {
+        XCTAssertFalse(
+          ActionCatalog.defaultTrigger(for: candidate)?.matchesPhysicalShortcut(trigger) == true,
+          "\(action.rawValue) conflicts with \(candidate.rawValue)"
+        )
+      }
+    }
     XCTAssertEqual(ActionCatalog.defaultTrigger(for: .focusNextRegion)?.displayValue, "F6")
     XCTAssertEqual(ActionCatalog.defaultTrigger(for: .focusPreviousRegion)?.displayValue, "⇧F6")
     XCTAssertTrue(
-      triggers.filter {
-        $0.displayValue != "F6" && $0.displayValue != "⇧F6"
-      }.allSatisfy {
-        !$0.modifiers.isDisjoint(with: [.command, .control, .option])
+      zip(Action.allCases, triggers).filter { action, trigger in
+        action.domain != .system
+          && trigger.displayValue != "F6" && trigger.displayValue != "⇧F6"
+      }.allSatisfy { _, trigger in
+        !trigger.modifiers.isDisjoint(with: [.command, .control, .option])
       }
     )
   }
@@ -322,5 +332,105 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertTrue(store.configuration.disabledApplications.isEmpty)
     XCTAssertTrue(store.configuration.unassignedTriggers.isEmpty)
     XCTAssertTrue(store.isApplicationEnabled(.ghostty))
+    XCTAssertFalse(store.isApplicationEnabled(.macOS))
+    XCTAssertFalse(store.isApplicationEnabled(.finder))
+  }
+
+  func testNewSuggestedTriggersMatchDesignPrinciples() {
+    let expected: [Action: String] = [
+      .mute: "⌥M", .camera: "⌥C", .raiseHand: "⌥H", .openChat: "⌥O",
+      .showParticipants: "⌥P", .toggleCaptions: "⌥L", .shareScreen: "⌥S",
+      .switchCamera: "⌥X", .pictureInPicture: "⌥I", .leaveMeeting: "⌥G",
+      .reactionLike: "⌥1", .reactionHeart: "⌥2", .reactionClap: "⌥3",
+      .reactionLaugh: "⌥4", .reactionWow: "⌥5", .reactionCelebrate: "⌥6",
+      .newSession: "⌥N", .toggleTerminal: "⌥T", .commandPalette: "⌥K",
+      .quickOpen: "⌥O", .focusSidebar: "⌥F1", .focusMainColumn: "⌥F2",
+      .focusTerminal: "⌥F3", .hardReload: "⇧⌘R", .nextTab: "⌥]",
+      .previousTab: "⇧⌥]", .openDownloads: "⌥D", .openDeveloperTools: "⌘⌥I",
+      .reopenClosedTab: "⇧⌘T",
+      .missionControl: "⇧⌘↑", .applicationExpose: "⇧⌘↓",
+      .previousDesktop: "⇧⌘←", .nextDesktop: "⇧⌘→",
+      .showDesktop: "F11", .showNotificationCenter: "⌃⌘N",
+      .toggleDoNotDisturb: "⌃⌘D", .toggleStageManager: "⌃⌘S",
+      .fillWindow: "⌃⌘↑", .tileWindowLeft: "⌃⌘←", .tileWindowRight: "⌃⌘→",
+      .switchDesktop1: "⌘1", .switchDesktop2: "⌘2", .switchDesktop3: "⌘3",
+      .switchDesktop4: "⌘4", .switchDesktop5: "⌘5",
+    ]
+
+    for (action, displayValue) in expected {
+      XCTAssertEqual(ActionCatalog.defaultTrigger(for: action)?.displayValue, displayValue)
+    }
+    XCTAssertEqual(ActionCatalog.defaultTrigger(for: .goToSymbol)?.displayValue, "⌃⌥O")
+    XCTAssertEqual(ActionCatalog.defaultTrigger(for: .runProject)?.displayValue, "⌃⌥G")
+    XCTAssertEqual(ActionCatalog.defaultTrigger(for: .nextIssue)?.displayValue, "⌃⌥]")
+  }
+
+  func testSchemaOneMigrationPreservesCustomClearAndLegacySuggestedTriggers() throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let fileURL = directory.appendingPathComponent("configuration.json")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let legacyData = try XCTUnwrap(
+      """
+      {
+        "schemaVersion": 1,
+        "triggerOverrides": [{
+          "action": "mute",
+          "shortcut": {"virtualKeyCode":103,"modifiers":[],"displayValue":"F11"}
+        }],
+        "unassignedTriggers": ["openChat"],
+        "shortcutOverrides": [],
+        "disabledApplications": ["zoomWorkplace"]
+      }
+      """.data(using: .utf8)
+    )
+    try legacyData.write(to: fileURL)
+
+    let migrated = QuickDrawConfigurationStore(fileURL: fileURL)
+
+    XCTAssertEqual(migrated.configuration.schemaVersion, 2)
+    XCTAssertEqual(migrated.trigger(for: .mute)?.displayValue, "F11")
+    XCTAssertNil(migrated.trigger(for: .openChat))
+    XCTAssertEqual(migrated.trigger(for: .camera)?.displayValue, "⌘⌥C")
+    XCTAssertFalse(migrated.isApplicationEnabled(.zoomWorkplace))
+    XCTAssertFalse(migrated.isApplicationEnabled(.macOS))
+    XCTAssertFalse(migrated.isApplicationEnabled(.finder))
+
+    let persistedMigration = QuickDrawConfigurationStore(fileURL: fileURL)
+    XCTAssertEqual(persistedMigration.configuration, migrated.configuration)
+
+    try migrated.setApplicationEnabled(false, for: .visualStudioCode)
+    let reloaded = QuickDrawConfigurationStore(fileURL: fileURL)
+    XCTAssertEqual(reloaded.configuration, migrated.configuration)
+
+    try reloaded.resetTrigger(for: .camera)
+    XCTAssertEqual(reloaded.trigger(for: .camera)?.displayValue, "⌥C")
+  }
+
+  func testMacOSIsAlwaysManagedOutsideQuickDraw() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+
+    try store.setApplicationEnabled(true, for: .macOS)
+    XCTAssertFalse(store.isApplicationEnabled(.macOS))
+    try store.setApplicationEnabled(true, for: .macOS)
+    XCTAssertFalse(store.isApplicationEnabled(.macOS))
+    XCTAssertFalse(store.configuration.enabledOptInTargets.contains(.macOS))
+  }
+
+  func testFinderCanBeOptedInWithoutSystemWideConfirmation() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+
+    try store.setApplicationEnabled(true, for: .finder)
+    XCTAssertTrue(store.isApplicationEnabled(.finder))
+    XCTAssertEqual(store.configuration.enabledOptInTargets, [.finder])
+  }
+
+  func testSystemSettingsRecommendationsDoNotBlockApplicationTriggers() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let systemRecommendation = try XCTUnwrap(store.trigger(for: .showDesktop))
+
+    XCTAssertNoThrow(try store.setTriggerOverride(systemRecommendation, for: .mute))
+    XCTAssertEqual(store.trigger(for: .mute), systemRecommendation)
   }
 }

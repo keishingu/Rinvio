@@ -452,6 +452,16 @@ final class ActionRouterTests: XCTestCase {
     )
   }
 
+  func testSystemActionsAreNeverRoutedByQuickDraw() {
+    XCTAssertEqual(
+      router.route(
+        action: .missionControl,
+        context: ForegroundContext(bundleIdentifier: "com.apple.TextEdit")
+      ),
+      .failure(.disabledApplication(target: .macOS))
+    )
+  }
+
   func testMeetingActionDoesNotEnterChatOnlyApplicationDomain() {
     assertFailure(
       action: .leaveMeeting,
@@ -462,7 +472,7 @@ final class ActionRouterTests: XCTestCase {
   }
 
   func testEveryCatalogActionHasAtLeastOneBuiltInApplicationShortcut() {
-    for action in Action.allCases {
+    for action in Action.allCases where !ActionCatalog.isSystemWide(action) {
       XCTAssertTrue(
         ActionTarget.allCases.contains {
           ActionCatalog.defaultShortcut(for: action, target: $0) != nil
