@@ -5,9 +5,7 @@ import SwiftUI
 struct QuickDrawRootView: View {
   @ObservedObject var model: QuickDrawAppModel
 
-  @State private var selectedSection: QuickDrawSection? = .meeting
   @State private var selectedActionID: String? = Action.mute.rawValue
-  @State private var selectedApplicationID: String? = "meeting:microsoftTeams"
   @State private var isInspectorPresented = true
   @State private var isDevelopmentExpanded = true
 
@@ -34,9 +32,9 @@ struct QuickDrawRootView: View {
     .frame(minWidth: 860, minHeight: 560)
     .onAppear {
       model.refreshEnvironment()
-      normalizeActionSelection(for: selectedSection ?? .meeting)
+      normalizeActionSelection(for: model.selectedSection ?? .meeting)
     }
-    .onChange(of: selectedSection) { _, section in
+    .onChange(of: model.selectedSection) { _, section in
       normalizeActionSelection(for: section ?? .meeting)
     }
     .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification))
@@ -47,12 +45,12 @@ struct QuickDrawRootView: View {
   }
 
   private var selectedAction: ActionDefinition? {
-    let definitions = actionDefinitions(for: selectedSection ?? .meeting)
+    let definitions = actionDefinitions(for: model.selectedSection ?? .meeting)
     return definitions.first { $0.id == selectedActionID } ?? definitions.first
   }
 
   private var sidebar: some View {
-    List(selection: $selectedSection) {
+    List(selection: $model.selectedSection) {
       Section(model.copy.actions) {
         ForEach([QuickDrawSection.meeting, .chat]) { section in
           Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
@@ -134,7 +132,7 @@ struct QuickDrawRootView: View {
 
   @ViewBuilder
   private var detail: some View {
-    switch selectedSection ?? .meeting {
+    switch model.selectedSection ?? .meeting {
     case .system:
       if let domain = QuickDrawSection.system.actionDomain {
         ActionsView(
@@ -149,7 +147,7 @@ struct QuickDrawRootView: View {
       }
     case .finder, .meeting, .chat, .development, .developmentAIAgent, .developmentEditor,
       .developmentTerminal, .browser:
-      let section = selectedSection ?? .meeting
+      let section = model.selectedSection ?? .meeting
       if let domain = section.actionDomain {
         ActionsView(
           title: model.copy.sectionTitle(section),
@@ -164,7 +162,7 @@ struct QuickDrawRootView: View {
         )
       }
     case .applications:
-      ApplicationsView(selection: $selectedApplicationID, model: model)
+      ApplicationsView(selection: $model.selectedApplicationID, model: model)
     case .settings:
       SettingsView(model: model)
     case .diagnostics:
@@ -174,7 +172,7 @@ struct QuickDrawRootView: View {
 
   @ViewBuilder
   private var inspector: some View {
-    switch selectedSection ?? .meeting {
+    switch model.selectedSection ?? .meeting {
     case .system:
       if let selectedAction {
         SystemActionInspector(definition: selectedAction, model: model)
@@ -189,18 +187,18 @@ struct QuickDrawRootView: View {
       if let selectedAction {
         ActionInspector(
           definition: selectedAction,
-          applications: installedApplications(for: selectedSection ?? .meeting),
+          applications: installedApplications(for: model.selectedSection ?? .meeting),
           model: model
         )
       } else {
         ContentUnavailableView(
           model.copy.noActionsInCategory,
-          systemImage: (selectedSection ?? .meeting).systemImage
+          systemImage: (model.selectedSection ?? .meeting).systemImage
         )
       }
     case .applications:
       if let application = model.applications.first(where: {
-        $0.id == selectedApplicationID?.split(separator: ":").last.map(String.init)
+        $0.id == model.selectedApplicationID?.split(separator: ":").last.map(String.init)
       })
         ?? model.applications.first
       {
@@ -293,9 +291,15 @@ private struct SettingsView: View {
           }
         }
 
-        Section(model.copy.screenSharingPrivacy) {
-          Label(model.copy.screenSharingBestEffort, systemImage: "eye.slash")
-          Text(model.copy.screenSharingLimitation)
+        Section(model.copy.developerMode) {
+          Toggle(
+            model.copy.developerMode,
+            isOn: Binding(
+              get: { model.isDeveloperModeEnabled },
+              set: model.setDeveloperModeEnabled
+            )
+          )
+          Text(model.copy.developerModeDescription)
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -667,23 +671,40 @@ private struct DiagnosticsView: View {
           LabeledContent(model.copy.state, value: model.localizedStatus.headline)
           LabeledContent(model.copy.target, value: model.localizedStatus.target)
           LabeledContent(model.copy.result, value: model.localizedStatus.detail)
-          LabeledContent(
-            model.copy.globalShortcut,
-            value: model.areHotKeysRegistered
-              ? model.copy.hotKeysRegistered(model.registeredTriggerSummary)
-              : model.copy.unavailable
-          )
+          if model.isDeveloperModeEnabled {
+            LabeledContent(
+              model.copy.globalShortcut,
+              value: model.areHotKeysRegistered
+                ? model.copy.hotKeysRegistered(model.registeredTriggerSummary)
+                : model.copy.unavailable
+            )
+          }
         }
 
-        Section(model.copy.recentRoutingLog) {
-          Text(model.diagnostics)
-            .font(.caption.monospaced())
-            .textSelection(.enabled)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        if model.isDeveloperModeEnabled {
+          Section(model.copy.developerTools) {
+            Toggle(
+              model.copy.dryRun,
+              isOn: Binding(
+                get: { model.isDryRunEnabled },
+                set: model.setDryRunEnabled
+              )
+            )
+            Text(model.copy.dryRunDescription)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
 
-          HStack {
-            Button(model.copy.refresh) { model.refreshDiagnostics() }
-            Button(model.copy.copyDiagnostics) { copyToPasteboard(model.diagnostics) }
+          Section(model.copy.recentRoutingLog) {
+            Text(model.diagnostics)
+              .font(.caption.monospaced())
+              .textSelection(.enabled)
+              .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack {
+              Button(model.copy.refresh) { model.refreshDiagnostics() }
+              Button(model.copy.copyDiagnostics) { copyToPasteboard(model.diagnostics) }
+            }
           }
         }
       }
@@ -816,25 +837,14 @@ private struct ActionInspector: View {
         }
       }
 
-      Section(model.copy.execution) {
-        Toggle(
-          model.copy.dryRun,
-          isOn: Binding(
-            get: { model.isDryRunEnabled },
-            set: model.setDryRunEnabled
-          )
-        )
-        Text(model.copy.dryRunDescription)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-
-        Button(model.copy.testLastActiveApplication) {
-          model.runDryCheck(action: definition.action)
+      if model.isDeveloperModeEnabled {
+        Section(model.copy.developerTools) {
+          Button(model.copy.testLastActiveApplication) {
+            model.runDryCheck(action: definition.action)
+          }
+          .disabled(!model.isEnabled)
         }
-        .disabled(!model.isEnabled)
       }
-
-      PermissionSection(model: model)
     }
     .formStyle(.grouped)
     .confirmationDialog(
@@ -1093,16 +1103,18 @@ private struct ApplicationInspector: View {
         }
       }
 
-      Section(model.copy.method) {
-        LabeledContent(
-          model.copy.capability,
-          value: model.copy.shortcutCapability(
-            model.supportedActionCount(for: application.target),
-            total: definitions.count
+      if model.isDeveloperModeEnabled {
+        Section(model.copy.method) {
+          LabeledContent(
+            model.copy.capability,
+            value: model.copy.shortcutCapability(
+              model.supportedActionCount(for: application.target),
+              total: definitions.count
+            )
           )
-        )
-        Text(model.copy.executionDetail(for: application))
-          .foregroundStyle(.secondary)
+          Text(model.copy.executionDetail(for: application))
+            .foregroundStyle(.secondary)
+        }
       }
     }
     .formStyle(.grouped)
@@ -1157,6 +1169,10 @@ private struct DiagnosticsInspector: View {
         Label(model.copy.noKeyLogging, systemImage: "checkmark.shield")
         Label(model.copy.noFullURLStorage, systemImage: "checkmark.shield")
         Label(model.copy.noTelemetry, systemImage: "checkmark.shield")
+        Label(model.copy.screenSharingBestEffort, systemImage: "eye.slash")
+        Text(model.copy.screenSharingLimitation)
+          .font(.caption)
+          .foregroundStyle(.secondary)
       }
     }
     .formStyle(.grouped)
@@ -1173,11 +1189,6 @@ private struct SettingsInspector: View {
         Text(model.copy.holdToKeepGuideVisible)
           .font(.caption)
           .foregroundStyle(.secondary)
-      }
-
-      Section(model.copy.privacy) {
-        Label(model.copy.noKeyLogging, systemImage: "checkmark.shield")
-        Label(model.copy.screenSharingBestEffort, systemImage: "eye.slash")
       }
     }
     .formStyle(.grouped)

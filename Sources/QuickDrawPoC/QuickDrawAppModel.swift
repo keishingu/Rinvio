@@ -571,11 +571,13 @@ struct TriggerAlignmentNotice: Equatable {
 @MainActor
 final class QuickDrawAppModel: ObservableObject {
   private static let cheatSheetEnabledKey = "cheatSheetEnabled"
+  private static let developerModeEnabledKey = "developerModeEnabled"
 
   @Published private(set) var language: AppLanguage
   @Published private(set) var isEnabled = true
   @Published private(set) var isDryRunEnabled = false
   @Published private(set) var isCheatSheetEnabled: Bool
+  @Published private(set) var isDeveloperModeEnabled: Bool
   @Published private(set) var hasAccessibilityPermission = false
   @Published private(set) var areHotKeysRegistered = false
   @Published private(set) var status = ActionStatus(
@@ -592,6 +594,8 @@ final class QuickDrawAppModel: ObservableObject {
   @Published private(set) var shortcutEditingError: String?
   @Published private(set) var triggerAlignmentNotice: TriggerAlignmentNotice?
   @Published private(set) var configuredSystemShortcuts: [Action: KeyStroke] = [:]
+  @Published var selectedSection: QuickDrawSection? = .meeting
+  @Published var selectedApplicationID: String? = "meeting:microsoftTeams"
   let actions = ActionDefinition.all
 
   private let defaults: UserDefaults
@@ -602,6 +606,7 @@ final class QuickDrawAppModel: ObservableObject {
   var onSetEnabled: ((Bool) -> Void)?
   var onSetDryRun: ((Bool) -> Void)?
   var onSetCheatSheetEnabled: ((Bool) -> Void)?
+  var onSetDeveloperMode: ((Bool) -> Void)?
   var onPreviewCheatSheet: (() -> Void)?
   var onRunDryCheck: ((Action) -> Void)?
   var onRequestAccessibility: (() -> Void)?
@@ -628,6 +633,8 @@ final class QuickDrawAppModel: ObservableObject {
     language = AppLanguage.preferred(defaults: defaults)
     isCheatSheetEnabled =
       defaults.object(forKey: Self.cheatSheetEnabledKey) as? Bool ?? true
+    isDeveloperModeEnabled =
+      defaults.object(forKey: Self.developerModeEnabledKey) as? Bool ?? false
     configuration = configurationStore.configuration
     refreshConfiguredSystemShortcuts()
   }
@@ -675,8 +682,30 @@ final class QuickDrawAppModel: ObservableObject {
     onSetCheatSheetEnabled?(enabled)
   }
 
+  func setDeveloperModeEnabled(_ enabled: Bool) {
+    isDeveloperModeEnabled = enabled
+    defaults.set(enabled, forKey: Self.developerModeEnabledKey)
+    if !enabled, isDryRunEnabled {
+      setDryRunEnabled(false)
+    }
+    onSetDeveloperMode?(enabled)
+  }
+
   func previewCheatSheet() {
     onPreviewCheatSheet?()
+  }
+
+  func selectSection(_ section: QuickDrawSection) {
+    selectedSection = section
+  }
+
+  func openApplicationSettings(for target: ActionTarget) {
+    let domain =
+      [ActionTarget.finder, .macOS].contains(target)
+      ? ActionDomain.system
+      : ActionCatalog.application(for: target).domains.first ?? .meeting
+    selectedApplicationID = "\(domain.rawValue):\(target.rawValue)"
+    selectedSection = .applications
   }
 
   func runDryCheck(action: Action) {

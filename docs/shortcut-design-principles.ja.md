@@ -126,6 +126,27 @@ QuickDrawのSystem対象は、アプリ内部の一般的なメニュー操作�
 
 ### 実行Level
 
+QuickDraw自身の画面操作は外部Applicationへ配送するActionではないため、Level 0〜4とは別の`internal` deliveryとして扱う。通常のApplication Menuへ割り当て、QuickDrawがForegroundの時だけ有効にする。Global HotKeyへは登録せず、QuickDrawの起動やForeground化はランチャー製品Hakenへ委ねる。
+
+通常利用ではAction InspectorをTriggerとApplication Mappingへ集中させる。Dry Run、Actionテスト、実行方式、Trigger登録詳細、ルーティングログはSettingsのDeveloper ModeがONの場合だけ表示する。アクセシビリティとプライバシーはInformationへ集約し、Developer ModeをOFFにした時は隠れたDry Runが残らないよう同時に解除する。
+
+| QuickDraw内部Action | Shortcut |
+|---|---|
+| Meeting | `⌥M` |
+| Chat | `⌥C` |
+| Development | `⌥D` |
+| Browser | `⌥B` |
+| Finder | `⌥F` |
+| macOS | `⌥S` |
+| Applications | `⌥A` |
+| Information | `⌥I` |
+| Settings | `⌘,` |
+| Shortcut Guide | `⌥/` |
+| Pause / Resume | `⇧⌥P` |
+| Last Used Application Target Settings | `⇧⌥A` |
+| Close Window | `⌘W` |
+| Quit | `⌘Q` |
+
 数字が上がるほどQuickDrawの介入度と保守コストが増える。Actionは、安定して目的を達成できる最も低いLevelで実装する。
 
 | Level | 名称 | 実行方式 | 例 |

@@ -21,7 +21,7 @@
 - Versioned configuration persisted in Application Support
 - Versioned Built-in Catalog bundled as JSON
 - Live Japanese / English display switching, persisted across launches
-- Applications and privacy-safe Diagnostics views
+- Applications view and privacy-safe Information view
 - Dock app and Menu Bar status, non-delivery Dry Run, copied diagnostics, and redacted unified log
 - No general key logging, polling, profiles, UI automation, or background routing
 
@@ -55,6 +55,25 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 6. Dry Runを無効にし、対象Application/Meet TabをForegroundにして設定済みTriggerを押す。
 
 ## Shortcut Guide
+
+QuickDraw自身がForegroundの間は、通常のApplication Shortcutで画面と状態を操作できます。これらはGlobal HotKeyへ登録されず、他のアプリでは完全に素通しします。
+
+| Action | Shortcut |
+|---|---|
+| Meeting | `⌥M` |
+| Chat | `⌥C` |
+| Development | `⌥D` |
+| Browser | `⌥B` |
+| Finder | `⌥F` |
+| macOS | `⌥S` |
+| Applications | `⌥A` |
+| Information | `⌥I` |
+| Settings | `⌘,` |
+| Shortcut Guide | `⌥/` |
+| Pause / Resume QuickDraw | `⇧⌥P` |
+| Last Used Application Target Settings | `⇧⌥A` |
+| Close Window | `⌘W` |
+| Quit QuickDraw | `⌘Q` |
 
 対応ApplicationをForegroundにして、QuickDraw TriggerまたはApplication Shortcutの修飾キー（`⌘⌥`や`⌘⇧`など）を約0.6秒長押しすると、その修飾キーから実行できるActionを画面中央のHUDへ表示します。QuickDraw Triggerが未割り当てでも、対象ApplicationにShortcutがあればApplication側の項目として表示します。HUD表示中に修飾キーの組み合わせを変えた場合は、閉じたり再度待ったりせず内容を即時更新します。修飾キーを離すかQuickDraw Shortcutを実行すると閉じ、実行後は修飾キーをすべて離すまで再表示しません。Modifierイベント自体は消費しません。各ActionにはQuickDraw Triggerと、対象Applicationへ配送する既定Shortcut（Mapping Overrideがあれば変更後の値）を罫線で分けて表示します。修飾キーを持たないShortcutは長押し表示の対象外ですが、`Preview`では確認できます。
 
@@ -219,8 +238,10 @@ SafariのDeveloper Toolsは、Safari設定の「Webデベロッパ用の機能�
 - Chrome Automation拒否時はMeetだけ失敗し、Teams/Zoomには影響しない。
 - QuickDrawのMenuからTestしても最後に使っていた外部AppをTargetとして扱う。
 
-## Diagnostics
+## Information
 
-通常の成功/失敗とlatencyはMenu Barに表示されます。`Copy Diagnostics`で直近20件の判定結果、割り当て済みTrigger、権限状態をコピーできます。詳細はConsole.appでsubsystem `dev.actionrouter.quickdraw-poc` を絞り込みます。
+通常時はQuickDrawの状態、権限、プライバシーだけを表示します。アクセシビリティ確認と画面共有に関する説明もInformationへ集約し、各Action InspectorではTriggerとApplication Mappingへ集中できます。
+
+Settingsで`Developer Mode`をONにすると、Dry Run、ActionごとのTargetテスト、割り当て済みTrigger、直近20件のルーティングログ、`Copy Diagnostics`を表示します。Developer ModeをOFFに戻すとDry Runも同時に解除されます。詳細はConsole.appでsubsystem `dev.actionrouter.quickdraw-poc`を絞り込みます。
 
 記録対象はAction route、Application bundle ID、Meetか否かの分類、Execution Method、Result、Latencyです。Full URL、Meet以外のhost、Tab title、Meeting code、入力内容は記録しません。

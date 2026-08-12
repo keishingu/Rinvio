@@ -47,11 +47,26 @@ struct QuickDrawCopy {
   var quickDrawPaused: String { text("QuickDraw 停止中", "QuickDraw paused") }
   var actions: String { text("アクション", "Actions") }
   var applications: String { text("アプリケーション", "Applications") }
+  var lastUsedApplicationSettings: String {
+    text("最後に使ったアプリのTarget設定", "Last Used Application Target Settings")
+  }
+  var fileMenu: String { text("ファイル", "File") }
+  var navigateMenu: String { text("移動", "Navigate") }
+  var helpMenu: String { text("ヘルプ", "Help") }
+  var closeWindow: String { text("ウインドウを閉じる", "Close Window") }
   var settings: String { text("設定", "Settings") }
   var settingsSubtitle: String {
     text("QuickDrawの表示と動作を設定します。", "Configure QuickDraw's appearance and behavior.")
   }
-  var diagnostics: String { text("診断", "Diagnostics") }
+  var developerMode: String { text("開発者モード", "Developer Mode") }
+  var developerModeDescription: String {
+    text(
+      "ドライラン、Actionテスト、ルーティングログを表示します。",
+      "Shows Dry Run, Action testing, and routing logs."
+    )
+  }
+  var developerTools: String { text("開発者ツール", "Developer Tools") }
+  var diagnostics: String { text("情報", "Information") }
   var noApplications: String { text("アプリケーションがありません", "No Applications") }
   var noActionsInCategory: String {
     text("このカテゴリにはActionがありません", "No Actions in this category")
@@ -232,8 +247,8 @@ struct QuickDrawCopy {
 
   var diagnosticsSubtitle: String {
     text(
-      "ルーティングに必要な情報だけを表示します。キー入力や会議URLは記録しません。",
-      "Routing metadata only. QuickDraw does not record your keystrokes or meeting URLs."
+      "QuickDrawの状態、権限、プライバシーを確認できます。",
+      "Review QuickDraw's status, permissions, and privacy."
     )
   }
   var currentStatus: String { text("現在の状態", "Current status") }
