@@ -406,9 +406,8 @@ public struct ActionRouter {
         return .failure(.browserContextUnavailable)
       }
 
-      let scheme = activeTabURL.scheme?.lowercased()
       let host = activeTabURL.host?.lowercased()
-      guard scheme == webIdentity.scheme.lowercased(), host == webIdentity.host.lowercased() else {
+      guard webIdentity.matches(activeTabURL) else {
         return .failure(.unsupportedWebPage(host: host))
       }
       target = webApplication.target

@@ -8,6 +8,11 @@ public struct CatalogWebApplication: Codable, Equatable, Sendable {
   public let browserTarget: ActionTarget
   public let scheme: String
   public let host: String
+
+  public func matches(_ url: URL) -> Bool {
+    url.scheme?.lowercased() == scheme.lowercased()
+      && url.host?.lowercased() == host.lowercased()
+  }
 }
 
 public struct CatalogApplication: Codable, Equatable, Sendable {
@@ -118,6 +123,16 @@ public struct BuiltInCatalog: Sendable {
   ) -> CatalogApplication? {
     applications.first {
       $0.domains.contains(domain) && $0.webApplication?.browserTarget == browserTarget
+    }
+  }
+
+  public func webApplication(
+    in browserTarget: ActionTarget,
+    matching url: URL
+  ) -> CatalogApplication? {
+    applications.first {
+      $0.webApplication?.browserTarget == browserTarget
+        && $0.webApplication?.matches(url) == true
     }
   }
 
@@ -260,6 +275,13 @@ public enum ActionCatalog {
     domain: ActionDomain
   ) -> CatalogApplication? {
     builtIn.webApplication(in: browserTarget, domain: domain)
+  }
+
+  public static func webApplication(
+    in browserTarget: ActionTarget,
+    matching url: URL
+  ) -> CatalogApplication? {
+    builtIn.webApplication(in: browserTarget, matching: url)
   }
 
   public static func requiresWebApplicationDetection(

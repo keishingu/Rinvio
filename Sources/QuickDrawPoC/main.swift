@@ -215,13 +215,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       model.setEnabled(!model.isEnabled)
     }
     applicationMenuController.onOpenLastApplicationSettings = {
-      [weak foregroundProvider, weak model, weak windowController] in
+      [weak foregroundProvider, weak activeTabProvider, weak model, weak windowController] in
       guard
         let bundleIdentifier = foregroundProvider?.foregroundApplication()?.bundleIdentifier,
-        let target = ActionCatalog.target(forBundleIdentifier: bundleIdentifier)
+        let foregroundTarget = ActionCatalog.target(forBundleIdentifier: bundleIdentifier)
       else {
         NSSound.beep()
         return
+      }
+      var target = foregroundTarget
+      if foregroundTarget == .googleChrome,
+        let activeTabProvider,
+        let activeTabURL = try? activeTabProvider.activeTabURL(),
+        let webApplication = ActionCatalog.webApplication(
+          in: foregroundTarget,
+          matching: activeTabURL
+        )
+      {
+        target = webApplication.target
       }
       model?.openApplicationSettings(for: target)
       windowController?.present()

@@ -190,6 +190,29 @@ final class BuiltInCatalogTests: XCTestCase {
     )
   }
 
+  func testWebApplicationMatchesActiveBrowserURL() throws {
+    XCTAssertEqual(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://meet.google.com/abc-defg-hij"))
+      )?.target,
+      .googleMeet
+    )
+    XCTAssertEqual(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://mail.google.com/mail/u/0/#inbox"))
+      )?.target,
+      .gmail
+    )
+    XCTAssertNil(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://example.com"))
+      )
+    )
+  }
+
   func testRejectsUnsupportedCatalogSchema() throws {
     let data = try XCTUnwrap(
       """
