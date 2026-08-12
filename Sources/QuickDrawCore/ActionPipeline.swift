@@ -14,6 +14,14 @@ public struct ApplicationSnapshot: Equatable, Sendable {
 public protocol ForegroundApplicationProviding {
   func foregroundApplication() -> ApplicationSnapshot?
   func isStillForeground(_ application: ApplicationSnapshot) -> Bool
+  func isPotentialQuickDrawTargetForeground() -> Bool
+}
+
+extension ForegroundApplicationProviding {
+  public func isPotentialQuickDrawTargetForeground() -> Bool {
+    guard let bundleIdentifier = foregroundApplication()?.bundleIdentifier else { return false }
+    return ActionCatalog.target(forBundleIdentifier: bundleIdentifier) != nil
+  }
 }
 
 public protocol ActiveTabURLProviding {

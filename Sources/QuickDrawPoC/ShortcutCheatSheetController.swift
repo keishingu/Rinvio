@@ -33,7 +33,7 @@ final class ShortcutCheatSheetController {
   private static let holdDelay: TimeInterval = 0.6
 
   private let configurationStore: QuickDrawConfigurationStore
-  private let foregroundProvider: ForegroundApplicationProvider
+  private let foregroundProvider: any ForegroundApplicationProviding
   private let activeTabProvider: ChromeActiveTabProvider
   private let languageProvider: () -> AppLanguage
   private let panel: NSPanel
@@ -44,6 +44,10 @@ final class ShortcutCheatSheetController {
   private var pendingModifiers: Set<ModifierKey>?
   private var pendingPresentation: DispatchWorkItem?
   private var pendingPreviewDismissal: DispatchWorkItem?
+
+  var isPreviewVisible: Bool {
+    pendingPreviewDismissal != nil && panel.isVisible
+  }
 
   var isCheatSheetEnabled = true {
     didSet {
@@ -65,7 +69,7 @@ final class ShortcutCheatSheetController {
 
   init(
     configurationStore: QuickDrawConfigurationStore,
-    foregroundProvider: ForegroundApplicationProvider,
+    foregroundProvider: any ForegroundApplicationProviding,
     activeTabProvider: ChromeActiveTabProvider,
     languageProvider: @escaping () -> AppLanguage
   ) {
@@ -98,7 +102,7 @@ final class ShortcutCheatSheetController {
 
     if modifiers.isEmpty {
       isAwaitingModifierRelease = false
-      reset()
+      if pendingPreviewDismissal == nil { reset() }
       return
     }
     guard !isAwaitingModifierRelease else {
