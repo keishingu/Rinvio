@@ -71,9 +71,9 @@ final class QuickDrawConfigurationTests: XCTestCase {
     let store = QuickDrawConfigurationStore(fileURL: nil)
     let meetingTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .mute))
 
-    try store.setTriggerOverride(meetingTrigger, for: .hardReload)
+    try store.setTriggerOverride(meetingTrigger, for: .toggleTerminal)
 
-    XCTAssertEqual(store.trigger(for: .hardReload), meetingTrigger)
+    XCTAssertEqual(store.trigger(for: .toggleTerminal), meetingTrigger)
   }
 
   func testRejectsSameTriggerAcrossDomainsSharedByTeams() throws {
@@ -84,6 +84,17 @@ final class QuickDrawConfigurationTests: XCTestCase {
       try store.setTriggerOverride(meetingTrigger, for: .quickSwitcher)
     ) { error in
       XCTAssertEqual(error as? QuickDrawConfigurationError, .duplicateTrigger(.mute))
+    }
+  }
+
+  func testRejectsSameTriggerAcrossBrowserAndGmail() throws {
+    let store = QuickDrawConfigurationStore(fileURL: nil)
+    let browserTrigger = try XCTUnwrap(ActionCatalog.defaultTrigger(for: .hardReload))
+
+    XCTAssertThrowsError(
+      try store.setTriggerOverride(browserTrigger, for: .replyEmail)
+    ) { error in
+      XCTAssertEqual(error as? QuickDrawConfigurationError, .duplicateTrigger(.hardReload))
     }
   }
 

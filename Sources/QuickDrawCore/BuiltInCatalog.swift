@@ -111,6 +111,21 @@ public struct BuiltInCatalog: Sendable {
       || applications.contains { application in
         application.domains.contains(first) && application.domains.contains(second)
       }
+      || webDomain(first, overlapsBrowserDomain: second)
+      || webDomain(second, overlapsBrowserDomain: first)
+  }
+
+  private func webDomain(
+    _ webDomain: ActionDomain,
+    overlapsBrowserDomain browserDomain: ActionDomain
+  ) -> Bool {
+    applications.contains { application in
+      guard
+        application.domains.contains(webDomain),
+        let browserTarget = application.webApplication?.browserTarget
+      else { return false }
+      return self.application(for: browserTarget).domains.contains(browserDomain)
+    }
   }
 
   public func target(forBundleIdentifier bundleIdentifier: String) -> ActionTarget? {
