@@ -48,11 +48,11 @@ QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/bui
 
 1. 起動時に表示されるQuickDraw Windowで、System / Finder / Meeting / Chat / Mail / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
    表示言語はSidebarの`Settings`から日本語／Englishを切り替えられる。QuickDraw全体の有効／停止はSidebar下部の状態表示右端にあるToggleで切り替える。
-2. 権限を与える前に確認する場合はAction Inspectorの`Dry Run`を有効にし、対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
-3. 実配送を試す場合はInspectorまたはMenu Barの`Request Accessibility Permission…`を選ぶ。
+2. 権限を与える前に確認する場合は`Settings`で`Developer Mode`をONにし、`Information` → `Developer Tools`の`Dry Run`を有効にする。対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
+3. 実配送を試す場合は`Information`のAccessibilityセクション、またはMenu Barの`Request Accessibility Permission…`を選ぶ。
 4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。
 5. Google MeetまたはGmailを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
-6. Dry Runを無効にし、対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。
+6. `Information` → `Developer Tools`でDry Runを無効にする（`Developer Mode`をOFFに戻しても同時に無効になる）。対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。
 
 ## Shortcut Guide
 
