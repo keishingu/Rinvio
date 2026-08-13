@@ -11,8 +11,8 @@
 
 ## Scope
 
-- System / Finder / Meeting / Chat / Mail / Development / Browserに分類した85のBuilt-in Action
-- Microsoft Teams / Zoom Workplace / Google Meet / Slack / Discord / Cairn / Apple Mail / Gmail / Microsoft Outlook / Codex / Claude / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
+- System / Finder / Meeting / Note / Chat / Mail / Development / Browserに分類した95のBuilt-in Action
+- Microsoft Teams（App / Web）/ Zoom Workplace（App / Web）/ Google Meet / Apple Notes / Notion（App / Web）/ Obsidian / Microsoft OneNote / Slack / Discord / Cairn / Apple Mail / Gmail / Microsoft Outlook / Codex / Claude / Antigravity / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
 - Application TargetはForeground-only。macOS操作は純正キーボードショートカットを参照し、編集はSystem Settingsへ委譲
 - Action-first native settings window with an application mapping inspector
 - Installed applications can be included in or excluded from QuickDraw individually
@@ -133,6 +133,7 @@ macOS推奨では`Command + Shift + 矢印`をWorkspace全体という範囲大�
 | Home | `⌥H` | Finder: `⇧⌘H` |
 | Desktop | `⌥D` | Finder: `⇧⌘D` |
 | Downloads | `⌥L` | Finder: `⌘⌥L` |
+| Copy Selected Path | `⌘L` | Finder: `⌥⌘C` |
 
 ### Meeting
 
@@ -154,6 +155,24 @@ macOS推奨では`Command + Shift + 矢印`をWorkspace全体という範囲大�
 | Reaction: 😂 | `⌥4` | — | `⌥⌘7` | — |
 | Reaction: 😮 | `⌥5` | — | `⌥⌘8` | — |
 | Reaction: 🎉 | `⌥6` | — | `⌥⌘9` | — |
+
+Teams WebはTeams Appと同じMeetingショートカットへ変換します。Zoom WebはActive TabのTarget判定とApplication設定に対応しますが、Zoom公式がWeb App向けに公開している会議操作ショートカットにトグル操作がないため、既定Mappingは未設定です。
+
+### Note
+
+| Action | Trigger | Apple Notes | Notion App | Notion Web | Obsidian | OneNote |
+|---|---|---|---|---|---|---|
+| New Note | `⌥N` | `⌘N` | `⌘N` | — | `⌘N` | `⌘N` |
+| Open Note | `⌥O` | `⌥⌘F` | `⌘P` | `⌘P` | `⌘O` | `⌘⌥F` |
+| Find in Note | `⌥F` | `⌘F` | `⌘F` | `⌘F` | `⌘F` | `⌘F` |
+| Previous Note | `⌥⌘←` | `⌥⌘[` | `⌘[` | `⌘[` | `⌥⌘←` | `⌘Page Up` |
+| Next Note | `⌥⌘→` | `⌥⌘]` | `⌘]` | `⌘]` | `⌥⌘→` | `⌘Page Down` |
+| Comment | `⌥M` | — | `⇧⌘M` | `⇧⌘M` | `⌘/` | — |
+| Go Up One Level | `⌥U` | — | `⇧⌘U` | `⇧⌘U` | — | — |
+| Block Action Menu | `⌥B` | — | `⌘/` | `⌘/` | — | — |
+| Duplicate Block | `⌃⌥D` | — | `⌘D` | `⌘D` | — | — |
+
+NotionはChromeのForeground Tabが`www.notion.so`または`notion.so`の時だけ対象です。
 
 ### Chat
 
@@ -184,6 +203,8 @@ GmailはChromeのForeground Tabが`mail.google.com`の時だけ対象です。`C
 ### Development
 
 JetBrains列はIntelliJ IDEA / WebStorm / RubyMine / PyCharm / GoLand / CLion / Rider / Android StudioのmacOS既定キーマップを共有します。各製品はApplication設定では個別に表示・Overrideできます。
+
+AI AgentにはAntigravityも表示し、New Sessionを`⌘N`へ変換します。
 
 | Action | Trigger | Codex | Claude | VS Code / Cursor | Xcode | JetBrains |
 |---|---|---|---|---|---|---|

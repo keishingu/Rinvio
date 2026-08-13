@@ -191,6 +191,15 @@
       }
     },
     {
+      "action": "finderCopyPath",
+      "domain": "finder",
+      "defaultTrigger": {
+        "virtualKeyCode": 37,
+        "modifiers": ["command"],
+        "displayValue": "⌘L"
+      }
+    },
+    {
       "action": "mute",
       "domain": "meeting",
       "defaultTrigger": {
@@ -332,6 +341,87 @@
         "virtualKeyCode": 22,
         "modifiers": ["option"],
         "displayValue": "⌥6"
+      }
+    },
+    {
+      "action": "newNote",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 45,
+        "modifiers": ["option"],
+        "displayValue": "⌥N"
+      }
+    },
+    {
+      "action": "openNote",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 31,
+        "modifiers": ["option"],
+        "displayValue": "⌥O"
+      }
+    },
+    {
+      "action": "findInNote",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 3,
+        "modifiers": ["option"],
+        "displayValue": "⌥F"
+      }
+    },
+    {
+      "action": "previousNote",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 123,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌥⌘←"
+      }
+    },
+    {
+      "action": "nextNote",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 124,
+        "modifiers": ["command", "option"],
+        "displayValue": "⌥⌘→"
+      }
+    },
+    {
+      "action": "addComment",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 46,
+        "modifiers": ["option"],
+        "displayValue": "⌥M"
+      }
+    },
+    {
+      "action": "goUpOneLevel",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 32,
+        "modifiers": ["option"],
+        "displayValue": "⌥U"
+      }
+    },
+    {
+      "action": "openBlockMenu",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 11,
+        "modifiers": ["option"],
+        "displayValue": "⌥B"
+      }
+    },
+    {
+      "action": "duplicateBlock",
+      "domain": "note",
+      "defaultTrigger": {
+        "virtualKeyCode": 2,
+        "modifiers": ["control", "option"],
+        "displayValue": "⌃⌥D"
       }
     },
     {
@@ -804,6 +894,65 @@
       "officialURL": "https://meet.google.com/"
     },
     {
+      "target": "microsoftTeamsWeb",
+      "domains": ["meeting"],
+      "bundleIdentifiers": [],
+      "inheritsMappingsFrom": "microsoftTeams",
+      "webApplication": {
+        "browserTarget": "googleChrome",
+        "scheme": "https",
+        "hosts": ["teams.cloud.microsoft", "teams.microsoft.com"]
+      },
+      "officialURL": "https://teams.cloud.microsoft/"
+    },
+    {
+      "target": "zoomWeb",
+      "domains": ["meeting"],
+      "bundleIdentifiers": [],
+      "webApplication": {
+        "browserTarget": "googleChrome",
+        "scheme": "https",
+        "host": "app.zoom.us"
+      },
+      "officialURL": "https://app.zoom.us/wc/"
+    },
+    {
+      "target": "appleNotes",
+      "domains": ["note"],
+      "bundleIdentifiers": ["com.apple.Notes"],
+      "officialURL": "https://support.apple.com/guide/notes/welcome/mac"
+    },
+    {
+      "target": "notion",
+      "domains": ["note"],
+      "bundleIdentifiers": ["notion.id"],
+      "inheritsMappingsFrom": "notionWeb",
+      "officialURL": "https://www.notion.com/desktop"
+    },
+    {
+      "target": "notionWeb",
+      "domains": ["note"],
+      "bundleIdentifiers": [],
+      "webApplication": {
+        "browserTarget": "googleChrome",
+        "scheme": "https",
+        "hosts": ["www.notion.so", "notion.so"]
+      },
+      "officialURL": "https://www.notion.so/"
+    },
+    {
+      "target": "obsidian",
+      "domains": ["note"],
+      "bundleIdentifiers": ["md.obsidian"],
+      "officialURL": "https://obsidian.md/download"
+    },
+    {
+      "target": "microsoftOneNote",
+      "domains": ["note"],
+      "bundleIdentifiers": ["com.microsoft.onenote.mac"],
+      "officialURL": "https://www.microsoft.com/microsoft-365/onenote/digital-note-taking-app"
+    },
+    {
       "target": "codex",
       "domains": ["development"],
       "bundleIdentifiers": ["com.openai.codex"],
@@ -814,6 +963,12 @@
       "domains": ["development"],
       "bundleIdentifiers": ["com.anthropic.claudefordesktop"],
       "officialURL": "https://claude.ai/download"
+    },
+    {
+      "target": "antigravity",
+      "domains": ["development"],
+      "bundleIdentifiers": ["com.google.antigravity"],
+      "officialURL": "https://antigravity.google/download"
     },
     {
       "target": "visualStudioCode",
@@ -1023,6 +1178,14 @@
       "execution": {
         "method": "keyboardShortcut",
         "shortcut": {"virtualKeyCode": 37, "modifiers": ["command", "option"], "displayValue": "⌘⌥L"}
+      }
+    },
+    {
+      "action": "finderCopyPath",
+      "target": "finder",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 8, "modifiers": ["command", "option"], "displayValue": "⌥⌘C"}
       }
     },
     {
@@ -1258,8 +1421,216 @@
       }
     },
     {
+      "action": "openNote",
+      "target": "notionWeb",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 35, "modifiers": ["command"], "displayValue": "⌘P"}
+      }
+    },
+    {
+      "action": "newNote",
+      "target": "appleNotes",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "openNote",
+      "target": "appleNotes",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command", "option"], "displayValue": "⌥⌘F"}
+      }
+    },
+    {
+      "action": "findInNote",
+      "target": "appleNotes",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command"], "displayValue": "⌘F"}
+      }
+    },
+    {
+      "action": "previousNote",
+      "target": "appleNotes",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 33, "modifiers": ["command", "option"], "displayValue": "⌥⌘["}
+      }
+    },
+    {
+      "action": "nextNote",
+      "target": "appleNotes",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 30, "modifiers": ["command", "option"], "displayValue": "⌥⌘]"}
+      }
+    },
+    {
+      "action": "findInNote",
+      "target": "notionWeb",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command"], "displayValue": "⌘F"}
+      }
+    },
+    {
+      "action": "previousNote",
+      "target": "notionWeb",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 33, "modifiers": ["command"], "displayValue": "⌘["}
+      }
+    },
+    {
+      "action": "nextNote",
+      "target": "notionWeb",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 30, "modifiers": ["command"], "displayValue": "⌘]"}
+      }
+    },
+    {
+      "action": "addComment",
+      "target": "notionWeb",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 46, "modifiers": ["command", "shift"], "displayValue": "⇧⌘M"}
+      }
+    },
+    {
+      "action": "goUpOneLevel",
+      "target": "notionWeb",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 32, "modifiers": ["command", "shift"], "displayValue": "⇧⌘U"}
+      }
+    },
+    {
+      "action": "openBlockMenu",
+      "target": "notionWeb",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 44, "modifiers": ["command"], "displayValue": "⌘/"}
+      }
+    },
+    {
+      "action": "duplicateBlock",
+      "target": "notionWeb",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 2, "modifiers": ["command"], "displayValue": "⌘D"}
+      }
+    },
+    {
+      "action": "newNote",
+      "target": "notion",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "newNote",
+      "target": "obsidian",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "openNote",
+      "target": "obsidian",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 31, "modifiers": ["command"], "displayValue": "⌘O"}
+      }
+    },
+    {
+      "action": "findInNote",
+      "target": "obsidian",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command"], "displayValue": "⌘F"}
+      }
+    },
+    {
+      "action": "previousNote",
+      "target": "obsidian",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 123, "modifiers": ["command", "option"], "displayValue": "⌥⌘←"}
+      }
+    },
+    {
+      "action": "nextNote",
+      "target": "obsidian",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 124, "modifiers": ["command", "option"], "displayValue": "⌥⌘→"}
+      }
+    },
+    {
+      "action": "addComment",
+      "target": "obsidian",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 44, "modifiers": ["command"], "displayValue": "⌘/"}
+      }
+    },
+    {
+      "action": "newNote",
+      "target": "microsoftOneNote",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "openNote",
+      "target": "microsoftOneNote",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command", "option"], "displayValue": "⌘⌥F"}
+      }
+    },
+    {
+      "action": "findInNote",
+      "target": "microsoftOneNote",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 3, "modifiers": ["command"], "displayValue": "⌘F"}
+      }
+    },
+    {
+      "action": "previousNote",
+      "target": "microsoftOneNote",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 116, "modifiers": ["command"], "displayValue": "⌘Page Up"}
+      }
+    },
+    {
+      "action": "nextNote",
+      "target": "microsoftOneNote",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 121, "modifiers": ["command"], "displayValue": "⌘Page Down"}
+      }
+    },
+    {
       "action": "newSession",
       "target": "codex",
+      "execution": {
+        "method": "keyboardShortcut",
+        "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}
+      }
+    },
+    {
+      "action": "newSession",
+      "target": "antigravity",
       "execution": {
         "method": "keyboardShortcut",
         "shortcut": {"virtualKeyCode": 45, "modifiers": ["command"], "displayValue": "⌘N"}

@@ -36,6 +36,17 @@ final class BuiltInCatalogTests: XCTestCase {
       .claude
     )
     XCTAssertEqual(
+      ActionCatalog.target(forBundleIdentifier: "com.google.antigravity"),
+      .antigravity
+    )
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "com.apple.Notes"), .appleNotes)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "notion.id"), .notion)
+    XCTAssertEqual(ActionCatalog.target(forBundleIdentifier: "md.obsidian"), .obsidian)
+    XCTAssertEqual(
+      ActionCatalog.target(forBundleIdentifier: "com.microsoft.onenote.mac"),
+      .microsoftOneNote
+    )
+    XCTAssertEqual(
       ActionCatalog.target(forBundleIdentifier: "com.microsoft.VSCode"),
       .visualStudioCode
     )
@@ -117,6 +128,11 @@ final class BuiltInCatalogTests: XCTestCase {
     XCTAssertEqual(
       ActionCatalog.defaultShortcut(for: .finderDownloads, target: .finder)?.displayValue,
       "⌘⌥L"
+    )
+    XCTAssertEqual(ActionCatalog.defaultTrigger(for: .finderCopyPath)?.displayValue, "⌘L")
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .finderCopyPath, target: .finder)?.displayValue,
+      "⌥⌘C"
     )
   }
 
@@ -205,11 +221,78 @@ final class BuiltInCatalogTests: XCTestCase {
       )?.target,
       .gmail
     )
+    XCTAssertEqual(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://teams.cloud.microsoft/v2/"))
+      )?.target,
+      .microsoftTeamsWeb
+    )
+    XCTAssertEqual(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://teams.microsoft.com/v2/"))
+      )?.target,
+      .microsoftTeamsWeb
+    )
+    XCTAssertEqual(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://app.zoom.us/wc/123/join"))
+      )?.target,
+      .zoomWeb
+    )
+    XCTAssertEqual(
+      ActionCatalog.webApplication(
+        in: .googleChrome,
+        matching: try XCTUnwrap(URL(string: "https://www.notion.so/workspace/page"))
+      )?.target,
+      .notionWeb
+    )
     XCTAssertNil(
       ActionCatalog.webApplication(
         in: .googleChrome,
         matching: try XCTUnwrap(URL(string: "https://example.com"))
       )
+    )
+  }
+
+  func testTeamsWebInheritsMeetingMappings() {
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .mute, target: .microsoftTeamsWeb),
+      ActionCatalog.defaultShortcut(for: .mute, target: .microsoftTeams)
+    )
+    XCTAssertEqual(ActionCatalog.application(for: .microsoftTeamsWeb).domains, [.meeting])
+  }
+
+  func testNoteMappingsComeFromCatalog() {
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .openNote, target: .notionWeb)?.displayValue,
+      "⌘P"
+    )
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .newNote, target: .obsidian)?.displayValue,
+      "⌘N"
+    )
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .newNote, target: .notion)?.displayValue,
+      "⌘N"
+    )
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .openNote, target: .notion),
+      ActionCatalog.defaultShortcut(for: .openNote, target: .notionWeb)
+    )
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .addComment, target: .obsidian)?.displayValue,
+      "⌘/"
+    )
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .openNote, target: .appleNotes)?.displayValue,
+      "⌥⌘F"
+    )
+    XCTAssertEqual(
+      ActionCatalog.defaultShortcut(for: .nextNote, target: .microsoftOneNote)?.displayValue,
+      "⌘Page Down"
     )
   }
 

@@ -190,10 +190,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       updateTriggerPresentation()
       return error
     }
-    model.onAlignDevelopmentTriggers = {
-      [weak coordinator, weak controller, weak model] target in
+    model.onAlignTriggers = {
+      [weak coordinator, weak controller, weak model] target, actions in
       let result =
-        coordinator?.alignDevelopmentTriggers(to: target)
+        coordinator?.alignTriggers(actions, to: target)
         ?? TriggerAlignmentResult(
           appliedCount: 0,
           skippedDuplicateCount: 0,

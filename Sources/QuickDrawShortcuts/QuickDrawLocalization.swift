@@ -90,6 +90,9 @@ struct QuickDrawCopy {
   var meetingControls: String { text("会議コントロール", "Meeting controls") }
   var panelsAndSharing: String { text("パネルと共有", "Panels and sharing") }
   var reactions: String { text("リアクション", "Reactions") }
+  var noteCreation: String { text("ノート作成", "Note creation") }
+  var noteNavigation: String { text("ノートの検索と移動", "Note search and navigation") }
+  var noteEditing: String { text("コメントとブロック操作", "Comments and block actions") }
   var agentSessions: String { text("エージェントセッション", "Agent sessions") }
   var terminals: String { text("ターミナル", "Terminal") }
   var regions: String { text("UI領域", "UI regions") }
@@ -218,10 +221,10 @@ struct QuickDrawCopy {
   func alignTriggersTo(_ application: ApplicationMapping) -> String {
     text("\(application.compactName)に寄せる", "Match \(application.compactName)")
   }
-  var alignDevelopmentTriggers: String {
+  var alignTriggers: String {
     text("ショートカットを統一", "Match shortcuts")
   }
-  var alignDevelopmentTriggersDescription: String {
+  var alignTriggersDescription: String {
     text(
       "グローバルショートカットを選んだアプリに合わせます。",
       "Match global shortcuts to the selected app."
@@ -463,6 +466,7 @@ struct QuickDrawCopy {
     case .system: actionDomainName(.system)
     case .finder: actionDomainName(.finder)
     case .meeting: actionDomainName(.meeting)
+    case .note: actionDomainName(.note)
     case .chat: actionDomainName(.chat)
     case .mail: actionDomainName(.mail)
     case .development: actionDomainName(.development)
@@ -503,6 +507,7 @@ struct QuickDrawCopy {
     case .system: text("macOS", "macOS")
     case .finder: text("Finder", "Finder")
     case .meeting: text("Meeting", "Meeting")
+    case .note: text("Note", "Note")
     case .chat: text("Chat", "Chat")
     case .mail: text("Mail", "Mail")
     case .development: text("Development", "Development")
@@ -526,6 +531,11 @@ struct QuickDrawCopy {
       text(
         "会議アプリごとの操作差を、共通Actionへ変換します。",
         "Translate meeting controls into the same Actions across apps."
+      )
+    case .note:
+      text(
+        "ノートアプリごとの作成・検索・移動操作を統一します。",
+        "Unify note creation, search, and navigation across apps."
       )
     case .chat:
       text(
@@ -564,6 +574,9 @@ struct QuickDrawCopy {
     case .meetingControls: meetingControls
     case .panelsAndSharing: panelsAndSharing
     case .reactions: reactions
+    case .noteCreation: noteCreation
+    case .noteNavigation: noteNavigation
+    case .noteEditing: noteEditing
     case .agentSessions: agentSessions
     case .terminals: terminals
     case .regions: regions
@@ -606,6 +619,7 @@ struct QuickDrawCopy {
     case .finderHome: text("ホーム", "Home")
     case .finderDesktop: text("デスクトップ", "Desktop")
     case .finderDownloads: text("ダウンロード", "Downloads")
+    case .finderCopyPath: text("選択項目のパスをコピー", "Copy Selected Path")
     case .mute: text("ミュート切替", "Mute Toggle")
     case .camera: text("カメラ切替", "Camera Toggle")
     case .raiseHand: text("挙手切替", "Raise Hand Toggle")
@@ -622,6 +636,15 @@ struct QuickDrawCopy {
     case .reactionLaugh: text("リアクション：😂", "Reaction: 😂")
     case .reactionWow: text("リアクション：😮", "Reaction: 😮")
     case .reactionCelebrate: text("リアクション：🎉", "Reaction: 🎉")
+    case .newNote: text("新しいノート", "New Note")
+    case .openNote: text("ノートを開く", "Open Note")
+    case .findInNote: text("ノート内を検索", "Find in Note")
+    case .previousNote: text("前のノート", "Previous Note")
+    case .nextNote: text("次のノート", "Next Note")
+    case .addComment: text("コメント", "Comment")
+    case .goUpOneLevel: text("1階層上へ", "Go Up One Level")
+    case .openBlockMenu: text("ブロック操作メニュー", "Block Action Menu")
+    case .duplicateBlock: text("ブロックを複製", "Duplicate Block")
     case .newSession: text("新しいセッション", "New Session")
     case .toggleTerminal: text("ターミナル表示切替", "Toggle Terminal")
     case .newTerminal: text("新しいターミナル", "New Terminal")
@@ -723,6 +746,11 @@ struct QuickDrawCopy {
       text("Finderでデスクトップを開きます", "Open the Desktop folder in Finder")
     case .finderDownloads:
       text("Finderでダウンロードを開きます", "Open the Downloads folder in Finder")
+    case .finderCopyPath:
+      text(
+        "Finderで選択中の項目の絶対パスをクリップボードへコピーします",
+        "Copy the absolute path of the selected Finder item to the clipboard"
+      )
     case .mute:
       text("現在の会議をミュート／ミュート解除します", "Mute or unmute the active meeting")
     case .camera:
@@ -758,6 +786,27 @@ struct QuickDrawCopy {
       text("😮リアクションを送信します", "Send a wow reaction")
     case .reactionCelebrate:
       text("🎉リアクションを送信します", "Send a celebration reaction")
+    case .newNote:
+      text("新しいノートを作成します", "Create a new note")
+    case .openNote:
+      text("名前からノートを検索して開きます", "Find and open a note by name")
+    case .findInNote:
+      text("現在のノート内の文字列を検索します", "Find text in the current note")
+    case .previousNote:
+      text("ノートの移動履歴を一つ戻ります", "Go back in note navigation history")
+    case .nextNote:
+      text("ノートの移動履歴を一つ進みます", "Go forward in note navigation history")
+    case .addComment:
+      text(
+        "選択部分へのコメントを追加または切り替えます",
+        "Add or toggle a comment for the selection"
+      )
+    case .goUpOneLevel:
+      text("現在のノートから1階層上へ移動します", "Move up one level from the current note")
+    case .openBlockMenu:
+      text("選択中のブロックの操作メニューを開きます", "Open the action menu for the selected block")
+    case .duplicateBlock:
+      text("選択中のブロックを複製します", "Duplicate the selected block")
     case .newSession:
       text(
         "現在の開発エージェントで新しいセッションを開始します",

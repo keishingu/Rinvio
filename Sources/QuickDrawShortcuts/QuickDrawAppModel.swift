@@ -8,6 +8,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
   case system
   case finder
   case meeting
+  case note
   case chat
   case mail
   case development
@@ -26,6 +27,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .system: "macwindow.on.rectangle"
     case .finder: "folder.fill"
     case .meeting: "person.2.fill"
+    case .note: "note.text"
     case .chat: "bubble.left.and.bubble.right.fill"
     case .mail: "envelope.fill"
     case .development: "wrench.and.screwdriver.fill"
@@ -44,6 +46,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .system: .system
     case .finder: .finder
     case .meeting: .meeting
+    case .note: .note
     case .chat: .chat
     case .mail: .mail
     case .development, .developmentAIAgent, .developmentEditor, .developmentTerminal:
@@ -85,10 +88,18 @@ struct ApplicationMapping: Identifiable, Equatable {
       (.macOS, "macOS", "macwindow.on.rectangle"),
       (.finder, "Finder", "folder.fill"),
       (.microsoftTeams, "Teams", "person.2.fill"),
+      (.microsoftTeamsWeb, "Teams Web", "globe"),
       (.zoomWorkplace, "Zoom", "video.fill"),
+      (.zoomWeb, "Zoom Web", "globe"),
       (.googleMeet, "Meet", "globe"),
+      (.appleNotes, "Apple Notes", "note.text"),
+      (.notion, "Notion", "note.text"),
+      (.notionWeb, "Notion Web", "note.text"),
+      (.obsidian, "Obsidian", "diamond.fill"),
+      (.microsoftOneNote, "OneNote", "note.text"),
       (.codex, "Codex", "chevron.left.forwardslash.chevron.right"),
       (.claude, "Claude", "terminal.fill"),
+      (.antigravity, "Antigravity", "sparkles"),
       (.visualStudioCode, "VS Code", "chevron.left.forwardslash.chevron.right"),
       (.cursor, "Cursor", "cursorarrow.rays"),
       (.xcode, "Xcode", "hammer.fill"),
@@ -157,7 +168,7 @@ enum DevelopmentApplicationCategory: String, CaseIterable, Identifiable {
   func contains(_ target: ActionTarget) -> Bool {
     switch self {
     case .aiAgent:
-      [.codex, .claude].contains(target)
+      [.codex, .claude, .antigravity].contains(target)
     case .editor:
       [
         .visualStudioCode, .cursor, .xcode, .intellijIdea, .webStorm, .rubyMine,
@@ -177,6 +188,9 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case meetingControls
   case panelsAndSharing
   case reactions
+  case noteCreation
+  case noteNavigation
+  case noteEditing
   case agentSessions
   case terminals
   case regions
@@ -310,6 +324,11 @@ struct ActionDefinition: Identifiable, Equatable {
       systemImage: "arrow.down.circle.fill",
       category: .finderNavigation
     ),
+    ActionDefinition(
+      action: .finderCopyPath,
+      systemImage: "doc.on.clipboard",
+      category: .finderNavigation
+    ),
     ActionDefinition(action: .mute, systemImage: "mic.slash.fill", category: .meetingControls),
     ActionDefinition(action: .camera, systemImage: "video.fill", category: .meetingControls),
     ActionDefinition(
@@ -362,6 +381,51 @@ struct ActionDefinition: Identifiable, Equatable {
       action: .reactionCelebrate,
       systemImage: "party.popper.fill",
       category: .reactions
+    ),
+    ActionDefinition(
+      action: .newNote,
+      systemImage: "square.and.pencil",
+      category: .noteCreation
+    ),
+    ActionDefinition(
+      action: .openNote,
+      systemImage: "doc.text.magnifyingglass",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .findInNote,
+      systemImage: "text.magnifyingglass",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .previousNote,
+      systemImage: "chevron.backward",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .nextNote,
+      systemImage: "chevron.forward",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .goUpOneLevel,
+      systemImage: "arrow.up.to.line",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .addComment,
+      systemImage: "text.bubble",
+      category: .noteEditing
+    ),
+    ActionDefinition(
+      action: .openBlockMenu,
+      systemImage: "slider.horizontal.3",
+      category: .noteEditing
+    ),
+    ActionDefinition(
+      action: .duplicateBlock,
+      systemImage: "plus.square.on.square",
+      category: .noteEditing
     ),
     ActionDefinition(
       action: .newSession,
@@ -676,7 +740,7 @@ final class QuickDrawAppModel: ObservableObject {
   var onUnassignTrigger: ((Action) -> String?)?
   var onResetTrigger: ((Action) -> String?)?
   var onResetAction: ((Action) -> String?)?
-  var onAlignDevelopmentTriggers: ((ActionTarget) -> TriggerAlignmentResult)?
+  var onAlignTriggers: ((ActionTarget, [Action]) -> TriggerAlignmentResult)?
 
   init(
     defaults: UserDefaults = .standard,
@@ -884,8 +948,8 @@ final class QuickDrawAppModel: ObservableObject {
     return actions.count { shortcut(for: $0.action, target: target) != nil }
   }
 
-  func alignDevelopmentTriggers(to application: ApplicationMapping) {
-    guard let result = onAlignDevelopmentTriggers?(application.target) else { return }
+  func alignTriggers(to application: ApplicationMapping, actions: [Action]) {
+    guard let result = onAlignTriggers?(application.target, actions) else { return }
     shortcutEditingError = result.error
     triggerAlignmentNotice =
       result.error == nil

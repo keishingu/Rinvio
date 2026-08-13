@@ -192,17 +192,27 @@ final class HotKeyConfigurationCoordinator {
     }
   }
 
-  func alignDevelopmentTriggers(to target: ActionTarget) -> TriggerAlignmentResult {
+  func alignTriggers(_ actions: [Action], to target: ActionTarget) -> TriggerAlignmentResult {
     var shortcuts: [Action: KeyStroke] = [:]
     var usedShortcuts: Set<PhysicalShortcut> = []
     var skippedDuplicateCount = 0
-    for action in Action.allCases where action.domain == .development {
+    for action in actions where !ActionCatalog.isSystemWide(action) {
       guard let shortcut = store.shortcut(for: action, target: target) else { continue }
       if usedShortcuts.insert(PhysicalShortcut(shortcut)).inserted {
         shortcuts[action] = shortcut
       } else {
         skippedDuplicateCount += 1
       }
+    }
+
+    var nextBindings = currentBindings()
+    nextBindings.merge(shortcuts) { _, aligned in aligned }
+    while let conflict = firstConflict(in: nextBindings) {
+      let actionToKeep = shortcuts[conflict.0] == nil ? conflict.0 : conflict.1
+      let actionToSkip = actionToKeep == conflict.0 ? conflict.1 : conflict.0
+      guard shortcuts.removeValue(forKey: actionToSkip) != nil else { break }
+      nextBindings[actionToSkip] = store.trigger(for: actionToSkip)
+      skippedDuplicateCount += 1
     }
     guard isRegistrationAllowed else {
       do {
@@ -226,16 +236,6 @@ final class HotKeyConfigurationCoordinator {
         skippedDuplicateCount: skippedDuplicateCount,
         error: "Global shortcut handler is unavailable"
       )
-    }
-
-    var nextBindings = currentBindings()
-    nextBindings.merge(shortcuts) { _, aligned in aligned }
-    while let conflict = firstConflict(in: nextBindings) {
-      let actionToKeep = shortcuts[conflict.0] == nil ? conflict.0 : conflict.1
-      let actionToSkip = actionToKeep == conflict.0 ? conflict.1 : conflict.0
-      guard shortcuts.removeValue(forKey: actionToSkip) != nil else { break }
-      nextBindings[actionToSkip] = store.trigger(for: actionToSkip)
-      skippedDuplicateCount += 1
     }
     do {
       try registrar.register(
