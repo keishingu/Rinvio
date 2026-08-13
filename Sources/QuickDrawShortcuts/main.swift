@@ -11,7 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var shortcutCheatSheetController: ShortcutCheatSheetController?
   private var appModel: QuickDrawAppModel?
   private let logger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "dev.actionrouter.quickdraw-poc",
+    subsystem: Bundle.main.bundleIdentifier ?? "com.keishingu.quickdraw-shortcuts",
     category: "lifecycle"
   )
 
@@ -67,13 +67,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     controller.onStatusChange = { [weak controller, weak menuController, weak model] status in
       guard let controller else { return }
+      let permissions = controller.permissionState
       menuController?.update(
         status: status,
-        hasAccessibilityPermission: controller.hasPostEventAccess
+        permissions: permissions
       )
       model?.update(
         status: status,
-        hasAccessibilityPermission: controller.hasPostEventAccess,
+        permissions: permissions,
         diagnostics: controller.diagnosticsText()
       )
     }
@@ -103,25 +104,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     model.onRunDryCheck = { [weak controller] action in
       controller?.trigger(action, forceDryRun: true)
     }
-    model.onRequestAccessibility = { [weak controller] in
+    model.onRequestInputMonitoring = { [weak controller] in
+      controller?.requestInputMonitoringAccess()
+    }
+    model.onRequestPostEvent = { [weak controller] in
       controller?.requestPostEventAccess()
     }
-    model.onRefreshPermission = { [weak controller, weak coordinator, weak model] in
-      guard let controller else { return false }
-      let granted = controller.hasPostEventAccess
-      if granted, !controller.areHotKeysRegistered {
+    model.onRefreshPermissions = { [weak controller, weak coordinator, weak model] in
+      guard let controller else {
+        return KeyboardPermissionState(
+          hasInputMonitoringAccess: false,
+          hasPostEventAccess: false
+        )
+      }
+      let permissions = controller.permissionState
+      if permissions.canMonitorTriggers, !controller.areHotKeysRegistered {
+        coordinator?.setRegistrationAllowed(true)
         let error = coordinator?.resume()
         let registered = error == nil
         controller.areHotKeysRegistered = registered
         model?.setHotKeysRegistered(registered)
-        if registered {
-          model?.setEnabled(true)
-        }
+      } else if !permissions.canMonitorTriggers, controller.areHotKeysRegistered {
+        coordinator?.setRegistrationAllowed(false)
+        controller.areHotKeysRegistered = false
+        model?.setHotKeysRegistered(false)
+      } else if !permissions.canMonitorTriggers {
+        coordinator?.setRegistrationAllowed(false)
       }
-      return granted
+      return permissions
     }
     model.onRefreshDiagnostics = { [weak controller] in
-      controller?.diagnosticsText() ?? "QuickDraw Diagnostics unavailable"
+      controller?.diagnosticsText() ?? "QuickDraw Shortcuts Diagnostics unavailable"
     }
     model.onLanguageChange = { [weak menuController, weak applicationMenuController] language in
       menuController?.setLanguage(language)
@@ -136,37 +149,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     model.onShortcutRecordingEnded = {
       [weak coordinator, weak controller, weak model, weak cheatSheetController] in
-      let error = coordinator?.resume()
+      let hasPermission = controller?.hasInputMonitoringAccess == true
+      coordinator?.setRegistrationAllowed(hasPermission)
+      let error = hasPermission ? coordinator?.resume() : "Input Monitoring permission is required"
       cheatSheetController?.isSuppressed = false
-      controller?.areHotKeysRegistered = error == nil
-      model?.setHotKeysRegistered(error == nil)
+      let registered = hasPermission && error == nil
+      controller?.areHotKeysRegistered = registered
+      model?.setHotKeysRegistered(registered)
       return error
     }
     model.onApplyTrigger = { [weak coordinator, weak controller, weak model] action, shortcut in
       let error = coordinator?.applyTrigger(shortcut, for: action)
-      controller?.areHotKeysRegistered = error == nil
-      model?.setHotKeysRegistered(error == nil)
+      let registered = controller?.hasInputMonitoringAccess == true && error == nil
+      controller?.areHotKeysRegistered = registered
+      model?.setHotKeysRegistered(registered)
       updateTriggerPresentation()
       return error
     }
     model.onResetTrigger = { [weak coordinator, weak controller, weak model] action in
       let error = coordinator?.resetTrigger(for: action)
-      controller?.areHotKeysRegistered = error == nil
-      model?.setHotKeysRegistered(error == nil)
+      let registered = controller?.hasInputMonitoringAccess == true && error == nil
+      controller?.areHotKeysRegistered = registered
+      model?.setHotKeysRegistered(registered)
       updateTriggerPresentation()
       return error
     }
     model.onUnassignTrigger = { [weak coordinator, weak controller, weak model] action in
       let error = coordinator?.unassignTrigger(for: action)
-      controller?.areHotKeysRegistered = error == nil
-      model?.setHotKeysRegistered(error == nil)
+      let registered = controller?.hasInputMonitoringAccess == true && error == nil
+      controller?.areHotKeysRegistered = registered
+      model?.setHotKeysRegistered(registered)
       updateTriggerPresentation()
       return error
     }
     model.onResetAction = { [weak coordinator, weak controller, weak model] action in
       let error = coordinator?.resetAction(action)
-      controller?.areHotKeysRegistered = error == nil
-      model?.setHotKeysRegistered(error == nil)
+      let registered = controller?.hasInputMonitoringAccess == true && error == nil
+      controller?.areHotKeysRegistered = registered
+      model?.setHotKeysRegistered(registered)
       updateTriggerPresentation()
       return error
     }
@@ -179,8 +199,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
           skippedDuplicateCount: 0,
           error: "Global shortcut handler is unavailable"
         )
-      controller?.areHotKeysRegistered = result.error == nil
-      model?.setHotKeysRegistered(result.error == nil)
+      let registered = controller?.hasInputMonitoringAccess == true && result.error == nil
+      controller?.areHotKeysRegistered = registered
+      model?.setHotKeysRegistered(registered)
       updateTriggerPresentation()
       return result
     }
@@ -197,11 +218,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     menuController.onRunDryCheck = { [weak controller] in
       controller?.trigger(.mute, forceDryRun: true)
     }
-    menuController.onRequestAccessibility = { [weak controller] in
-      controller?.requestPostEventAccess()
+    menuController.onRequestInputMonitoring = { [weak model] in
+      model?.requestInputMonitoring()
+    }
+    menuController.onRequestPostEvent = { [weak model] in
+      model?.requestPostEvent()
     }
     menuController.onCopyDiagnostics = { [weak controller] in
-      controller?.diagnosticsText() ?? "QuickDraw PoC Diagnostics unavailable"
+      controller?.diagnosticsText() ?? "QuickDraw Shortcuts Diagnostics unavailable"
     }
     applicationMenuController.onSelectSection = { [weak model, weak windowController] section in
       model?.selectSection(section)
@@ -238,73 +262,68 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       windowController?.present()
     }
 
-    do {
-      try coordinator.start(
-        handler: {
-          [weak controller, weak foregroundProvider, weak cheatSheetController] actions in
-          guard foregroundProvider?.isPotentialQuickDrawTargetForeground() == true else {
-            return false
-          }
-          let wasHandled = controller?.trigger(actions) ?? false
-          if wasHandled {
-            DispatchQueue.main.async {
-              cheatSheetController?.handleShortcutExecution()
-            }
-          }
-          return wasHandled
-        },
-        modifierHandler: { [weak cheatSheetController] modifiers in
-          DispatchQueue.main.async {
-            cheatSheetController?.handleModifierChange(modifiers)
-          }
-        },
-        nonModifierKeyHandler: { [weak cheatSheetController] in
-          cheatSheetController?.handleNonModifierKeyPress()
+    coordinator.prepare(
+      handler: {
+        [weak controller, weak foregroundProvider, weak cheatSheetController] actions in
+        guard foregroundProvider?.isPotentialQuickDrawTargetForeground() == true else {
+          return false
         }
-      )
-      controller.areHotKeysRegistered = true
-      model.setHotKeysRegistered(true)
-      let initialStatus = ActionStatus(
-        action: nil,
-        headline: "Enabled — shortcuts ready",
-        detail: controller.permissionSummary,
-        target: "Not detected",
-        isError: !shortcutExecutor.hasPostEventAccess
-      )
-      menuController.update(
-        status: initialStatus,
-        hasAccessibilityPermission: shortcutExecutor.hasPostEventAccess
-      )
-      model.update(
-        status: initialStatus,
-        hasAccessibilityPermission: shortcutExecutor.hasPostEventAccess,
-        diagnostics: controller.diagnosticsText()
-      )
-      logger.info(
-        "QuickDraw PoC started hotkeys=\(controller.triggerSummary, privacy: .public) postEventAccess=\(shortcutExecutor.hasPostEventAccess, privacy: .public)"
-      )
-    } catch {
-      controller.isEnabled = false
-      model.setHotKeysRegistered(false)
-      model.setEnabled(false)
-      let failureStatus = ActionStatus(
-        action: nil,
-        headline: "Global shortcut registration failed",
-        detail: error.localizedDescription,
-        target: "Not detected",
-        isError: true
-      )
-      menuController.update(
-        status: failureStatus,
-        hasAccessibilityPermission: shortcutExecutor.hasPostEventAccess
-      )
-      model.update(
-        status: failureStatus,
-        hasAccessibilityPermission: shortcutExecutor.hasPostEventAccess,
-        diagnostics: controller.diagnosticsText()
-      )
+        let wasHandled = controller?.trigger(actions) ?? false
+        if wasHandled {
+          DispatchQueue.main.async {
+            cheatSheetController?.handleShortcutExecution()
+          }
+        }
+        return wasHandled
+      },
+      modifierHandler: { [weak cheatSheetController] modifiers in
+        DispatchQueue.main.async {
+          cheatSheetController?.handleModifierChange(modifiers)
+        }
+      },
+      nonModifierKeyHandler: { [weak cheatSheetController] in
+        cheatSheetController?.handleNonModifierKeyPress()
+      }
+    )
+
+    coordinator.setRegistrationAllowed(controller.hasInputMonitoringAccess)
+
+    let registrationError =
+      controller.hasInputMonitoringAccess
+      ? coordinator.resume()
+      : "Input Monitoring permission is required"
+    let registered = registrationError == nil
+    controller.areHotKeysRegistered = registered
+    model.setHotKeysRegistered(registered)
+    let permissions = controller.permissionState
+    let initialHeadline: String
+    if !permissions.hasInputMonitoringAccess {
+      initialHeadline = "Input Monitoring required"
+    } else if registrationError != nil {
+      initialHeadline = "Global shortcut registration failed"
+    } else {
+      initialHeadline = "Enabled — shortcuts ready"
+    }
+    let initialStatus = ActionStatus(
+      action: nil,
+      headline: initialHeadline,
+      detail: registrationError ?? controller.permissionSummary,
+      target: "Not detected",
+      isError: registrationError != nil || !permissions.isFullyAuthorized
+    )
+    menuController.update(status: initialStatus, permissions: permissions)
+    model.update(
+      status: initialStatus,
+      permissions: permissions,
+      diagnostics: controller.diagnosticsText()
+    )
+    if let registrationError {
       logger.error(
-        "QuickDraw PoC started without hotkey reason=\(error.localizedDescription, privacy: .public)"
+        "QuickDraw started without hotkey reason=\(registrationError, privacy: .public)"
+      )
+    } else {
+      logger.info(
+        "QuickDraw started hotkeys=\(controller.triggerSummary, privacy: .public) inputMonitoringAccess=\(permissions.hasInputMonitoringAccess, privacy: .public) postEventAccess=\(permissions.hasPostEventAccess, privacy: .public)"
       )
     }
 

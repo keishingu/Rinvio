@@ -1,6 +1,7 @@
 import QuickDrawCore
 import XCTest
-@testable import QuickDrawPoC
+
+@testable import QuickDrawShortcuts
 
 final class ConfiguredSystemShortcutDetectorTests: XCTestCase {
   func testUnknownKeyCodeStillHasDisplayValue() {

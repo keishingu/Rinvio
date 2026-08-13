@@ -61,14 +61,14 @@ Extension側のChrome CommandsをQuickDraw ActionのTriggerとして登録しな
 
 ### 5. QuickDrawリポジトリを段階的モノレポにする
 
-Browser Extension、Native Bridge、共有Protocolは現在のQuickDrawリポジトリで管理する。現時点で既存Swift Packageを`apps/macos`などへ移動しない。Extension PoC開始時に必要なトップレベルディレクトリだけを追加する。
+Browser Extension、Native Bridge、共有Protocolは現在のQuickDrawリポジトリで管理する。現時点で既存Swift Packageを`apps/macos`などへ移動しない。Extension validation開始時に必要なトップレベルディレクトリだけを追加する。
 
 ```text
 QuickDraw/
 ├─ Package.swift
 ├─ Sources/                         # 現在のmacOS App / Coreを維持
 ├─ Tests/
-├─ BrowserExtension/                # PoC開始時に追加
+├─ BrowserExtension/                # validation開始時に追加
 │  ├─ package.json
 │  ├─ src/
 │  │  ├─ service-worker/
@@ -86,7 +86,7 @@ QuickDraw/
 - Native Messaging schemaとfixture
 - App / Native Bridge / Extensionの対応version
 - Adapter contract test
-- Chrome ExtensionとmacOS Appを跨ぐPoC記録
+- Chrome ExtensionとmacOS Appを跨ぐvalidation記録
 
 SwiftとTypeScriptの型生成は、手書きschemaで不整合が実際に問題になるまで導入しない。最初はJSON Schemaと共通fixtureを双方のtestで検証する。
 
@@ -112,7 +112,7 @@ sequenceDiagram
     N-->>Q: success / unavailable / unsupported / timeout
 ```
 
-Chrome Native MessagingはExtension側から接続を開始する。QuickDraw.appとChromeが起動したNative Messaging Hostの間をどう接続するかはPoC対象とし、`NativeBridge`境界の内側へ隔離する。候補はXPCまたは権限を限定したlocal IPCで、loopback HTTP serverは攻撃面が増えるため第一候補にしない。
+Chrome Native MessagingはExtension側から接続を開始する。QuickDraw.appとChromeが起動したNative Messaging Hostの間をどう接続するかはvalidation対象とし、`NativeBridge`境界の内側へ隔離する。候補はXPCまたは権限を限定したlocal IPCで、loopback HTTP serverは攻撃面が増えるため第一候補にしない。
 
 ## Message contract
 
@@ -149,18 +149,18 @@ Arbitrary JavaScript、CSS selector、DOM text、URL、Tab titleをQuickDraw.app
 - Extension未導入・接続失敗でもLevel 1 Shortcut Actionは継続する。
 - Reaction Capabilityを初めて有効化する時にだけExtension導入を案内する。
 
-## PoC scope
+## validation scope
 
-最初のPoCはChrome + Google Meet + `reaction.like`だけを対象にする。
+最初のvalidationはChrome + Google Meet + `reaction.like`だけを対象にする。
 
 1. QuickDraw.appからAction IDを送る。
 2. ActiveなMeet Tabだけを対象にする。
 3. 👍をsemantic DOM accessで1回実行する。
 4. 成功、会議外、Reaction無効、対象Tabなしをtyped resultで返す。
 5. 日本語・英語UI、Meet更新、連続100回で識別と実行成功率を測る。
-6. PoCがgateを満たした後に他ReactionとChromium Browserへ広げる。
+6. validationがgateを満たした後に他ReactionとChromium Browserへ広げる。
 
-PoCではbackground Tab routing、Safari Web Extension、Firefox、Browser-only Mode、Extension内設定画面を扱わない。
+validationではbackground Tab routing、Safari Web Extension、Firefox、Browser-only Mode、Extension内設定画面を扱わない。
 
 ## Certainty
 
@@ -170,10 +170,10 @@ PoCではbackground Tab routing、Safari Web Extension、Firefox、Browser-only 
 | QuickDraw.appがTriggerと設定を所有 | Accepted |
 | ExtensionをAdapterとして同一Repositoryに置く | Accepted |
 | ReactionにはDOM accessが有力 | Likely |
-| Meet DOM elementの安定した識別方法 | Requires PoC |
-| AppとNative Messaging Host間のlocal IPC | Requires PoC |
-| Edge / Brave / Arcで同一Extensionを利用 | Requires PoC |
-| Safari / Firefox対応 | Unsupported in initial PoC |
+| Meet DOM elementの安定した識別方法 | Requires validation |
+| AppとNative Messaging Host間のlocal IPC | Requires validation |
+| Edge / Brave / Arcで同一Extensionを利用 | Requires validation |
+| Safari / Firefox対応 | Unsupported in initial validation |
 
 ## Consequences
 
@@ -200,7 +200,7 @@ Browserだけで完結するが、Trigger、設定、Profile、Diagnosticsがmac
 
 ### macOS AccessibilityだけでMeet Reactionを操作
 
-Extension不要だが、BrowserのAccessibility tree、locale、UI更新への依存が大きい。比較用PoCとfallback候補には残す。
+Extension不要だが、BrowserのAccessibility tree、locale、UI更新への依存が大きい。比較用validationとfallback候補には残す。
 
 ### Apple EventsからJavaScriptを実行
 
@@ -208,7 +208,7 @@ Browser側の追加設定と広い権限説明が必要になり、QuickDrawがa
 
 ### Separate repositories
 
-release cycleを分離しやすい一方、Action ID、schema、fixture、互換性変更が複数PRに分かれる。単一プロダクトの初期PoCには不利なため採用しない。
+release cycleを分離しやすい一方、Action ID、schema、fixture、互換性変更が複数PRに分かれる。単一プロダクトの初期validationには不利なため採用しない。
 
 ## References
 

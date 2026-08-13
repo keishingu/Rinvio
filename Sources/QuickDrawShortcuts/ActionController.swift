@@ -38,26 +38,45 @@ final class ActionController {
   var triggerSummary = "F6/F7/F8"
 
   var permissionSummary: String {
-    hasPostEventAccess ? "Accessibility: Granted" : "Accessibility: Required"
+    if !hasInputMonitoringAccess { return "Input Monitoring: Required" }
+    if !hasPostEventAccess { return "Shortcut Delivery: Required" }
+    return "Keyboard permissions: Granted"
+  }
+
+  var hasInputMonitoringAccess: Bool {
+    inputMonitoringAuthorizer.hasAccess
   }
 
   var hasPostEventAccess: Bool {
     shortcutExecutor.hasPostEventAccess
   }
 
+  var permissionState: KeyboardPermissionState {
+    KeyboardPermissionState(
+      hasInputMonitoringAccess: hasInputMonitoringAccess,
+      hasPostEventAccess: hasPostEventAccess
+    )
+  }
+
   private let pipeline: ActionPipeline
   private let shortcutExecutor: ShortcutExecutor
+  private let inputMonitoringAuthorizer: InputMonitoringAuthorizer
   private var recentReports: [ActionPipelineReport] = []
   private var lastTarget = "Not detected"
   private var lastAction: Action?
   private let logger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "dev.actionrouter.quickdraw-poc",
+    subsystem: Bundle.main.bundleIdentifier ?? "com.keishingu.quickdraw-shortcuts",
     category: "action-routing"
   )
 
-  init(pipeline: ActionPipeline, shortcutExecutor: ShortcutExecutor) {
+  init(
+    pipeline: ActionPipeline,
+    shortcutExecutor: ShortcutExecutor,
+    inputMonitoringAuthorizer: InputMonitoringAuthorizer = InputMonitoringAuthorizer()
+  ) {
     self.pipeline = pipeline
     self.shortcutExecutor = shortcutExecutor
+    self.inputMonitoringAuthorizer = inputMonitoringAuthorizer
   }
 
   @discardableResult
@@ -76,13 +95,37 @@ final class ActionController {
     for action in candidateActions {
       let report = pipeline.run(action: action, mode: mode)
       let consumesTrigger = forceDryRun || report.outcome.consumesTrigger
-      guard consumesTrigger else { continue }
-      record(report)
-      publish(report)
-      return true
+      if consumesTrigger {
+        record(report)
+        publish(report)
+        return true
+      }
+      if case .failed(let failure) = report.outcome {
+        switch failure {
+        case .targetChanged, .shortcutDeliveryFailed:
+          record(report)
+          publish(report)
+          return false
+        default:
+          break
+        }
+      }
     }
     logger.debug("Shortcut passed through because no QuickDraw target matched")
     return false
+  }
+
+  @discardableResult
+  func requestInputMonitoringAccess() -> Bool {
+    let granted = inputMonitoringAuthorizer.requestAccess()
+    publishStateChange(
+      headline: granted ? "Input Monitoring granted" : "Input Monitoring permission requested",
+      detail: granted
+        ? "QuickDraw can now monitor configured triggers"
+        : "Enable QuickDraw in Input Monitoring, then check again",
+      isError: !granted
+    )
+    return granted
   }
 
   @discardableResult
@@ -92,7 +135,7 @@ final class ActionController {
       headline: granted ? "Accessibility granted" : "Accessibility permission requested",
       detail: granted
         ? "Return to a supported application and use a configured trigger"
-        : "Enable QuickDraw PoC in System Settings, then try again",
+        : "Enable QuickDraw in Accessibility, then check again",
       isError: !granted
     )
     return granted
@@ -100,11 +143,12 @@ final class ActionController {
 
   func diagnosticsText() -> String {
     var lines = [
-      "QuickDraw PoC Diagnostics",
+      "QuickDraw Shortcuts Diagnostics",
       "generatedAt=\(ISO8601DateFormatter().string(from: Date()))",
       "hotkeys=\(areHotKeysRegistered ? "registered" : "notRegistered") \(triggerSummary)",
       "enabled=\(isEnabled)",
       "mode=\(isDryRunEnabled ? "dryRun" : "live")",
+      "inputMonitoringAccess=\(hasInputMonitoringAccess)",
       "postEventAccess=\(hasPostEventAccess)",
       "lastAction=\(lastAction?.rawValue ?? "none")",
       "lastTarget=\(lastTarget)",

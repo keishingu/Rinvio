@@ -67,6 +67,14 @@ struct QuickDrawCopy {
   }
   var developerTools: String { text("開発者ツール", "Developer Tools") }
   var diagnostics: String { text("情報", "Information") }
+  var aboutQuickDraw: String {
+    text("QuickDraw Shortcutsについて", "About QuickDraw Shortcuts")
+  }
+  var productName: String { text("製品名", "Product Name") }
+  var version: String { text("バージョン", "Version") }
+  var copyright: String { text("著作権", "Copyright") }
+  var privacyPolicy: String { text("プライバシーポリシー", "Privacy Policy") }
+  var support: String { text("サポート", "Support") }
   var noApplications: String { text("アプリケーションがありません", "No Applications") }
   var noActionsInCategory: String {
     text("このカテゴリにはActionがありません", "No Actions in this category")
@@ -360,15 +368,28 @@ struct QuickDrawCopy {
   var shortcutAccessibilityPrefix: String { text("ショートカット", "Shortcut") }
 
   var accessibility: String { text("アクセシビリティ", "Accessibility") }
+  var inputMonitoring: String { text("入力監視", "Input Monitoring") }
+  var shortcutDelivery: String { text("ショートカット配送", "Shortcut Delivery") }
   var permissionGranted: String { text("許可済み", "Permission granted") }
   var permissionRequired: String { text("許可が必要です", "Permission required") }
-  var permissionDescription: String {
+  var inputMonitoringDescription: String {
     text(
-      "ルーティング後にアプリ固有のショートカットを送信するためだけに使用します。",
-      "Required only to send the application shortcut after routing."
+      "設定済みのTriggerだけを判定するために使用します。キー入力は記録・保存・送信しません。",
+      "Used only to recognize configured Triggers. QuickDraw never records, stores, or transmits key input."
     )
   }
-  var requestPermission: String { text("アクセスを許可…", "Request Permission…") }
+  var shortcutDeliveryDescription: String {
+    text(
+      "ルーティング後に公式ショートカットを送信するためだけに使用します。macOSではアクセシビリティ設定に表示されます。",
+      "Used only to send an official shortcut after routing. macOS lists this permission under Accessibility."
+    )
+  }
+  var requestInputMonitoring: String {
+    text("入力監視を許可…", "Allow Input Monitoring…")
+  }
+  var requestShortcutDelivery: String {
+    text("ショートカット配送を許可…", "Allow Shortcut Delivery…")
+  }
   var checkAgain: String { text("もう一度確認", "Check Again") }
 
   var privacy: String { text("プライバシー", "Privacy") }
@@ -387,7 +408,7 @@ struct QuickDrawCopy {
   }
 
   var menuTitle: String {
-    "QuickDraw PoC"
+    "QuickDraw Shortcuts"
   }
   var openQuickDraw: String { text("QuickDrawを開く…", "Open QuickDraw…") }
   var dryRunMenu: String {
@@ -399,8 +420,11 @@ struct QuickDrawCopy {
       "Run Mute Dry Check on Last Active App"
     )
   }
-  var requestAccessibilityMenu: String {
-    text("アクセシビリティを許可…", "Request Accessibility Permission…")
+  var requestInputMonitoringMenu: String {
+    text("入力監視を許可…", "Allow Input Monitoring…")
+  }
+  var requestShortcutDeliveryMenu: String {
+    text("ショートカット配送を許可…", "Allow Shortcut Delivery…")
   }
   func hotKeyRegisteredMenu(_ count: Int) -> String {
     text("ホットキー: \(count)個のTriggerを登録済み", "Hotkeys: \(count) Triggers Registered")
@@ -411,12 +435,26 @@ struct QuickDrawCopy {
       "Privacy: Web Target classification only; no key logging"
     )
   }
-  var quitQuickDraw: String { text("QuickDraw PoCを終了", "Quit QuickDraw PoC") }
+  var quitQuickDraw: String {
+    text("QuickDraw Shortcutsを終了", "Quit QuickDraw Shortcuts")
+  }
   var accessibilityGrantedMenu: String {
     text("アクセシビリティ: 許可済み", "Accessibility: Granted")
   }
   var accessibilityRequiredMenu: String {
     text("アクセシビリティ: 許可が必要", "Accessibility: Required")
+  }
+  var inputMonitoringGrantedMenu: String {
+    text("入力監視: 許可済み", "Input Monitoring: Granted")
+  }
+  var inputMonitoringRequiredMenu: String {
+    text("入力監視: 許可が必要", "Input Monitoring: Required")
+  }
+  var shortcutDeliveryGrantedMenu: String {
+    text("ショートカット配送: 許可済み", "Shortcut Delivery: Granted")
+  }
+  var shortcutDeliveryRequiredMenu: String {
+    text("ショートカット配送: 許可が必要", "Shortcut Delivery: Required")
   }
   var targetPrefix: String { text("対象", "Target") }
 
@@ -917,6 +955,9 @@ struct QuickDrawCopy {
     case "Live delivery enabled": "実際のキー送信を有効化しました"
     case "Accessibility granted": "アクセシビリティは許可済みです"
     case "Accessibility permission requested": "アクセシビリティの許可を要求しました"
+    case "Input Monitoring granted": "入力監視は許可済みです"
+    case "Input Monitoring permission requested": "入力監視の許可を要求しました"
+    case "Input Monitoring required": "入力監視の許可が必要です"
     case "Dry Run route matched": "ドライランで経路を確認しました"
     case "Global shortcut registration failed": "グローバルショートカットを登録できませんでした"
     default: value
@@ -928,13 +969,21 @@ struct QuickDrawCopy {
       "Preparing shortcuts": "ショートカットを準備しています",
       "Accessibility: Granted": "アクセシビリティ: 許可済み",
       "Accessibility: Required": "アクセシビリティ: 許可が必要",
+      "Keyboard permissions: Granted": "キーボード権限: 許可済み",
+      "Input Monitoring: Required": "入力監視: 許可が必要",
+      "Shortcut Delivery: Required": "ショートカット配送: 許可が必要",
       "Action routing is paused": "Actionのルーティングは停止中です",
       "Configured triggers will route and log without sending a shortcut":
         "設定したTriggerでショートカットを送らずに経路だけを記録します",
       "Return to a supported application and use a configured trigger":
         "対応アプリへ戻り設定したTriggerを使用してください",
-      "Enable QuickDraw PoC in System Settings, then try again":
-        "システム設定でQuickDraw PoCを有効にして、もう一度お試しください",
+      "Enable QuickDraw in Accessibility, then check again":
+        "システム設定のアクセシビリティでQuickDrawを有効にして、もう一度確認してください",
+      "QuickDraw can now monitor configured triggers":
+        "QuickDrawは設定済みTriggerを監視できます",
+      "Enable QuickDraw in Input Monitoring, then check again":
+        "システム設定の入力監視でQuickDrawを有効にして、もう一度確認してください",
+      "Input Monitoring permission is required": "入力監視の許可が必要です",
     ]
     if let localized = exact[value] { return localized }
     if let action, value.contains(" has no shortcut for ") {

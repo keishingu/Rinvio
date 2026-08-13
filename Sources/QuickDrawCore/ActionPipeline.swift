@@ -115,7 +115,7 @@ public enum ActionPipelineOutcome: Equatable, Sendable {
           false
         }
       case .targetChanged, .shortcutDeliveryFailed:
-        true
+        false
       }
     }
   }

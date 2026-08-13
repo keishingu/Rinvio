@@ -2,7 +2,7 @@ import AppKit
 import QuickDrawCore
 import XCTest
 
-@testable import QuickDrawPoC
+@testable import QuickDrawShortcuts
 
 @MainActor
 final class ApplicationMenuControllerTests: XCTestCase {
@@ -83,6 +83,58 @@ final class ApplicationMenuControllerTests: XCTestCase {
 
     XCTAssertFalse(model.isDryRunEnabled)
     XCTAssertEqual(dryRunUpdates, [true, false])
+  }
+
+  func testPermissionRequestsOpenTheMatchingSystemSettingsPaneWhenStillRequired() {
+    var openedURLs: [URL] = []
+    let model = QuickDrawAppModel(
+      defaults: UserDefaults(suiteName: #function)!,
+      configurationStore: QuickDrawConfigurationStore(fileURL: nil),
+      openURL: {
+        openedURLs.append($0)
+        return true
+      }
+    )
+    model.onRefreshPermissions = {
+      KeyboardPermissionState(
+        hasInputMonitoringAccess: false,
+        hasPostEventAccess: false
+      )
+    }
+
+    model.requestInputMonitoring()
+    model.requestPostEvent()
+
+    XCTAssertEqual(
+      openedURLs.map(\.absoluteString),
+      [
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent",
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+      ]
+    )
+  }
+
+  func testPermissionRequestsDoNotOpenSystemSettingsWhenAlreadyGranted() {
+    var openedURLs: [URL] = []
+    let model = QuickDrawAppModel(
+      defaults: UserDefaults(suiteName: #function)!,
+      configurationStore: QuickDrawConfigurationStore(fileURL: nil),
+      openURL: {
+        openedURLs.append($0)
+        return true
+      }
+    )
+    model.onRefreshPermissions = {
+      KeyboardPermissionState(
+        hasInputMonitoringAccess: true,
+        hasPostEventAccess: true
+      )
+    }
+
+    model.requestInputMonitoring()
+    model.requestPostEvent()
+
+    XCTAssertTrue(openedURLs.isEmpty)
   }
 
   func testOptionNavigationShortcutsSelectTheirSections() throws {

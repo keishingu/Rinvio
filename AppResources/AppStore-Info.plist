@@ -3,34 +3,36 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key>
-    <string>QuickDraw Shortcuts</string>
+    <string>$(PRODUCT_NAME)</string>
     <key>CFBundleExecutable</key>
-    <string>QuickDrawShortcuts</string>
+    <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIconName</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.keishingu.quickdraw-shortcuts</string>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>QuickDraw Shortcuts</string>
+    <string>$(PRODUCT_NAME)</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>$(MARKETING_VERSION)</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
 	<key>LSMinimumSystemVersion</key>
-	<string>15.0</string>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
     <key>NSAppleEventsUsageDescription</key>
-	<string>QuickDraw checks only Google Chrome's active tab URL to determine whether Google Meet or Gmail is the current target.</string>
+    <string>QuickDraw checks only Google Chrome's active tab URL to determine whether Google Meet or Gmail is the current target.</string>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2026 Kei Shingu. All rights reserved.</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
 </dict>
 </plist>

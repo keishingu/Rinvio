@@ -2,11 +2,11 @@
 
 - ステータス: Proposed / 実装前
 - 更新日: 2026-08-11
-- 対象: macOS、Level 1 MVP、Level 2 PoC
+- 対象: macOS、Level 1 MVP、Level 2 validation
 - UI参考: 添付の Haken 案を QuickDraw として解釈
 
 > [!NOTE]
-> 本文中の`⌘⌥`中心のTrigger例は、初期PoCを説明する履歴的な例である。現在のSuggested Trigger、Meeting / Development / Browserの再整理、macOS純正設定への委譲、Finderのopt-in設計は [ショートカット設計原則とSystem / Finder opt-in設計](shortcut-design-principles.ja.md) を正本とする。
+> 本文中の`⌘⌥`中心のTrigger例は、初期validationを説明する履歴的な例である。現在のSuggested Trigger、Meeting / Development / Browserの再整理、macOS純正設定への委譲、Finderのopt-in設計は [ショートカット設計原則とSystem / Finder opt-in設計](shortcut-design-principles.ja.md) を正本とする。
 
 ## 先に結論
 
@@ -30,7 +30,7 @@ QuickDraw のMVPは、次の1本の経路を確実に成立させる。
 |---|---|
 | **Confirmed** | Appleまたはベンダー公式資料で確認済み、あるいはインストール済みアプリのScripting Dictionaryで確認済み。 |
 | **Likely** | API仕様や一般的挙動から成立可能性が高いが、対象OS・アプリ版で確認が必要。 |
-| **Requires PoC** | 実測結果で方式または仕様を決める。 |
+| **Requires validation** | 実測結果で方式または仕様を決める。 |
 | **Unsupported** | 今回意図的に非対応、または堅牢な方式がない。 |
 
 ---
@@ -79,7 +79,7 @@ Karabinerとの併用時も、KarabinerがQuickDrawのTriggerまたは外部Acti
 | Level | UX | 技術 | 状態 |
 |---|---|---|---|
 | 1 Shortcut Translation | Direct Trigger | 公式Shortcut中心 | MVP |
-| 2 Semantic Adapter | Direct Trigger | Appごとに異なる実行方式 | 次期PoC |
+| 2 Semantic Adapter | Direct Trigger | Appごとに異なる実行方式 | 次期validation |
 | 3 Complex Commands | Command Palette | 低頻度・状態依存・複数手順 | Scope外 |
 
 Levelは実装方式そのものではなく、プロダクト上の複雑さを表す。Zoom Reactionには公式Shortcutがあるが、Teams/Meetとの横断機能としてはLevel 2に置く。
@@ -101,7 +101,7 @@ Levelは実装方式そのものではなく、プロダクト上の複雑さを
 
 1. 「1つのActionを複数アプリへ変換する」と短く説明する。
 2. 3つのBuilt-in Actionと検出済みApplicationを表示する。
-3. Triggerを割り当てる。現在のPoCは`⌘⌥`+英字／数字を使用するが、将来のSuggested Triggerは[ショートカット設計原則](shortcut-design-principles.ja.md)に従い、Actionの意味とTarget種別で配置する。
+3. Triggerを割り当てる。現在のvalidationは`⌘⌥`+英字／数字を使用するが、将来のSuggested Triggerは[ショートカット設計原則](shortcut-design-principles.ja.md)に従い、Actionの意味とTarget種別で配置する。
 4. 必要になるPermissionと理由を事前表示する。この時点では一括要求しない。
 5. 「QuickDrawを有効にする」でLevel 1に必要なPermissionを案内し、Foregroundの対応アプリでTestする。
 6. Windowを閉じてもMenu Barで常駐する。
@@ -296,7 +296,7 @@ AvailabilityとMethodを分ける。
 
 - availability: supported / requiresSetup / experimental / temporarilyUnavailable / unsupported
 - method: shortcut / officialAPI / urlScheme / appleEvent / accessibility / browserExtension
-- confidence: confirmed / likely / requiresPoC
+- confidence: confirmed / likely / requiresvalidation
 - required permissions、reason、source version、override可能値
 
 UIでは `Supported · Shortcut`、`Requires extension · Browser` のように組み合わせて表示する。
@@ -345,7 +345,7 @@ flowchart LR
 - QuickDraw生成イベントはsource markerで除外し、再発火を防ぐ。
 - macOS標準カタログ、System Settingsのbest-effort読取、event tap生成結果を分けて競合状態を表現する。
 
-**Confirmed in PoC /継続検証:** current macOSでのmodifier chord、repeat、source marker、対象外passthrough。Permission、secure input、sleep/wakeは継続して実機検証する。
+**Confirmed in validation /継続検証:** current macOSでのmodifier chord、repeat、source marker、対象外passthrough。Permission、secure input、sleep/wakeは継続して実機検証する。
 
 ### Routing flow
 
@@ -365,7 +365,7 @@ Level 1 hot pathではnetwork access、AX tree探索、pollingを行わない。
 | 方針 | 評価 | MVP |
 |---|---|---|
 | Foreground only | 高信頼・説明可能。会議へfocusが必要 | **採用** |
-| Meeting session detection | UX価値は高いがvendor依存・誤検出リスク | 後続PoC |
+| Meeting session detection | UX価値は高いがvendor依存・誤検出リスク | 後続validation |
 | User-selected / pinned target | 明示的。ただし背景Shortcut配送自体を検証要 | Phase 1.1 |
 | Action-specific routing | 強力だが設定が複雑 | Future |
 | Context-aware routing | 隠れた判断が増える | 十分な診断実績後 |
@@ -376,7 +376,7 @@ QuickDrawが会議アプリを一瞬Activateして戻す方式は禁止する。
 
 公式Shortcutのmodifier/key-down/key-upを生成し、QuickDraw固有source markerを付けて配送する。Input layerはmarker付きeventを無視し、再帰を防ぐ。
 
-`CGEvent.post`、`postToPid`等のどれが最も堅牢か、Accessibility/Post Event Permissionがどの条件で必要かは**Requires PoC**。Clean machine実測前に「Accessibility不要」と宣伝しない。
+`CGEvent.post`、`postToPid`等のどれが最も堅牢か、Accessibility/Post Event Permissionがどの条件で必要かは**Requires validation**。Clean machine実測前に「Accessibility不要」と宣伝しない。
 
 ### 実行方式の優先順位
 
@@ -425,7 +425,7 @@ Vendor側でcustomize/updateされるため、Catalog version/sourceとUser Over
 
 Level 1:
 
-- 実在bundle ID群をPoCで記録する。
+- 実在bundle ID群をvalidationで記録する。
 - 3つの公式Shortcutを宣言する。
 - TeamsがForegroundの時だけ配送する。
 - Electron AX treeは探索しない。
@@ -437,7 +437,7 @@ Level 2:
 - 探索node数/timeを制限し、cacheは短命にする。
 - invalid elementやwindow changeで即座にinvalidateする。
 
-TeamsのAX metadata安定性は**Requires PoC**。
+TeamsのAX metadata安定性は**Requires validation**。
 
 ### ZoomAdapter
 
@@ -451,7 +451,7 @@ Level 2 Reactionは現行公式Shortcutを利用できる。
 - Joy `⌥⌘7`
 - Celebrate `⌥⌘9`
 
-Shortcut存在は**Confirmed**、account policy、locale、layout、custom settingを含む安定性は**Requires PoC**。
+Shortcut存在は**Confirmed**、account policy、locale、layout、custom settingを含む安定性は**Requires validation**。
 
 ### GoogleMeetAdapter
 
@@ -477,12 +477,12 @@ Level 2:
 
 | Adapter / Action | Availability | Method | Confidence |
 |---|---|---|---|
-| Teams / MVP 3 Actions | Supported | Shortcut | mapping confirmed / delivery PoC |
-| Zoom / MVP 3 Actions | Supported | Shortcut | mapping confirmed / delivery PoC |
-| Meet / MVP 3 Actions | Requires browser setup | Shortcut | mapping confirmed / route PoC |
-| Zoom / Reactions | Experimental | Shortcut | behavior PoC |
-| Teams / Reactions | Experimental | Accessibility | Requires PoC |
-| Meet / Reactions | Experimental | AX or Extension | Requires PoC |
+| Teams / MVP 3 Actions | Supported | Shortcut | mapping confirmed / delivery validation |
+| Zoom / MVP 3 Actions | Supported | Shortcut | mapping confirmed / delivery validation |
+| Meet / MVP 3 Actions | Requires browser setup | Shortcut | mapping confirmed / route validation |
+| Zoom / Reactions | Experimental | Shortcut | behavior validation |
+| Teams / Reactions | Experimental | Accessibility | Requires validation |
+| Meet / Reactions | Experimental | AX or Extension | Requires validation |
 
 ---
 
@@ -501,14 +501,14 @@ Level 2:
 
 | 領域 | API | 判断 |
 |---|---|---|
-| Global Hotkey | `CGEventTap` | **Confirmed in PoC。** 設定済みTriggerだけを条件付きで消費し、その他は素通し。 |
+| Global Hotkey | `CGEventTap` | **Confirmed in validation。** 設定済みTriggerだけを条件付きで消費し、その他は素通し。 |
 | Foreground App | `NSWorkspace.frontmostApplication`、activation notifications | **Confirmed。** event-driven。 |
 | Input monitor | `NSEvent` global monitor | 不採用。modify不可で、広いkey観測が不要。 |
 | Input interception | `CGEventTap` | Triggerのコンテキスト限定消費に必要。キー内容は保存せずsource marker付き出力を除外。 |
-| Shortcut output | `CGEvent` keyboard event / post variants | **Requires PoC。** APIはConfirmed、TCC/Target挙動は実測。 |
+| Shortcut output | `CGEvent` keyboard event / post variants | **Requires validation。** APIはConfirmed、TCC/Target挙動は実測。 |
 | Accessibility | `AXUIElement`、`AXUIElementPerformAction`、AX notification | Level 2。APIはConfirmedだがtimeout/failure前提。 |
 | Apple Events | Apple Event Manager / ScriptingBridge | Browser active tab metadataだけに限定。 |
-| Browser identity | Browser Scripting Dictionary | Installed Chrome/Safariでactive/current tab URLを**Confirmed**。RuntimeはPoC。 |
+| Browser identity | Browser Scripting Dictionary | Installed Chrome/Safariでactive/current tab URLを**Confirmed**。Runtimeはvalidation。 |
 | URL Scheme | `NSWorkspace.open` | Meeting toggleには不適。将来external Action invoke候補。 |
 | Menu invocation | AX menu + `kAXPressAction` | Level 2 fallback。locale/dynamic menuに注意。 |
 | Login item | `SMAppService.mainApp` | macOS 13+で**Confirmed**。helper不要。 |
@@ -529,13 +529,13 @@ Apple資料:
 - Chrome: `window.active tab` と `tab.URL` をlocal Scripting DictionaryでConfirmed。
 - Safari: `window.current tab` と `tab.URL` をConfirmed。
 - Edge/Arc/Firefox: heritageから推測せずMVP Unsupported。
-- Private/Incognito: privacy/behavior PoC完了までUnsupportedをdefaultとする。
+- Private/Incognito: privacy/behavior validation完了までUnsupportedをdefaultとする。
 
 前面Browserの前面Windowだけを100ms目標のtimeoutで問い合わせる。全Tab列挙をしない。取得後はscheme+hostだけで判定し、path/query/fragmentを破棄する。
 
 ### ScriptingBridge vs raw Apple Events
 
-ScriptingBridgeは読みやすいがgenerated interface/build dependencyが増える。Raw descriptorは2 propertyだけなら小さいがerror-prone。PoCで比較し、Browser-specific gateway一箇所へ隔離する。shellから `osascript` を起動する方式は採用しない。
+ScriptingBridgeは読みやすいがgenerated interface/build dependencyが増える。Raw descriptorは2 propertyだけなら小さいがerror-prone。validationで比較し、Browser-specific gateway一箇所へ隔離する。shellから `osascript` を起動する方式は採用しない。
 
 ### Application-specific API / URL Scheme / Menu
 
@@ -555,7 +555,7 @@ MVPはMac App StoreではなくDeveloper ID + Notarizationを推奨する。App 
 
 | Permission | 理由 | Level | Request timing | ない場合 | 判断 |
 |---|---|---|---|---|---|
-| Accessibility / Post Event | Synthetic Shortcut配送。Level 2 AX操作 | L1 likely / L2 definite | Enable時、説明後 | 設定のみ可、実行不可 | L1必要性をclean-machine PoCで確定 |
+| Accessibility / Post Event | Synthetic Shortcut配送。Level 2 AX操作 | L1 likely / L2 definite | Enable時、説明後 | 設定のみ可、実行不可 | L1必要性をclean-machine validationで確定 |
 | Input Monitoring | Global key/mouse監視 | advancedのみ | MVPでは要求しない | Intended hotkey方式には影響しない想定 | **MVP不使用** |
 | Automation — Chrome/Safari | Active Tab URLを読む | Meet L1 | Browser enable/test時 | Teams/Zoomは動作、Meet不可 | delayed / per-browser |
 | Screen Recording | Pixel capture | none | never | 影響なし | **不使用** |
@@ -719,7 +719,7 @@ Reaction成功はMVP条件に含めない。
 
 | Target | 第一候補 | fallback | 境界 |
 |---|---|---|---|
-| Zoom | Official reaction shortcuts | 必要時semantic AX | policy/layout/custom settingをPoC |
+| Zoom | Official reaction shortcuts | 必要時semantic AX | policy/layout/custom settingをvalidation |
 | Teams | Semantic Accessibility | 初期はなし | element identityとupdate耐性がgate |
 | Meet | Browser Extension + Native Messaging | Semantic Accessibility | DOM element identityとversion skewがgate |
 
@@ -737,7 +737,7 @@ Coordinate禁止、単一depth/index path禁止、ambiguousならfail closed。P
 
 Extensionが必要になるのは**Web UI execution**であり、必ずしも**tab recognition**ではない。
 
-Browser Extensionは独立したChrome版QuickDrawではなく、QuickDraw.appが確定したActionを実行するApplication Adapterとする。Trigger、Action設定、Routing、DiagnosticsのSource of TruthはQuickDraw.appに置き、Extension側へ重複させない。Repositoryは段階的モノレポとし、既存Swift構成を維持したままPoC開始時に`BrowserExtension/`と共有message schemaを追加する。詳細は[ADR-0001](adr/0001-browser-extension-adapter-and-monorepo.md)を参照。
+Browser Extensionは独立したChrome版QuickDrawではなく、QuickDraw.appが確定したActionを実行するApplication Adapterとする。Trigger、Action設定、Routing、DiagnosticsのSource of TruthはQuickDraw.appに置き、Extension側へ重複させない。Repositoryは段階的モノレポとし、既存Swift構成を維持したままvalidation開始時に`BrowserExtension/`と共有message schemaを追加する。詳細は[ADR-0001](adr/0001-browser-extension-adapter-and-monorepo.md)を参照。
 
 ```mermaid
 sequenceDiagram
@@ -770,7 +770,7 @@ Native Messagingはbrowserごとのmanifest、sign/install、store review、vers
 ### Phase 1.1
 
 - Chrome-only MVPならSafari追加。
-- Focus theftなしのPinned Target/background execution PoC。
+- Focus theftなしのPinned Target/background execution validation。
 - `openSharePicker`。
 - Vendor updateに対するMapping health check。
 
@@ -807,16 +807,16 @@ DeviceはAction IDを発火し、Adapterを直接呼ばない。
 
 | Risk | Impact | Likelihood | Confidence | Mitigation |
 |---|---|---|---|---|
-| Synthetic Shortcutが不安定/広いPermission必要 | Level 1 blocker | Medium | Requires PoC | Clean-machine P0をUI実装前に実施 |
+| Synthetic Shortcutが不安定/広いPermission必要 | Level 1 blocker | Medium | Requires validation | Clean-machine P0をUI実装前に実施 |
 | Teams/Zoom custom shortcut | silent wrong behavior | High | Confirmed | manual override/reset、diagnostics |
 | Meeting外でtoggle配送 | no effect/別command | Medium | Likely | foreground + Test、successをDeliveredと表現 |
-| Meet Apple Event遅延/拒否 | Meet unavailable | Medium | Requires PoC | delayed permission、100ms timeout、fail closed |
-| Detection後にTab変更 | wrong pageへ入力 | Low/Medium | Requires PoC | 配送直前revalidation |
+| Meet Apple Event遅延/拒否 | Meet unavailable | Medium | Requires validation | delayed permission、100ms timeout、fail closed |
+| Detection後にTab変更 | wrong pageへ入力 | Low/Medium | Requires validation | 配送直前revalidation |
 | Private mode metadata | privacy trust loss | Medium | Unknown | default unsupported |
-| Teams Electron AX変更 | Reaction破損 | High | Requires PoC | semantic identity、versioned health、fail closed |
-| Meet DOM/AX変更 | Reaction破損 | High | Requires PoC | measured gate後だけExtension |
+| Teams Electron AX変更 | Reaction破損 | High | Requires validation | semantic identity、versioned health、fail closed |
+| Meet DOM/AX変更 | Reaction破損 | High | Requires validation | measured gate後だけExtension |
 | Bare keyがtypingを奪う | severe UX | High | Confirmed by design | MVP unsupported |
-| 背景会議が本来の中心需要 | MVP value制限 | High | Product risk | Level 1直後にPinned Target PoC |
+| 背景会議が本来の中心需要 | MVP value制限 | High | Product risk | Level 1直後にPinned Target validation |
 | Sandbox/App Store制約 | distribution delay | Medium | Requires review | Developer ID first |
 | Brand/icon rights | public release risk | Low/Medium | Unknown | 名称識別中心、公開前legal review |
 | QuickDraw名称変更 | migration cost | Medium | Known | brand-neutral ID/schema/service boundary |
@@ -825,9 +825,9 @@ DeviceはAction IDを発火し、Adapterを直接呼ばない。
 
 ---
 
-## 15. PoC plan
+## 15. validation plan
 
-PoCはProduct Code開始ではなく、破棄可能なLab Targetとする。OS/App version、Permission state、結果、latency、failure behaviorをmatrixで残す。
+validationはProduct Code開始ではなく、破棄可能なLab Targetとする。OS/App version、Permission state、結果、latency、failure behaviorをmatrixで残す。
 
 ### P0 — UI実装前のGo/No-Go
 
@@ -881,11 +881,11 @@ QuickDraw/
 ├─ Package.swift
 ├─ Sources/
 │  ├─ QuickDrawCore/                     # Action、Routing、Catalog
-│  ├─ QuickDrawPoC/                      # macOS App、UI、macOS gateways
-│  └─ QuickDrawBrowserBridge/            # Native Messaging PoC開始時に追加
+│  ├─ QuickDrawShortcuts/                      # macOS App、UI、macOS gateways
+│  └─ QuickDrawBrowserBridge/            # Native Messaging validation開始時に追加
 ├─ Tests/
 │  └─ QuickDrawCoreTests/
-├─ BrowserExtension/                     # Level 2 PoC開始時に追加
+├─ BrowserExtension/                     # Level 2 validation開始時に追加
 │  ├─ package.json
 │  ├─ src/service-worker/
 │  ├─ src/content-scripts/google-meet/
@@ -1038,7 +1038,7 @@ User-facing privacy statementが真であることをArchitecture Acceptanceと�
 2. **Distribution:** MVPはDeveloper ID + Notarization、Mac App Store feasibilityは後回しでよいか。
 3. **Trigger policy:** bare alphanumericを拒否し、Fキーまたはmodifier chordだけを受理する。Suggested Triggerの修飾キーは一律`⌘⌥`とせず、[ショートカット設計原則](shortcut-design-principles.ja.md)に従ってActionの意味とTarget種別で決める。
 4. **Input/output mechanism:** `CGEventTap`で条件付き消費し、source marker付き`CGEvent`で出力する。必要Permissionは実機matrixで継続確認する。
-5. **Target policy:** MVP Foreground-onlyを受け入れ、Pinned/background targetを最優先のpost-MVP PoCとするか。
+5. **Target policy:** MVP Foreground-onlyを受け入れ、Pinned/background targetを最優先のpost-MVP validationとするか。
 6. **Meet browser scope:** Chrome-onlyをacceptance baseline（推奨）にするか、Chrome + Safariにするか。
 7. **Permission promise:** P0前にLevel 1 Permissionを断定せず、Input Monitoring/Screen Recordingは要求しない方針でよいか。
 8. **Mapping behavior:** Official defaults + manual override/resetとし、auto-discoveryをMVPから外すか。

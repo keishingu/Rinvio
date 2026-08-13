@@ -94,6 +94,7 @@ final class ActionPipelineTests: XCTestCase {
     let report = fixture.pipeline.run(action: .mute, mode: .live)
 
     XCTAssertEqual(report.outcome, .failed(.targetChanged))
+    XCTAssertFalse(report.outcome.consumesTrigger)
     XCTAssertTrue(fixture.deliverer.shortcuts.isEmpty)
   }
 
@@ -125,6 +126,7 @@ final class ActionPipelineTests: XCTestCase {
       return XCTFail("Expected shortcut delivery failure")
     }
     XCTAssertEqual(message, "Delivery denied")
+    XCTAssertFalse(report.outcome.consumesTrigger)
   }
 
   func testUnsupportedApplicationFailsWithoutDelivery() {
