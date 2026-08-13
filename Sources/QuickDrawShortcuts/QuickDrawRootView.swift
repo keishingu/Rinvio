@@ -52,7 +52,7 @@ struct QuickDrawRootView: View {
   private var sidebar: some View {
     List(selection: $model.selectedSection) {
       Section(model.copy.actions) {
-        ForEach([QuickDrawSection.meeting, .chat, .mail]) { section in
+        ForEach([QuickDrawSection.meeting, .note, .chat, .mail]) { section in
           Label(model.copy.sectionTitle(section), systemImage: section.systemImage)
             .tag(section)
         }
@@ -140,13 +140,12 @@ struct QuickDrawRootView: View {
           subtitle: model.copy.actionDomainSubtitle(domain),
           definitions: actionDefinitions(for: .system),
           applications: [],
-          alignmentCategory: nil,
           selection: $selectedActionID,
           model: model
         )
       }
-    case .finder, .meeting, .chat, .mail, .development, .developmentAIAgent, .developmentEditor,
-      .developmentTerminal, .browser:
+    case .finder, .meeting, .note, .chat, .mail, .development, .developmentAIAgent,
+      .developmentEditor, .developmentTerminal, .browser:
       let section = model.selectedSection ?? .meeting
       if let domain = section.actionDomain {
         ActionsView(
@@ -156,7 +155,6 @@ struct QuickDrawRootView: View {
           ) ?? model.copy.actionDomainSubtitle(domain),
           definitions: actionDefinitions(for: section),
           applications: installedApplications(for: section),
-          alignmentCategory: section.developmentCategory,
           selection: $selectedActionID,
           model: model
         )
@@ -182,8 +180,8 @@ struct QuickDrawRootView: View {
           systemImage: QuickDrawSection.system.systemImage
         )
       }
-    case .finder, .meeting, .chat, .mail, .development, .developmentAIAgent, .developmentEditor,
-      .developmentTerminal, .browser:
+    case .finder, .meeting, .note, .chat, .mail, .development, .developmentAIAgent,
+      .developmentEditor, .developmentTerminal, .browser:
       if let selectedAction {
         ActionInspector(
           definition: selectedAction,
@@ -303,10 +301,22 @@ private struct SettingsView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
+
+        Section(model.copy.aboutQuickDraw) {
+          LabeledContent(model.copy.productName, value: "QuickDraw Shortcuts")
+          LabeledContent(model.copy.version, value: model.versionDescription)
+          LabeledContent(model.copy.copyright, value: "© 2026 Kei Shingu")
+          Button(model.copy.privacyPolicy) {
+            model.openPrivacyPolicy()
+          }
+          Button(model.copy.support) {
+            model.openSupport()
+          }
+        }
       }
       .formStyle(.grouped)
     }
-    .navigationTitle("QuickDraw")
+    .navigationTitle("QuickDraw Shortcuts")
   }
 }
 
@@ -315,7 +325,6 @@ private struct ActionsView: View {
   let subtitle: String
   let definitions: [ActionDefinition]
   let applications: [ApplicationMapping]
-  let alignmentCategory: DevelopmentApplicationCategory?
   @Binding var selection: String?
   @ObservedObject var model: QuickDrawAppModel
 
@@ -331,7 +340,7 @@ private struct ActionsView: View {
         title: title,
         subtitle: subtitle
       )
-      if alignmentCategory != nil {
+      if !applications.isEmpty {
         alignmentControls
       }
       Divider()
@@ -359,9 +368,9 @@ private struct ActionsView: View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(spacing: 8) {
         VStack(alignment: .leading, spacing: 4) {
-          Label(model.copy.alignDevelopmentTriggers, systemImage: "keyboard")
+          Label(model.copy.alignTriggers, systemImage: "keyboard")
             .font(.headline)
-          Text(model.copy.alignDevelopmentTriggersDescription)
+          Text(model.copy.alignTriggersDescription)
             .font(.caption)
             .foregroundStyle(.secondary)
         }
@@ -376,10 +385,13 @@ private struct ActionsView: View {
               }
             }
 
-            Menu(model.copy.alignDevelopmentTriggers) {
+            Menu(model.copy.alignTriggers) {
               ForEach(applications) { application in
                 Button(model.copy.alignTriggersTo(application)) {
-                  model.alignDevelopmentTriggers(to: application)
+                  model.alignTriggers(
+                    to: application,
+                    actions: definitions.map(\.action)
+                  )
                 }
               }
             }
@@ -405,7 +417,10 @@ private struct ActionsView: View {
 
   private func alignmentButton(for application: ApplicationMapping) -> some View {
     Button(model.copy.alignTriggersTo(application)) {
-      model.alignDevelopmentTriggers(to: application)
+      model.alignTriggers(
+        to: application,
+        actions: definitions.map(\.action)
+      )
     }
     .buttonStyle(.bordered)
     .controlSize(.small)
@@ -1199,23 +1214,40 @@ private struct PermissionSection: View {
   @ObservedObject var model: QuickDrawAppModel
 
   var body: some View {
-    Section(model.copy.accessibility) {
+    Section(model.copy.inputMonitoring) {
       Label(
-        model.hasAccessibilityPermission
+        model.hasInputMonitoringPermission
           ? model.copy.permissionGranted : model.copy.permissionRequired,
-        systemImage: model.hasAccessibilityPermission
+        systemImage: model.hasInputMonitoringPermission
           ? "checkmark.circle.fill" : "exclamationmark.circle"
       )
-      .foregroundStyle(model.hasAccessibilityPermission ? .secondary : .primary)
+      .foregroundStyle(model.hasInputMonitoringPermission ? .secondary : .primary)
 
-      if !model.hasAccessibilityPermission {
-        Text(model.copy.permissionDescription)
+      if !model.hasInputMonitoringPermission {
+        Text(model.copy.inputMonitoringDescription)
           .font(.caption)
           .foregroundStyle(.secondary)
-        Button(model.copy.requestPermission) { model.requestAccessibility() }
+        Button(model.copy.requestInputMonitoring) { model.requestInputMonitoring() }
+      }
+    }
+
+    Section(model.copy.shortcutDelivery) {
+      Label(
+        model.hasPostEventPermission
+          ? model.copy.permissionGranted : model.copy.permissionRequired,
+        systemImage: model.hasPostEventPermission
+          ? "checkmark.circle.fill" : "exclamationmark.circle"
+      )
+      .foregroundStyle(model.hasPostEventPermission ? .secondary : .primary)
+
+      if !model.hasPostEventPermission {
+        Text(model.copy.shortcutDeliveryDescription)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+        Button(model.copy.requestShortcutDelivery) { model.requestPostEvent() }
       }
 
-      Button(model.copy.checkAgain) { model.refreshPermission() }
+      Button(model.copy.checkAgain) { model.refreshPermissions() }
     }
   }
 }

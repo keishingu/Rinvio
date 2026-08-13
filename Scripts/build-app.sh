@@ -3,23 +3,32 @@ set -euo pipefail
 
 project_root="${0:A:h:h}"
 configuration="${1:-debug}"
-app_name="QuickDraw PoC.app"
+app_name="QuickDraw Shortcuts.app"
 output_root="$project_root/.build/app"
 app_bundle="$output_root/$app_name"
 
 swift build \
     --package-path "$project_root" \
     --configuration "$configuration" \
-    --product QuickDrawPoC
+    --product QuickDrawShortcuts
 
-binary_path="$(swift build --package-path "$project_root" --configuration "$configuration" --show-bin-path)/QuickDrawPoC"
+binary_path="$(swift build --package-path "$project_root" --configuration "$configuration" --show-bin-path)/QuickDrawShortcuts"
 
 mkdir -p "$app_bundle/Contents/MacOS" "$app_bundle/Contents/Resources"
-cp "$binary_path" "$app_bundle/Contents/MacOS/QuickDrawPoC"
+cp "$binary_path" "$app_bundle/Contents/MacOS/QuickDrawShortcuts"
 cp "$project_root/AppResources/Info.plist" "$app_bundle/Contents/Info.plist"
 cp \
     "$project_root/Sources/QuickDrawCore/Resources/built-in-catalog.json" \
     "$app_bundle/Contents/Resources/built-in-catalog.json"
+cp \
+    "$project_root/AppResources/PrivacyInfo.xcprivacy" \
+    "$app_bundle/Contents/Resources/PrivacyInfo.xcprivacy"
+for localization in en ja; do
+    mkdir -p "$app_bundle/Contents/Resources/$localization.lproj"
+    cp \
+        "$project_root/AppResources/$localization.lproj/InfoPlist.strings" \
+        "$app_bundle/Contents/Resources/$localization.lproj/InfoPlist.strings"
+done
 
 xcrun actool \
     "$project_root/AppResources/Assets.xcassets" \
@@ -43,7 +52,7 @@ fi
 codesign \
     --force \
     --sign "$identity" \
-    --identifier dev.actionrouter.quickdraw-poc \
+    --identifier com.keishingu.quickdraw-shortcuts \
     --timestamp=none \
     "$app_bundle"
 

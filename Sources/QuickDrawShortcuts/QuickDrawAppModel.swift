@@ -8,6 +8,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
   case system
   case finder
   case meeting
+  case note
   case chat
   case mail
   case development
@@ -26,6 +27,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .system: "macwindow.on.rectangle"
     case .finder: "folder.fill"
     case .meeting: "person.2.fill"
+    case .note: "note.text"
     case .chat: "bubble.left.and.bubble.right.fill"
     case .mail: "envelope.fill"
     case .development: "wrench.and.screwdriver.fill"
@@ -44,6 +46,7 @@ enum QuickDrawSection: String, CaseIterable, Identifiable {
     case .system: .system
     case .finder: .finder
     case .meeting: .meeting
+    case .note: .note
     case .chat: .chat
     case .mail: .mail
     case .development, .developmentAIAgent, .developmentEditor, .developmentTerminal:
@@ -85,10 +88,18 @@ struct ApplicationMapping: Identifiable, Equatable {
       (.macOS, "macOS", "macwindow.on.rectangle"),
       (.finder, "Finder", "folder.fill"),
       (.microsoftTeams, "Teams", "person.2.fill"),
+      (.microsoftTeamsWeb, "Teams Web", "globe"),
       (.zoomWorkplace, "Zoom", "video.fill"),
+      (.zoomWeb, "Zoom Web", "globe"),
       (.googleMeet, "Meet", "globe"),
+      (.appleNotes, "Apple Notes", "note.text"),
+      (.notion, "Notion", "note.text"),
+      (.notionWeb, "Notion Web", "note.text"),
+      (.obsidian, "Obsidian", "diamond.fill"),
+      (.microsoftOneNote, "OneNote", "note.text"),
       (.codex, "Codex", "chevron.left.forwardslash.chevron.right"),
       (.claude, "Claude", "terminal.fill"),
+      (.antigravity, "Antigravity", "sparkles"),
       (.visualStudioCode, "VS Code", "chevron.left.forwardslash.chevron.right"),
       (.cursor, "Cursor", "cursorarrow.rays"),
       (.xcode, "Xcode", "hammer.fill"),
@@ -157,7 +168,7 @@ enum DevelopmentApplicationCategory: String, CaseIterable, Identifiable {
   func contains(_ target: ActionTarget) -> Bool {
     switch self {
     case .aiAgent:
-      [.codex, .claude].contains(target)
+      [.codex, .claude, .antigravity].contains(target)
     case .editor:
       [
         .visualStudioCode, .cursor, .xcode, .intellijIdea, .webStorm, .rubyMine,
@@ -177,6 +188,9 @@ enum ActionCategory: String, CaseIterable, Identifiable {
   case meetingControls
   case panelsAndSharing
   case reactions
+  case noteCreation
+  case noteNavigation
+  case noteEditing
   case agentSessions
   case terminals
   case regions
@@ -310,6 +324,11 @@ struct ActionDefinition: Identifiable, Equatable {
       systemImage: "arrow.down.circle.fill",
       category: .finderNavigation
     ),
+    ActionDefinition(
+      action: .finderCopyPath,
+      systemImage: "doc.on.clipboard",
+      category: .finderNavigation
+    ),
     ActionDefinition(action: .mute, systemImage: "mic.slash.fill", category: .meetingControls),
     ActionDefinition(action: .camera, systemImage: "video.fill", category: .meetingControls),
     ActionDefinition(
@@ -362,6 +381,51 @@ struct ActionDefinition: Identifiable, Equatable {
       action: .reactionCelebrate,
       systemImage: "party.popper.fill",
       category: .reactions
+    ),
+    ActionDefinition(
+      action: .newNote,
+      systemImage: "square.and.pencil",
+      category: .noteCreation
+    ),
+    ActionDefinition(
+      action: .openNote,
+      systemImage: "doc.text.magnifyingglass",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .findInNote,
+      systemImage: "text.magnifyingglass",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .previousNote,
+      systemImage: "chevron.backward",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .nextNote,
+      systemImage: "chevron.forward",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .goUpOneLevel,
+      systemImage: "arrow.up.to.line",
+      category: .noteNavigation
+    ),
+    ActionDefinition(
+      action: .addComment,
+      systemImage: "text.bubble",
+      category: .noteEditing
+    ),
+    ActionDefinition(
+      action: .openBlockMenu,
+      systemImage: "slider.horizontal.3",
+      category: .noteEditing
+    ),
+    ActionDefinition(
+      action: .duplicateBlock,
+      systemImage: "plus.square.on.square",
+      category: .noteEditing
     ),
     ActionDefinition(
       action: .newSession,
@@ -619,6 +683,10 @@ struct TriggerAlignmentNotice: Equatable {
 
 @MainActor
 final class QuickDrawAppModel: ObservableObject {
+  static let privacyPolicyURL = URL(
+    string: "https://github.com/keishingu/QuickDraw/blob/main/docs/privacy-policy.md"
+  )!
+  static let supportURL = URL(string: "https://github.com/keishingu/QuickDraw/issues")!
   private static let cheatSheetEnabledKey = "cheatSheetEnabled"
   private static let developerModeEnabledKey = "developerModeEnabled"
 
@@ -627,7 +695,8 @@ final class QuickDrawAppModel: ObservableObject {
   @Published private(set) var isDryRunEnabled = false
   @Published private(set) var isCheatSheetEnabled: Bool
   @Published private(set) var isDeveloperModeEnabled: Bool
-  @Published private(set) var hasAccessibilityPermission = false
+  @Published private(set) var hasInputMonitoringPermission = false
+  @Published private(set) var hasPostEventPermission = false
   @Published private(set) var areHotKeysRegistered = false
   @Published private(set) var status = ActionStatus(
     action: nil,
@@ -636,7 +705,8 @@ final class QuickDrawAppModel: ObservableObject {
     target: "Not detected",
     isError: false
   )
-  @Published private(set) var diagnostics = "QuickDraw Diagnostics are not available yet."
+  @Published private(set) var diagnostics =
+    "QuickDraw Shortcuts Diagnostics are not available yet."
   @Published private(set) var applications = ApplicationMapping.current()
   @Published private(set) var configuration: QuickDrawConfiguration
   @Published private(set) var recordingDestination: ShortcutRecordingDestination?
@@ -650,6 +720,7 @@ final class QuickDrawAppModel: ObservableObject {
   private let defaults: UserDefaults
   private let configurationStore: QuickDrawConfigurationStore
   private let configuredSystemShortcutDetector: ConfiguredSystemShortcutDetector
+  private let openURL: (URL) -> Bool
   private var localKeyMonitor: Any?
 
   var onSetEnabled: ((Bool) -> Void)?
@@ -658,8 +729,9 @@ final class QuickDrawAppModel: ObservableObject {
   var onSetDeveloperMode: ((Bool) -> Void)?
   var onPreviewCheatSheet: (() -> Void)?
   var onRunDryCheck: ((Action) -> Void)?
-  var onRequestAccessibility: (() -> Void)?
-  var onRefreshPermission: (() -> Bool)?
+  var onRequestInputMonitoring: (() -> Void)?
+  var onRequestPostEvent: (() -> Void)?
+  var onRefreshPermissions: (() -> KeyboardPermissionState)?
   var onRefreshDiagnostics: (() -> String)?
   var onLanguageChange: ((AppLanguage) -> Void)?
   var onShortcutRecordingBegan: (() -> Void)?
@@ -668,17 +740,19 @@ final class QuickDrawAppModel: ObservableObject {
   var onUnassignTrigger: ((Action) -> String?)?
   var onResetTrigger: ((Action) -> String?)?
   var onResetAction: ((Action) -> String?)?
-  var onAlignDevelopmentTriggers: ((ActionTarget) -> TriggerAlignmentResult)?
+  var onAlignTriggers: ((ActionTarget, [Action]) -> TriggerAlignmentResult)?
 
   init(
     defaults: UserDefaults = .standard,
     configurationStore: QuickDrawConfigurationStore = QuickDrawConfigurationStore(),
     configuredSystemShortcutDetector: ConfiguredSystemShortcutDetector =
-      ConfiguredSystemShortcutDetector()
+      ConfiguredSystemShortcutDetector(),
+    openURL: @escaping (URL) -> Bool = { NSWorkspace.shared.open($0) }
   ) {
     self.defaults = defaults
     self.configurationStore = configurationStore
     self.configuredSystemShortcutDetector = configuredSystemShortcutDetector
+    self.openURL = openURL
     language = AppLanguage.preferred(defaults: defaults)
     isCheatSheetEnabled =
       defaults.object(forKey: Self.cheatSheetEnabledKey) as? Bool ?? true
@@ -707,6 +781,14 @@ final class QuickDrawAppModel: ObservableObject {
       if ActionCatalog.isSystemWide($0) { return nil }
       return trigger(for: $0)?.displayValue
     }.joined(separator: "／")
+  }
+
+  var versionDescription: String {
+    let version =
+      Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+      ?? "Development"
+    let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Local"
+    return "\(version) (\(build))"
   }
 
   func setLanguage(_ language: AppLanguage) {
@@ -742,6 +824,14 @@ final class QuickDrawAppModel: ObservableObject {
 
   func previewCheatSheet() {
     onPreviewCheatSheet?()
+  }
+
+  func openPrivacyPolicy() {
+    NSWorkspace.shared.open(Self.privacyPolicyURL)
+  }
+
+  func openSupport() {
+    NSWorkspace.shared.open(Self.supportURL)
   }
 
   func selectSection(_ section: QuickDrawSection) {
@@ -804,14 +894,10 @@ final class QuickDrawAppModel: ObservableObject {
   }
 
   func openSystemShortcutSettings() {
-    let urls = [
+    openFirstAvailableURL([
       "x-apple.systempreferences:com.apple.Keyboard-Settings.extension?KeyboardShortcuts",
       "x-apple.systempreferences:com.apple.Keyboard-Settings.extension",
-    ]
-    for value in urls {
-      guard let url = URL(string: value) else { continue }
-      if NSWorkspace.shared.open(url) { return }
-    }
+    ])
   }
 
   func isShortcutOverridden(for action: Action, target: ActionTarget) -> Bool {
@@ -862,8 +948,8 @@ final class QuickDrawAppModel: ObservableObject {
     return actions.count { shortcut(for: $0.action, target: target) != nil }
   }
 
-  func alignDevelopmentTriggers(to application: ApplicationMapping) {
-    guard let result = onAlignDevelopmentTriggers?(application.target) else { return }
+  func alignTriggers(to application: ApplicationMapping, actions: [Action]) {
+    guard let result = onAlignTriggers?(application.target, actions) else { return }
     shortcutEditingError = result.error
     triggerAlignmentNotice =
       result.error == nil
@@ -936,14 +1022,40 @@ final class QuickDrawAppModel: ObservableObject {
       || ActionTarget.allCases.contains { isShortcutOverridden(for: action, target: $0) }
   }
 
-  func requestAccessibility() {
-    onRequestAccessibility?()
-    refreshPermission()
+  func requestInputMonitoring() {
+    onRequestInputMonitoring?()
+    refreshPermissions()
+    if !hasInputMonitoringPermission {
+      openFirstAvailableURL([
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent",
+        "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_ListenEvent",
+      ])
+    }
   }
 
-  func refreshPermission() {
-    if let onRefreshPermission {
-      hasAccessibilityPermission = onRefreshPermission()
+  func requestPostEvent() {
+    onRequestPostEvent?()
+    refreshPermissions()
+    if !hasPostEventPermission {
+      openFirstAvailableURL([
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+        "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility",
+      ])
+    }
+  }
+
+  private func openFirstAvailableURL(_ values: [String]) {
+    for value in values {
+      guard let url = URL(string: value) else { continue }
+      if openURL(url) { return }
+    }
+  }
+
+  func refreshPermissions() {
+    if let onRefreshPermissions {
+      let state = onRefreshPermissions()
+      hasInputMonitoringPermission = state.hasInputMonitoringAccess
+      hasPostEventPermission = state.hasPostEventAccess
     }
     refreshDiagnostics()
   }
@@ -952,7 +1064,7 @@ final class QuickDrawAppModel: ObservableObject {
     applications = ApplicationMapping.current()
     refreshConfiguredSystemShortcuts()
     syncConfiguration()
-    refreshPermission()
+    refreshPermissions()
   }
 
   func refreshDiagnostics() {
@@ -963,11 +1075,12 @@ final class QuickDrawAppModel: ObservableObject {
 
   func update(
     status: ActionStatus,
-    hasAccessibilityPermission: Bool,
+    permissions: KeyboardPermissionState,
     diagnostics: String
   ) {
     self.status = status
-    self.hasAccessibilityPermission = hasAccessibilityPermission
+    hasInputMonitoringPermission = permissions.hasInputMonitoringAccess
+    hasPostEventPermission = permissions.hasPostEventAccess
     self.diagnostics = diagnostics
   }
 

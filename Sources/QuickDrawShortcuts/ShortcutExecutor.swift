@@ -38,7 +38,7 @@ struct ShortcutExecutor: ShortcutDelivering {
     guard let source = CGEventSource(stateID: .privateState) else {
       throw ShortcutExecutionError.eventSourceUnavailable
     }
-    for plannedEvent in ShortcutEventPlanner.plan(for: shortcut) {
+    let events = try ShortcutEventPlanner.plan(for: shortcut).map { plannedEvent in
       guard
         let event = CGEvent(
           keyboardEventSource: source,
@@ -56,6 +56,9 @@ struct ShortcutExecutor: ShortcutDelivering {
         .eventSourceUserData,
         value: plannedEvent.sourceMarker
       )
+      return event
+    }
+    for event in events {
       event.post(tap: .cgSessionEventTap)
     }
   }

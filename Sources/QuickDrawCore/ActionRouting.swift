@@ -28,6 +28,7 @@ public enum ActionDomain: String, CaseIterable, Codable, Equatable, Identifiable
   case system
   case finder
   case meeting
+  case note
   case chat
   case mail
   case development
@@ -58,6 +59,7 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case finderHome
   case finderDesktop
   case finderDownloads
+  case finderCopyPath
   case mute
   case camera
   case raiseHand
@@ -74,6 +76,15 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
   case reactionLaugh
   case reactionWow
   case reactionCelebrate
+  case newNote
+  case openNote
+  case findInNote
+  case previousNote
+  case nextNote
+  case addComment
+  case goUpOneLevel
+  case openBlockMenu
+  case duplicateBlock
   case newSession
   case toggleTerminal
   case newTerminal
@@ -152,6 +163,7 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .finderHome: "Home"
     case .finderDesktop: "Desktop"
     case .finderDownloads: "Downloads"
+    case .finderCopyPath: "Copy Pathname"
     case .mute: "Mute"
     case .camera: "Camera"
     case .raiseHand: "Raise Hand"
@@ -168,6 +180,15 @@ public enum Action: String, CaseIterable, Codable, Equatable, Identifiable, Send
     case .reactionLaugh: "Laugh"
     case .reactionWow: "Wow"
     case .reactionCelebrate: "Celebrate"
+    case .newNote: "New Note"
+    case .openNote: "Open Note"
+    case .findInNote: "Find in Note"
+    case .previousNote: "Previous Note"
+    case .nextNote: "Next Note"
+    case .addComment: "Comment"
+    case .goUpOneLevel: "Go Up One Level"
+    case .openBlockMenu: "Block Action Menu"
+    case .duplicateBlock: "Duplicate Block"
     case .newSession: "New Session"
     case .toggleTerminal: "Toggle Terminal"
     case .newTerminal: "New Terminal"
@@ -224,10 +245,18 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
   case macOS
   case finder
   case microsoftTeams
+  case microsoftTeamsWeb
   case zoomWorkplace
+  case zoomWeb
   case googleMeet
+  case appleNotes
+  case notion
+  case notionWeb
+  case obsidian
+  case microsoftOneNote
   case codex
   case claude
+  case antigravity
   case visualStudioCode
   case cursor
   case xcode
@@ -260,10 +289,18 @@ public enum ActionTarget: String, CaseIterable, Codable, Equatable, Sendable {
     case .macOS: "macOS"
     case .finder: "Finder"
     case .microsoftTeams: "Microsoft Teams"
+    case .microsoftTeamsWeb: "Microsoft Teams (Web)"
     case .zoomWorkplace: "Zoom Workplace"
+    case .zoomWeb: "Zoom (Web)"
     case .googleMeet: "Google Meet"
+    case .appleNotes: "Apple Notes"
+    case .notion: "Notion"
+    case .notionWeb: "Notion (Web)"
+    case .obsidian: "Obsidian"
+    case .microsoftOneNote: "Microsoft OneNote"
     case .codex: "Codex"
     case .claude: "Claude"
+    case .antigravity: "Antigravity"
     case .visualStudioCode: "Visual Studio Code"
     case .cursor: "Cursor"
     case .xcode: "Xcode"
@@ -398,16 +435,22 @@ public struct ActionRouter {
     }
 
     let target: ActionTarget
-    if let webApplication = ActionCatalog.webApplication(
-      in: foregroundTarget,
+    if ActionCatalog.requiresWebApplicationDetection(
+      bundleIdentifier: bundleIdentifier,
       domain: action.domain
-    ), let webIdentity = webApplication.webApplication {
+    ) {
       guard let activeTabURL = context.activeTabURL else {
         return .failure(.browserContextUnavailable)
       }
 
       let host = activeTabURL.host?.lowercased()
-      guard webIdentity.matches(activeTabURL) else {
+      guard
+        let webApplication = ActionCatalog.webApplication(
+          in: foregroundTarget,
+          matching: activeTabURL
+        ),
+        webApplication.domains.contains(action.domain)
+      else {
         return .failure(.unsupportedWebPage(host: host))
       }
       target = webApplication.target

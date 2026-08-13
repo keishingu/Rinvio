@@ -3,30 +3,34 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key>
-    <string>QuickDraw PoC</string>
+    <string>QuickDraw Shortcuts</string>
     <key>CFBundleExecutable</key>
-    <string>QuickDrawPoC</string>
+    <string>QuickDrawShortcuts</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIconName</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>dev.actionrouter.quickdraw-poc</string>
+    <string>com.keishingu.quickdraw-shortcuts</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>QuickDraw PoC</string>
+    <string>QuickDraw Shortcuts</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.1.0</string>
+    <string>1.0.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>15.0</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSMinimumSystemVersion</key>
+	<string>15.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>QuickDraw checks only Google Chrome's active tab URL to determine whether Google Meet is the current target.</string>
+	<string>QuickDraw checks only Google Chrome's active tab URL to determine whether Google Meet or Gmail is the current target.</string>
     <key>NSHumanReadableCopyright</key>
-    <string>QuickDraw proof of concept</string>
+    <string>Copyright © 2026 Kei Shingu. All rights reserved.</string>
 </dict>
 </plist>

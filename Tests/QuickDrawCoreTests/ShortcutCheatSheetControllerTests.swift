@@ -1,7 +1,7 @@
 import QuickDrawCore
 import XCTest
 
-@testable import QuickDrawPoC
+@testable import QuickDrawShortcuts
 
 @MainActor
 final class ShortcutCheatSheetControllerTests: XCTestCase {

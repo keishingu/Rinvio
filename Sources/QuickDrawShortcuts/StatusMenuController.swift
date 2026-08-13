@@ -5,7 +5,8 @@ final class StatusMenuController: NSObject {
   var onToggleDryRun: ((Bool) -> Void)?
   var onOpenWindow: (() -> Void)?
   var onRunDryCheck: (() -> Void)?
-  var onRequestAccessibility: (() -> Void)?
+  var onRequestInputMonitoring: (() -> Void)?
+  var onRequestPostEvent: (() -> Void)?
   var onCopyDiagnostics: (() -> String)?
 
   private let statusItem: NSStatusItem
@@ -14,8 +15,10 @@ final class StatusMenuController: NSObject {
   private let headlineItem = NSMenuItem()
   private let detailItem = NSMenuItem()
   private let targetItem = NSMenuItem()
-  private let permissionStatusItem = NSMenuItem()
-  private let permissionActionItem = NSMenuItem()
+  private let inputMonitoringStatusItem = NSMenuItem()
+  private let postEventStatusItem = NSMenuItem()
+  private let inputMonitoringActionItem = NSMenuItem()
+  private let postEventActionItem = NSMenuItem()
   private let appTitleItem = NSMenuItem()
   private let openItem = NSMenuItem()
   private let dryCheckItem = NSMenuItem()
@@ -36,7 +39,10 @@ final class StatusMenuController: NSObject {
     target: "Not detected",
     isError: false
   )
-  private var lastAccessibilityPermission = false
+  private var lastPermissions = KeyboardPermissionState(
+    hasInputMonitoringAccess: false,
+    hasPostEventAccess: false
+  )
   private var triggerCount = 0
 
   override init() {
@@ -46,10 +52,8 @@ final class StatusMenuController: NSObject {
     configureFeedbackPopover()
 
     if let button = statusItem.button {
-      button.image = NSImage(
-        systemSymbolName: "speaker.slash.circle",
-        accessibilityDescription: "QuickDraw PoC"
-      )
+      button.image = Self.quickDrawStatusImage()
+      button.setAccessibilityLabel("QuickDraw Shortcuts")
     }
 
     let menu = NSMenu()
@@ -65,8 +69,11 @@ final class StatusMenuController: NSObject {
     targetItem.isEnabled = false
     menu.addItem(targetItem)
 
-    permissionStatusItem.isEnabled = false
-    menu.addItem(permissionStatusItem)
+    inputMonitoringStatusItem.isEnabled = false
+    menu.addItem(inputMonitoringStatusItem)
+
+    postEventStatusItem.isEnabled = false
+    menu.addItem(postEventStatusItem)
 
     menu.addItem(.separator())
 
@@ -90,9 +97,13 @@ final class StatusMenuController: NSObject {
     dryCheckItem.target = self
     menu.addItem(dryCheckItem)
 
-    permissionActionItem.target = self
-    permissionActionItem.action = #selector(requestAccessibility)
-    menu.addItem(permissionActionItem)
+    inputMonitoringActionItem.target = self
+    inputMonitoringActionItem.action = #selector(requestInputMonitoring)
+    menu.addItem(inputMonitoringActionItem)
+
+    postEventActionItem.target = self
+    postEventActionItem.action = #selector(requestPostEvent)
+    menu.addItem(postEventActionItem)
 
     menu.addItem(developerSectionSeparator)
 
@@ -117,28 +128,37 @@ final class StatusMenuController: NSObject {
     applyLanguage()
   }
 
-  func update(status: ActionStatus, hasAccessibilityPermission: Bool) {
+  func update(status: ActionStatus, permissions: KeyboardPermissionState) {
     lastStatus = status
-    lastAccessibilityPermission = hasAccessibilityPermission
+    lastPermissions = permissions
     let copy = QuickDrawCopy(language: language)
     let localizedStatus = copy.localizedStatus(status)
 
     headlineItem.title = localizedStatus.headline
     detailItem.title = localizedStatus.detail
     targetItem.title = "\(copy.targetPrefix): \(localizedStatus.target)"
-    permissionStatusItem.title =
-      hasAccessibilityPermission
-      ? copy.accessibilityGrantedMenu
-      : copy.accessibilityRequiredMenu
-    permissionActionItem.isHidden = hasAccessibilityPermission
+    inputMonitoringStatusItem.title =
+      permissions.hasInputMonitoringAccess
+      ? copy.inputMonitoringGrantedMenu
+      : copy.inputMonitoringRequiredMenu
+    postEventStatusItem.title =
+      permissions.hasPostEventAccess
+      ? copy.shortcutDeliveryGrantedMenu
+      : copy.shortcutDeliveryRequiredMenu
+    inputMonitoringActionItem.isHidden = permissions.hasInputMonitoringAccess
+    postEventActionItem.isHidden = permissions.hasPostEventAccess
     feedbackHeadline.stringValue = localizedStatus.headline
     feedbackDetail.stringValue = localizedStatus.detail
     feedbackTarget.stringValue = "\(copy.targetPrefix): \(localizedStatus.target)"
 
-    statusItem.button?.image = NSImage(
-      systemSymbolName: status.isError ? "exclamationmark.circle" : "speaker.slash.circle",
-      accessibilityDescription: localizedStatus.headline
-    )
+    statusItem.button?.image =
+      status.isError
+      ? NSImage(
+        systemSymbolName: "exclamationmark.circle",
+        accessibilityDescription: localizedStatus.headline
+      )
+      : Self.quickDrawStatusImage()
+    statusItem.button?.setAccessibilityLabel(localizedStatus.headline)
   }
 
   func setLanguage(_ language: AppLanguage) {
@@ -146,7 +166,7 @@ final class StatusMenuController: NSObject {
     applyLanguage()
     update(
       status: lastStatus,
-      hasAccessibilityPermission: lastAccessibilityPermission
+      permissions: lastPermissions
     )
   }
 
@@ -176,6 +196,18 @@ final class StatusMenuController: NSObject {
     item.isEnabled = false
   }
 
+  private static func quickDrawStatusImage() -> NSImage? {
+    guard let image = NSImage(named: "StatusBarIcon") else {
+      return NSImage(
+        systemSymbolName: "link",
+        accessibilityDescription: "QuickDraw Shortcuts"
+      )
+    }
+    image.isTemplate = true
+    image.size = NSSize(width: 18, height: 18)
+    return image
+  }
+
   private func applyLanguage() {
     let copy = QuickDrawCopy(language: language)
     statusItem.button?.toolTip = copy.menuTitle
@@ -184,7 +216,8 @@ final class StatusMenuController: NSObject {
     enabledItem.title = copy.enabled
     dryRunItem.title = copy.dryRunMenu
     dryCheckItem.title = copy.runDryCheckMenu
-    permissionActionItem.title = copy.requestAccessibilityMenu
+    inputMonitoringActionItem.title = copy.requestInputMonitoringMenu
+    postEventActionItem.title = copy.requestShortcutDeliveryMenu
     copyItem.title = copy.copyDiagnostics
     hotKeyItem.title = copy.hotKeyRegisteredMenu(triggerCount)
     privacyItem.title = copy.privacyMenu
@@ -254,8 +287,12 @@ final class StatusMenuController: NSObject {
     }
   }
 
-  @objc private func requestAccessibility() {
-    onRequestAccessibility?()
+  @objc private func requestInputMonitoring() {
+    onRequestInputMonitoring?()
+  }
+
+  @objc private func requestPostEvent() {
+    onRequestPostEvent?()
   }
 
   @objc private func copyDiagnostics() {

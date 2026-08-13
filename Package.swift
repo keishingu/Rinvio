@@ -3,13 +3,13 @@
 import PackageDescription
 
 let package = Package(
-  name: "QuickDrawPoC",
+  name: "QuickDrawShortcuts",
   platforms: [
     .macOS(.v15)
   ],
   products: [
     .library(name: "QuickDrawCore", targets: ["QuickDrawCore"]),
-    .executable(name: "QuickDrawPoC", targets: ["QuickDrawPoC"]),
+    .executable(name: "QuickDrawShortcuts", targets: ["QuickDrawShortcuts"]),
   ],
   targets: [
     .target(
@@ -19,7 +19,7 @@ let package = Package(
       ]
     ),
     .executableTarget(
-      name: "QuickDrawPoC",
+      name: "QuickDrawShortcuts",
       dependencies: ["QuickDrawCore"],
       linkerSettings: [
         .linkedFramework("AppKit"),
@@ -30,7 +30,7 @@ let package = Package(
     ),
     .testTarget(
       name: "QuickDrawCoreTests",
-      dependencies: ["QuickDrawCore", "QuickDrawPoC"]
+      dependencies: ["QuickDrawCore", "QuickDrawShortcuts"]
     ),
   ],
   swiftLanguageModes: [.v5]

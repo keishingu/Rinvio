@@ -1,4 +1,4 @@
-# QuickDraw PoC
+# QuickDraw Shortcuts
 
 アプリごとに異なる頻出操作を共通Actionへ変換し、Foregroundの対象アプリへ配送するmacOS Utilityです。
 
@@ -11,8 +11,8 @@
 
 ## Scope
 
-- System / Finder / Meeting / Chat / Mail / Development / Browserに分類した85のBuilt-in Action
-- Microsoft Teams / Zoom Workplace / Google Meet / Slack / Discord / Cairn / Apple Mail / Gmail / Microsoft Outlook / Codex / Claude / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
+- System / Finder / Meeting / Note / Chat / Mail / Development / Browserに分類した95のBuilt-in Action
+- Microsoft Teams（App / Web）/ Zoom Workplace（App / Web）/ Google Meet / Apple Notes / Notion（App / Web）/ Obsidian / Microsoft OneNote / Slack / Discord / Cairn / Apple Mail / Gmail / Microsoft Outlook / Codex / Claude / Antigravity / Visual Studio Code / Cursor / Xcode / JetBrains系IDE / Terminal / iTerm2 / Ghostty / Safari / Google Chromeの既定ショートカットを共通Actionへ変換
 - Application TargetはForeground-only。macOS操作は純正キーボードショートカットを参照し、編集はSystem Settingsへ委譲
 - Action-first native settings window with an application mapping inspector
 - Installed applications can be included in or excluded from QuickDraw individually
@@ -31,10 +31,10 @@
 
 ```sh
 Scripts/verify.sh
-open '.build/app/QuickDraw PoC.app'
+open '.build/app/QuickDraw Shortcuts.app'
 ```
 
-`Scripts/verify.sh` はformat lint、unit test、app bundle生成、Info.plist、code signatureをまとめて検証します。
+`Scripts/verify.sh` はformat lint、unit test、開発用app bundle生成、Info.plist、code signatureをまとめて検証します。`Scripts/verify-app-store.sh`はApp Store用Xcode Targetをunsigned Release Archiveし、製品名、Bundle ID、Privacy Manifest、日英の権限説明、Universal Binaryを検証します。提出情報の下書きと残作業は[App Store提出情報](docs/app-store-submission.ja.md)を参照してください。
 
 再ビルド後もTCC権限を安定させるため、`Scripts/build-app.sh` は利用可能なApple Development証明書を自動選択します。明示的に指定する場合は次の環境変数を使います。
 
@@ -42,17 +42,17 @@ open '.build/app/QuickDraw PoC.app'
 QUICKDRAW_CODE_SIGN_IDENTITY='Apple Development: Your Name (TEAMID)' Scripts/build-app.sh debug
 ```
 
-証明書が見つからない場合だけローカルPoC用のad-hoc署名へフォールバックします。adhoc署名では、再ビルド後にmacOSがPermissionを再要求する場合があります。
+証明書が見つからない場合だけローカル開発用のad-hoc署名へフォールバックします。ad-hoc署名では、再ビルド後にmacOSがPermissionを再要求する場合があります。
 
 ## First run
 
 1. 起動時に表示されるQuickDraw Windowで、System / Finder / Meeting / Chat / Mail / Development / BrowserのActionと各ApplicationのMappingを確認する。Windowを閉じた後はMenu Barの`Open QuickDraw…`から再表示できる。
    表示言語はSidebarの`Settings`から日本語／Englishを切り替えられる。QuickDraw全体の有効／停止はSidebar下部の状態表示右端にあるToggleで切り替える。
 2. 権限を与える前に確認する場合は`Settings`で`Developer Mode`をONにし、`Information` → `Developer Tools`の`Dry Run`を有効にする。対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。Dry Runはshortcutを送信しない。
-3. 実配送を試す場合は`Information`のAccessibilityセクション、またはMenu Barの`Request Accessibility Permission…`を選ぶ。
-4. System Settings → Privacy & Security → AccessibilityでQuickDraw PoCを許可する。
-5. Google MeetまたはGmailを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。
-6. `Information` → `Developer Tools`でDry Runを無効にする（`Developer Mode`をOFFに戻しても同時に無効になる）。対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。
+3. 実配送を試す場合は`Information`の`Input Monitoring`から許可を要求し、System Settings → Privacy & Security → Input MonitoringでQuickDraw Shortcutsを許可する。この権限は設定済みTriggerの検出だけに使い、キー入力を保存しない。
+4. 続いて`Shortcut Delivery`から許可を要求し、System Settings → Privacy & Security → AccessibilityでQuickDraw Shortcutsを許可する。この権限は対応Applicationへ公式Shortcutを配送するために使う。
+5. Google MeetまたはGmailを使う場合は、最初の判定時に表示されるAutomation promptでGoogle Chromeを許可する。QuickDrawが読むのはForeground TabのURLだけで、host判定後に完全なURLを保存しない。
+6. `Information` → `Developer Tools`でDry Runを無効にする（`Developer Mode`をOFFに戻しても同時に無効になる）。対象ApplicationまたはWeb Application TabをForegroundにして設定済みTriggerを押す。Input Monitoringが許可されていない場合、QuickDrawはTriggerを登録・消費しない。
 
 ## Shortcut Guide
 
@@ -102,7 +102,7 @@ Applications一覧では、Applicationごとに`QuickDrawの対象`をON/OFFで�
 
 Built-in ActionのSuggested Triggerは[ショートカット設計原則](docs/shortcut-design-principles.ja.md)に従い、Meetingとアプリ／UI操作はOption、Editor拡張ActionはControl + Option、定着したBrowser操作はCommand文化を維持します。UI領域の前後移動は各アプリの慣例に合わせて`⇧F6` / `F6`を使います。TriggerはForeground Applicationのカテゴリ内で解決し、そのActionのMappingがある場合だけQuickDrawがキーを消費します。別カテゴリ、対象外、またはMapping未対応なら元のキーイベントをそのままアプリ／macOSへ渡します。
 
-Applicationの所属カテゴリが交差しないAction同士は、同じTriggerを再利用できます。一方、TeamsのようにMeetingとChatの両方へ所属するApplicationがあるカテゴリ間では、判定が曖昧になるため重複Triggerを設定できません。Google MeetとGmailではActive Tabを判定し、`meet.google.com`ではMeeting Action、`mail.google.com`ではMail Action、それ以外のChromeタブではBrowser Actionだけを配送します。
+Applicationの所属カテゴリが交差しないAction同士は、同じTriggerを再利用できます。一方、TeamsのようにMeetingとChatの両方へ所属するApplicationがあるカテゴリ間では、判定が曖昧になるため重複Triggerを設定できません。ChromeではActive Tabを判定し、Google Meet / Teams Web / Zoom WebではMeeting Action、NotionではNote Action、GmailではMail Action、それ以外のTabではBrowser Actionだけを配送します。
 
 macOS標準またはSystem Settingsで有効なショートカットと競合する場合、Action Inspectorに警告を表示します。これは使用禁止ではなく、対応アプリではQuickDrawが優先されることを示します。System Settingsの検出は非公開のPreference表現を読むbest-effort方式であり、既知の標準ショートカットカタログと組み合わせています。
 
@@ -133,6 +133,7 @@ macOS推奨では`Command + Shift + 矢印`をWorkspace全体という範囲大�
 | Home | `⌥H` | Finder: `⇧⌘H` |
 | Desktop | `⌥D` | Finder: `⇧⌘D` |
 | Downloads | `⌥L` | Finder: `⌘⌥L` |
+| Copy Selected Path | `⌘L` | Finder: `⌥⌘C` |
 
 ### Meeting
 
@@ -154,6 +155,24 @@ macOS推奨では`Command + Shift + 矢印`をWorkspace全体という範囲大�
 | Reaction: 😂 | `⌥4` | — | `⌥⌘7` | — |
 | Reaction: 😮 | `⌥5` | — | `⌥⌘8` | — |
 | Reaction: 🎉 | `⌥6` | — | `⌥⌘9` | — |
+
+Teams WebはTeams Appと同じMeetingショートカットへ変換します。Zoom WebはActive TabのTarget判定とApplication設定に対応しますが、Zoom公式がWeb App向けに公開している会議操作ショートカットにトグル操作がないため、既定Mappingは未設定です。
+
+### Note
+
+| Action | Trigger | Apple Notes | Notion App | Notion Web | Obsidian | OneNote |
+|---|---|---|---|---|---|---|
+| New Note | `⌥N` | `⌘N` | `⌘N` | — | `⌘N` | `⌘N` |
+| Open Note | `⌥O` | `⌥⌘F` | `⌘P` | `⌘P` | `⌘O` | `⌘⌥F` |
+| Find in Note | `⌥F` | `⌘F` | `⌘F` | `⌘F` | `⌘F` | `⌘F` |
+| Previous Note | `⌥⌘←` | `⌥⌘[` | `⌘[` | `⌘[` | `⌥⌘←` | `⌘Page Up` |
+| Next Note | `⌥⌘→` | `⌥⌘]` | `⌘]` | `⌘]` | `⌥⌘→` | `⌘Page Down` |
+| Comment | `⌥M` | — | `⇧⌘M` | `⇧⌘M` | `⌘/` | — |
+| Go Up One Level | `⌥U` | — | `⇧⌘U` | `⇧⌘U` | — | — |
+| Block Action Menu | `⌥B` | — | `⌘/` | `⌘/` | — | — |
+| Duplicate Block | `⌃⌥D` | — | `⌘D` | `⌘D` | — | — |
+
+NotionはChromeのForeground Tabが`www.notion.so`または`notion.so`の時だけ対象です。
 
 ### Chat
 
@@ -184,6 +203,8 @@ GmailはChromeのForeground Tabが`mail.google.com`の時だけ対象です。`C
 ### Development
 
 JetBrains列はIntelliJ IDEA / WebStorm / RubyMine / PyCharm / GoLand / CLion / Rider / Android StudioのmacOS既定キーマップを共有します。各製品はApplication設定では個別に表示・Overrideできます。
+
+AI AgentにはAntigravityも表示し、New Sessionを`⌘N`へ変換します。
 
 | Action | Trigger | Codex | Claude | VS Code / Cursor | Xcode | JetBrains |
 |---|---|---|---|---|---|---|
@@ -261,6 +282,6 @@ SafariのDeveloper Toolsは、Safari設定の「Webデベロッパ用の機能�
 
 通常時はQuickDrawの状態、権限、プライバシーだけを表示します。アクセシビリティ確認と画面共有に関する説明もInformationへ集約し、各Action InspectorではTriggerとApplication Mappingへ集中できます。
 
-Settingsで`Developer Mode`をONにすると、Dry Run、ActionごとのTargetテスト、割り当て済みTrigger、直近20件のルーティングログ、`Copy Diagnostics`を表示します。Developer ModeをOFFに戻すとDry Runも同時に解除されます。詳細はConsole.appでsubsystem `dev.actionrouter.quickdraw-poc`を絞り込みます。
+Settingsで`Developer Mode`をONにすると、Dry Run、ActionごとのTargetテスト、割り当て済みTrigger、直近20件のルーティングログ、`Copy Diagnostics`を表示します。Developer ModeをOFFに戻すとDry Runも同時に解除されます。詳細はConsole.appでsubsystem `com.keishingu.quickdraw-shortcuts`を絞り込みます。
 
 記録対象はAction route、Application bundle ID、Meetか否かの分類、Execution Method、Result、Latencyです。Full URL、Meet以外のhost、Tab title、Meeting code、入力内容は記録しません。

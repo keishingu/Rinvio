@@ -3,11 +3,14 @@ import Foundation
 import QuickDrawCore
 
 enum GlobalHotKeyError: LocalizedError {
+  case handlerUnavailable
   case eventTapCreationFailed
   case runLoopSourceCreationFailed
 
   var errorDescription: String? {
     switch self {
+    case .handlerUnavailable:
+      "Global shortcut handler is unavailable"
     case .eventTapCreationFailed:
       "Could not monitor shortcuts. Accessibility or Input Monitoring permission may be required."
     case .runLoopSourceCreationFailed:

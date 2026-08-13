@@ -1,8 +1,8 @@
-# QuickDraw Level 1 PoC Verification
+# QuickDraw Level 1 validation Verification
 
 - Date: 2026-08-08
 - Build environment: Xcode 26.3 / Swift 6.2.4 / arm64
-- App: `.build/app/QuickDraw PoC.app`
+- App: `.build/app/QuickDraw Shortcuts.app`
 
 ## Automated evidence
 
@@ -56,7 +56,7 @@
 The original Carbon baseline was:
 
 ```text
-QuickDraw PoC started hotkeys=F6,F7,F8 postEventAccess=false
+QuickDraw Shortcuts started hotkeys=F6,F7,F8 postEventAccess=false
 ```
 
 The current implementation uses a modifying CGEventTap so unsupported applications can receive the original key event instead of having it swallowed by a global Carbon registration. The signed build successfully created the event tap with the existing Accessibility grant. A clean-account matrix must still confirm whether a separate Input Monitoring prompt appears on each supported macOS release.
@@ -84,6 +84,6 @@ The following cannot be truthfully marked verified without user permission and a
 - Camera and Raise Hand live delivery in Teams, Zoom, and Meet.
 - Thirty-cycle duplicate/stuck-modifier/focus-theft matrix for each target.
 
-Follow the matrix in the root `README.md`. A delivered result appears in the menu and in Console under subsystem `dev.actionrouter.quickdraw-poc`.
+Follow the matrix in the root `README.md`. A delivered result appears in the menu and in Console under subsystem `com.keishingu.quickdraw-shortcuts`.
 
 For a support handoff, choose `Copy Diagnostics` from the menu. The copied text is limited to the latest 20 attempts and excludes full URLs, non-Meet hosts, tab titles, meeting codes, and captured keys.

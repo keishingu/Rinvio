@@ -2,7 +2,7 @@ import AppKit
 import QuickDrawCore
 import XCTest
 
-@testable import QuickDrawPoC
+@testable import QuickDrawShortcuts
 
 @MainActor
 final class ApplicationMenuControllerTests: XCTestCase {
@@ -50,6 +50,31 @@ final class ApplicationMenuControllerTests: XCTestCase {
     XCTAssertEqual(model.selectedApplicationID, "system:finder")
   }
 
+  func testShortcutAlignmentAcceptsActionsFromAnyCategory() throws {
+    let model = QuickDrawAppModel(
+      defaults: UserDefaults(suiteName: #function)!,
+      configurationStore: QuickDrawConfigurationStore(fileURL: nil)
+    )
+    let application = try XCTUnwrap(model.applications.first { $0.target == .appleNotes })
+    var receivedTarget: ActionTarget?
+    var receivedActions: [Action] = []
+    model.onAlignTriggers = { target, actions in
+      receivedTarget = target
+      receivedActions = actions
+      return TriggerAlignmentResult(
+        appliedCount: actions.count,
+        skippedDuplicateCount: 0,
+        error: nil
+      )
+    }
+
+    model.alignTriggers(to: application, actions: [.newNote, .findInNote])
+
+    XCTAssertEqual(receivedTarget, .appleNotes)
+    XCTAssertEqual(receivedActions, [.newNote, .findInNote])
+    XCTAssertEqual(model.triggerAlignmentNotice?.appliedCount, 2)
+  }
+
   func testDeveloperModeDefaultsOffAndPersists() {
     let suiteName = "\(#function).\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suiteName)!
@@ -85,13 +110,65 @@ final class ApplicationMenuControllerTests: XCTestCase {
     XCTAssertEqual(dryRunUpdates, [true, false])
   }
 
+  func testPermissionRequestsOpenTheMatchingSystemSettingsPaneWhenStillRequired() {
+    var openedURLs: [URL] = []
+    let model = QuickDrawAppModel(
+      defaults: UserDefaults(suiteName: #function)!,
+      configurationStore: QuickDrawConfigurationStore(fileURL: nil),
+      openURL: {
+        openedURLs.append($0)
+        return true
+      }
+    )
+    model.onRefreshPermissions = {
+      KeyboardPermissionState(
+        hasInputMonitoringAccess: false,
+        hasPostEventAccess: false
+      )
+    }
+
+    model.requestInputMonitoring()
+    model.requestPostEvent()
+
+    XCTAssertEqual(
+      openedURLs.map(\.absoluteString),
+      [
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent",
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+      ]
+    )
+  }
+
+  func testPermissionRequestsDoNotOpenSystemSettingsWhenAlreadyGranted() {
+    var openedURLs: [URL] = []
+    let model = QuickDrawAppModel(
+      defaults: UserDefaults(suiteName: #function)!,
+      configurationStore: QuickDrawConfigurationStore(fileURL: nil),
+      openURL: {
+        openedURLs.append($0)
+        return true
+      }
+    )
+    model.onRefreshPermissions = {
+      KeyboardPermissionState(
+        hasInputMonitoringAccess: true,
+        hasPostEventAccess: true
+      )
+    }
+
+    model.requestInputMonitoring()
+    model.requestPostEvent()
+
+    XCTAssertTrue(openedURLs.isEmpty)
+  }
+
   func testOptionNavigationShortcutsSelectTheirSections() throws {
     let controller = ApplicationMenuController()
     var sections: [QuickDrawSection] = []
     controller.onSelectSection = { sections.append($0) }
 
     let items = controller.mainMenu.items.flatMap { $0.submenu?.items ?? [] }
-    for key in ["m", "c", "e", "d", "b", "f", "s", "a", "i"] {
+    for key in ["m", "n", "c", "e", "d", "b", "f", "s", "a", "i"] {
       let item = try XCTUnwrap(
         items.first {
           $0.keyEquivalent == key && $0.keyEquivalentModifierMask == [.option]
@@ -103,8 +180,8 @@ final class ApplicationMenuControllerTests: XCTestCase {
     XCTAssertEqual(
       sections,
       [
-        .meeting, .chat, .mail, .development, .browser, .finder, .system, .applications,
-        .diagnostics,
+        .meeting, .note, .chat, .mail, .development, .browser, .finder, .system,
+        .applications, .diagnostics,
       ]
     )
   }
