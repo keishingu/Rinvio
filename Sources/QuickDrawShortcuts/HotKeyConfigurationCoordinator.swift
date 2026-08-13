@@ -13,6 +13,7 @@ final class HotKeyConfigurationCoordinator {
   private var handler: (([Action]) -> Bool)?
   private var modifierHandler: ((Set<ModifierKey>) -> Void)?
   private var nonModifierKeyHandler: (() -> Void)?
+  private var isRegistrationAllowed = true
 
   init(registrar: GlobalHotKeyRegistrar, store: QuickDrawConfigurationStore) {
     self.registrar = registrar
@@ -24,9 +25,28 @@ final class HotKeyConfigurationCoordinator {
     modifierHandler: @escaping (Set<ModifierKey>) -> Void,
     nonModifierKeyHandler: @escaping () -> Void
   ) throws {
+    prepare(
+      handler: handler,
+      modifierHandler: modifierHandler,
+      nonModifierKeyHandler: nonModifierKeyHandler
+    )
+    try registerCurrentBindings()
+  }
+
+  func prepare(
+    handler: @escaping ([Action]) -> Bool,
+    modifierHandler: @escaping (Set<ModifierKey>) -> Void,
+    nonModifierKeyHandler: @escaping () -> Void
+  ) {
     self.handler = handler
     self.modifierHandler = modifierHandler
     self.nonModifierKeyHandler = nonModifierKeyHandler
+  }
+
+  private func registerCurrentBindings() throws {
+    guard let handler, let modifierHandler, let nonModifierKeyHandler else {
+      throw GlobalHotKeyError.handlerUnavailable
+    }
     try registrar.register(
       bindings: currentBindings(),
       handler: handler,
@@ -39,8 +59,18 @@ final class HotKeyConfigurationCoordinator {
     registrar.unregister()
   }
 
+  func setRegistrationAllowed(_ isAllowed: Bool) {
+    isRegistrationAllowed = isAllowed
+    if !isAllowed {
+      registrar.unregister()
+    }
+  }
+
   @discardableResult
   func resume() -> String? {
+    guard isRegistrationAllowed else {
+      return "Input Monitoring permission is required"
+    }
     guard let handler, let modifierHandler, let nonModifierKeyHandler else {
       return "Global shortcut handler is unavailable"
     }
@@ -63,6 +93,15 @@ final class HotKeyConfigurationCoordinator {
     } catch {
       _ = resume()
       return error.localizedDescription
+    }
+
+    guard isRegistrationAllowed else {
+      do {
+        try store.setTriggerOverride(shortcut, for: action)
+        return nil
+      } catch {
+        return error.localizedDescription
+      }
     }
 
     var nextBindings = currentBindings()
@@ -94,6 +133,14 @@ final class HotKeyConfigurationCoordinator {
   }
 
   func resetTrigger(for action: Action) -> String? {
+    guard isRegistrationAllowed else {
+      do {
+        try store.resetTrigger(for: action)
+        return nil
+      } catch {
+        return error.localizedDescription
+      }
+    }
     guard let handler, let modifierHandler, let nonModifierKeyHandler else {
       return "Global shortcut handler is unavailable"
     }
@@ -117,6 +164,14 @@ final class HotKeyConfigurationCoordinator {
   }
 
   func unassignTrigger(for action: Action) -> String? {
+    guard isRegistrationAllowed else {
+      do {
+        try store.unassignTrigger(for: action)
+        return nil
+      } catch {
+        return error.localizedDescription
+      }
+    }
     guard let handler, let modifierHandler, let nonModifierKeyHandler else {
       return "Global shortcut handler is unavailable"
     }
@@ -138,14 +193,6 @@ final class HotKeyConfigurationCoordinator {
   }
 
   func alignDevelopmentTriggers(to target: ActionTarget) -> TriggerAlignmentResult {
-    guard let handler, let modifierHandler, let nonModifierKeyHandler else {
-      return TriggerAlignmentResult(
-        appliedCount: 0,
-        skippedDuplicateCount: 0,
-        error: "Global shortcut handler is unavailable"
-      )
-    }
-
     var shortcuts: [Action: KeyStroke] = [:]
     var usedShortcuts: Set<PhysicalShortcut> = []
     var skippedDuplicateCount = 0
@@ -156,6 +203,29 @@ final class HotKeyConfigurationCoordinator {
       } else {
         skippedDuplicateCount += 1
       }
+    }
+    guard isRegistrationAllowed else {
+      do {
+        try store.setTriggerOverrides(shortcuts)
+        return TriggerAlignmentResult(
+          appliedCount: shortcuts.count,
+          skippedDuplicateCount: skippedDuplicateCount,
+          error: nil
+        )
+      } catch {
+        return TriggerAlignmentResult(
+          appliedCount: 0,
+          skippedDuplicateCount: skippedDuplicateCount,
+          error: error.localizedDescription
+        )
+      }
+    }
+    guard let handler, let modifierHandler, let nonModifierKeyHandler else {
+      return TriggerAlignmentResult(
+        appliedCount: 0,
+        skippedDuplicateCount: skippedDuplicateCount,
+        error: "Global shortcut handler is unavailable"
+      )
     }
 
     var nextBindings = currentBindings()
@@ -200,6 +270,14 @@ final class HotKeyConfigurationCoordinator {
   }
 
   func resetAction(_ action: Action) -> String? {
+    guard isRegistrationAllowed else {
+      do {
+        try store.resetAction(action)
+        return nil
+      } catch {
+        return error.localizedDescription
+      }
+    }
     guard let handler, let modifierHandler, let nonModifierKeyHandler else {
       return "Global shortcut handler is unavailable"
     }

@@ -1,3 +1,4 @@
 .build/
 .swiftpm/
+AppStore/Builds/
 .DS_Store
