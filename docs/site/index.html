@@ -427,8 +427,8 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
     <div>
       <h2><span class="ja">2つの権限、決まった用途</span><span class="en">Two permissions, two jobs</span></h2>
       <p class="sub" style="margin-bottom:0">
-        <span class="ja"><b>Input Monitoring</b>は登録済みTriggerの検出だけに使い、打鍵を保存しません。<b>Accessibility</b>は対応Applicationへ公式Shortcutを配送するために使います。Google MeetとGmailを使う場合のみ、ChromeのForeground TabのURLをhost判定のために読み、判定後は完全なURLを保存しません。</span>
-        <span class="en"><b>Input Monitoring</b> detects your registered triggers and stores no keystrokes. <b>Accessibility</b> delivers the official shortcut to the app in front. Only if you use Google Meet or Gmail does QuickDraw read the foreground Chrome tab's URL — to identify the host, after which the full URL is not retained.</span>
+        <span class="ja"><b>Input Monitoring</b>は登録済みTriggerの検出だけに使い、打鍵を保存しません。<b>Accessibility</b>は対応Applicationへ公式Shortcutを配送するために使います。ChromeがForegroundのときは、Web Applicationの判定、Shortcut Guideの表示、最後に使ったApplicationの設定を開くためにForeground TabのURLを読み、schemeとhostだけを端末内で判定します。完全なURLは保存・送信しません。</span>
+        <span class="en"><b>Input Monitoring</b> detects your registered triggers and stores no keystrokes. <b>Accessibility</b> delivers the official shortcut to the app in front. When Chrome is in the foreground, QuickDraw may read the foreground tab's URL to identify supported web apps, show the Shortcut Guide, or open settings for the last-used app. Only the scheme and host are evaluated locally; the full URL is not stored or transmitted.</span>
       </p>
     </div>
     <div>

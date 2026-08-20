@@ -12,7 +12,7 @@ QuickDraw uses macOS Input Monitoring only to compare keyboard events with short
 
 ### Browser context
 
-When Google Meet or Gmail support is enabled in Google Chrome, QuickDraw asks Chrome for the active tab URL through Apple Events. The URL is evaluated locally to match only its scheme and host. QuickDraw does not save or transmit the full URL, path, query, fragment, tab title, meeting code, or message content.
+When Google Chrome is in the foreground, QuickDraw may ask Chrome for the active tab URL through Apple Events to identify supported web applications, show the Shortcut Guide, or open settings for the last-used application. The URL is evaluated locally to match only its scheme and host. QuickDraw does not save or transmit the full URL, path, query, fragment, tab title, meeting code, or message content.
 
 ### Local settings
 
@@ -36,7 +36,7 @@ QuickDrawは、キーボードイベントがアプリ内で設定されたシ�
 
 ### Browser Context
 
-Google ChromeでGoogle MeetまたはGmail対応を有効にした場合、QuickDrawはApple Eventsを通じてChromeへアクティブタブのURLを問い合わせます。URLはschemeとhostの一致だけを端末内で判定します。完全なURL、path、query、fragment、タブタイトル、会議コード、メッセージ内容を保存・送信しません。
+Google ChromeがForegroundの場合、QuickDrawは対応Web Applicationの判定、Shortcut Guideの表示、最後に使ったApplicationの設定を開くために、Apple Eventsを通じてChromeへアクティブタブのURLを問い合わせることがあります。URLはschemeとhostの一致だけを端末内で判定します。完全なURL、path、query、fragment、タブタイトル、会議コード、メッセージ内容を保存・送信しません。
 
 ### ローカル設定
 
