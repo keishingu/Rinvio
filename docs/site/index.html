@@ -454,9 +454,9 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
     <ol class="steps">
       <li><p><span class="ja">起動時のRinvio Windowで、ActionとApplicationのMappingを確認する。</span><span class="en">Review the actions and each app's mapping in the window that opens on launch.</span></p>
         <p class="note"><span class="ja">閉じたあとはMenu Barの<kbd>Open Rinvio…</kbd>から再表示できる。</span><span class="en">Reopen it later from <kbd>Open Rinvio…</kbd> in the menu bar.</span></p></li>
+      <li><p><span class="ja"><kbd>Information</kbd>の<kbd>Input Monitoring</kbd>から許可を要求し、System Settings → Privacy &amp; Security → Input MonitoringでRinvioを許可する。</span><span class="en">Request <kbd>Input Monitoring</kbd> from <kbd>Information</kbd>, then allow Rinvio in System Settings → Privacy &amp; Security → Input Monitoring.</span></p></li>
       <li><p><span class="ja"><kbd>Settings</kbd>で<kbd>Developer Mode</kbd>をON、<kbd>Information</kbd> → <kbd>Developer Tools</kbd>で<kbd>Dry Run</kbd>を有効にする。</span><span class="en">Turn on <kbd>Developer Mode</kbd> in <kbd>Settings</kbd>, then enable <kbd>Dry Run</kbd> under <kbd>Information</kbd> → <kbd>Developer Tools</kbd>.</span></p>
         <p class="note"><span class="ja">対象ApplicationをForegroundにしてTriggerを押す。Dry Runはshortcutを送信しない。</span><span class="en">Bring a supported app to the front and press a trigger. Dry Run sends no shortcut.</span></p></li>
-      <li><p><span class="ja"><kbd>Information</kbd>の<kbd>Input Monitoring</kbd>から許可を要求し、System Settings → Privacy &amp; Security → Input MonitoringでRinvioを許可する。</span><span class="en">Request <kbd>Input Monitoring</kbd> from <kbd>Information</kbd>, then allow Rinvio in System Settings → Privacy &amp; Security → Input Monitoring.</span></p></li>
       <li><p><span class="ja">続いて<kbd>Shortcut Delivery</kbd>から許可を要求し、Privacy &amp; Security → AccessibilityでRinvioを許可する。</span><span class="en">Then request <kbd>Shortcut Delivery</kbd> and allow Rinvio under Privacy &amp; Security → Accessibility.</span></p></li>
       <li><p><span class="ja">Dry Runを無効にして、対象ApplicationまたはWeb Application TabをForegroundにしてTriggerを押す。</span><span class="en">Turn Dry Run off, bring a supported app or web app tab to the front, and press a trigger.</span></p>
         <p class="note"><span class="ja">Input Monitoringが未許可の場合、RinvioはTriggerを登録も消費もしない。</span><span class="en">Without Input Monitoring, Rinvio neither registers nor consumes triggers.</span></p></li>
@@ -469,7 +469,7 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
     <h2><span class="ja">ソースからビルドする</span><span class="en">Build it from source</span></h2>
     <p class="sub"><span class="ja"><kbd>verify.sh</kbd>はformat lint、unit test、開発用app bundle生成、Info.plist、code signatureをまとめて検証します。</span><span class="en"><kbd>verify.sh</kbd> runs the format lint, the unit tests, the dev app bundle build, and the Info.plist and code signature checks in one pass.</span></p>
 <pre>Scripts/verify.sh
-open '.build/app/Rinvio.app'</pre>
+open '.build/app/QuickDraw Shortcuts.app'</pre>
   </div>
 </section>
 
@@ -478,8 +478,8 @@ open '.build/app/Rinvio.app'</pre>
 <footer>
   <div class="wrap">
     <div class="fbar"><b>Rinvio</b></div>
-    <div class="ja">macOS Utility。設定は <kbd>~/Library/Application Support/Rinvio/configuration.json</kbd> にschema version付きで保存されます。</div>
-    <div class="en">A macOS utility. Settings are stored with a schema version at <kbd>~/Library/Application Support/Rinvio/configuration.json</kbd>.</div>
+    <div class="ja">macOS Utility。現在のbuildでは、設定は <kbd>~/Library/Application Support/QuickDraw/configuration.json</kbd> にschema version付きで保存されます。</div>
+    <div class="en">A macOS utility. In current builds, settings are stored with a schema version at <kbd>~/Library/Application Support/QuickDraw/configuration.json</kbd>.</div>
   </div>
 </footer>
 
