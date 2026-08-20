@@ -1,5 +1,10 @@
 # QuickDraw Shortcuts — App Store提出情報
 
+> [!IMPORTANT]
+> この文書は、2026年8月20日のApp Reviewで却下されたMac App Store提出時点の履歴資料である。現在の配布方針ではなく、再提出用チェックリストとして使用しないこと。
+>
+> Input MonitoringとAccessibilityを使う現行の中核体験はMac App Storeの審査方針と両立しないと判断し、Developer ID署名とApple notarizationによる直接配布へ移行する。また、`QuickDraw`はAppleの商標として指摘されたため、公開製品名を変更する。判断の詳細は[ADR-0003](adr/0003-macos-direct-distribution-after-app-store-rejection.md)を参照すること。
+
 この文書はApp Store Connectへ入力する公開情報と、App Reviewへ渡す検証手順の下書きである。実装上の製品名は`QuickDraw Shortcuts`、Bundle IDは`com.keishingu.quickdraw-shortcuts`とする。
 
 ## 基本情報
