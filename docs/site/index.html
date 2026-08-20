@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QuickDraw Shortcuts</title>
+<title>Rinvio — Shortcuts for macOS</title>
 
 <style>
 /* ===================== tokens =====================
@@ -280,7 +280,7 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
 <header>
   <div class="wrap bar">
     <div class="mark">
-      <span class="txt">QuickDraw <span class="sub">Shortcuts for macOS</span></span>
+      <span class="txt">Rinvio <span class="sub">Shortcuts for macOS</span></span>
     </div>
     <div class="langtoggle" role="group" aria-label="Display language / 表示言語">
       <button type="button" data-setlang="ja" aria-pressed="true">JA</button>
@@ -303,11 +303,11 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
       <span class="en"><span class="swap">One key</span> you press.<br>Each app's <span class="out">own shortcut</span> arrives.</span>
     </h1>
     <p class="lede">
-      <span class="ja">ミュートのショートカットはTeamsとZoomとMeetで違います。QuickDrawはその差を吸収し、共通のTriggerを、前面のアプリが理解できるキーへ変換して送ります。</span>
-      <span class="en">Mute is a different chord in Teams, Zoom, and Meet. QuickDraw absorbs the difference: one trigger, converted into the key the foreground app already understands.</span>
+      <span class="ja">ミュートのショートカットはTeamsとZoomとMeetで違います。Rinvioはその差を吸収し、共通のTriggerを、前面のアプリが理解できるキーへ変換して送ります。</span>
+      <span class="en">Mute is a different chord in Teams, Zoom, and Meet. Rinvio absorbs the difference: one trigger, converted into the key the foreground app already understands.</span>
     </p>
     </div>
-    <div class="heroicon"><img src="assets/icon.png" alt="QuickDraw app icon" width="512" height="512"></div>
+    <div class="heroicon"><img src="assets/icon.png" alt="Rinvio app icon" width="512" height="512"></div>
   </div>
 
   <div class="router">
@@ -353,8 +353,8 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
   <div class="wrap">
     <h2><span class="ja">変換表</span><span class="en">The conversion table</span></h2>
     <p class="sub">
-      <span class="ja">左のTriggerを押すと、前面のアプリの列にある既定Shortcutが送られます。「—」はそのアプリに対応する操作がないことを示し、その場合QuickDrawはキーを消費せずアプリへそのまま渡します。</span>
-      <span class="en">Press the trigger on the left; the shortcut in the foreground app's column is what gets sent. A dash means that app has no matching command — QuickDraw passes the key straight through instead of consuming it.</span>
+      <span class="ja">左のTriggerを押すと、前面のアプリの列にある既定Shortcutが送られます。「—」はそのアプリに対応する操作がないことを示し、その場合Rinvioはキーを消費せずアプリへそのまま渡します。</span>
+      <span class="en">Press the trigger on the left; the shortcut in the foreground app's column is what gets sent. A dash means that app has no matching command — Rinvio passes the key straight through instead of consuming it.</span>
     </p>
     <div class="tabs" id="tabs" role="tablist"></div>
     <div class="tablewrap"><table id="mapTable"><thead></thead><tbody></tbody></table></div>
@@ -387,8 +387,8 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
         <span class="en">Hold a modifier for about 0.6 seconds and the actions available in the foreground app appear in the center of the screen. Change the combination while holding and the list updates instantly; release to dismiss. The keys aren't consumed, so <kbd>⌥Tab</kbd> and friends still behave normally.</span>
       </p>
       <p class="sub" style="margin-bottom:0">
-        <span class="ja">各行はQuickDraw Triggerと、実際にアプリへ届くShortcutを分けて表示します。</span>
-        <span class="en">Each row separates the QuickDraw trigger from the shortcut the app actually receives.</span>
+        <span class="ja">各行はRinvio Triggerと、実際にアプリへ届くShortcutを分けて表示します。</span>
+        <span class="en">Each row separates the Rinvio trigger from the shortcut the app actually receives.</span>
       </p>
     </div>
     <div class="hud" role="img" aria-label="Shortcut Guide overlay showing Option-key actions for Zoom Workplace">
@@ -414,7 +414,7 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
       </div>
       <div>
         <h3><span class="ja">アプリ単位で外す</span><span class="en">Exclude an app</span></h3>
-        <p class="sub"><span class="ja">Applicationごとに対象のON/OFFを切り替えられます。OFFのアプリではTriggerを消費せず、Shortcutも配送せず、Guideも表示しません。Overrideは保持されるので、戻せばそのまま使えます。</span><span class="en">Turn any app on or off individually. While it's off, QuickDraw consumes no triggers, delivers no shortcuts, and shows no guide there — your overrides are kept for when you turn it back on.</span></p>
+        <p class="sub"><span class="ja">Applicationごとに対象のON/OFFを切り替えられます。OFFのアプリではTriggerを消費せず、Shortcutも配送せず、Guideも表示しません。Overrideは保持されるので、戻せばそのまま使えます。</span><span class="en">Turn any app on or off individually. While it's off, Rinvio consumes no triggers, delivers no shortcuts, and shows no guide there — your overrides are kept for when you turn it back on.</span></p>
         <h3><span class="ja">アプリの流儀に寄せる</span><span class="en">Match an app's conventions</span></h3>
         <p class="sub" style="margin-bottom:0"><span class="ja">各設定画面の「〜に寄せる」から、そのアプリで対応済みのShortcutをTriggerへ一括反映できます。曖昧になるActionは現在のTriggerのまま残します。</span><span class="en">Adopt one app's existing shortcuts as your triggers in a single step. Actions that would become ambiguous keep the trigger they have.</span></p>
       </div>
@@ -428,7 +428,7 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
       <h2><span class="ja">2つの権限、決まった用途</span><span class="en">Two permissions, two jobs</span></h2>
       <p class="sub" style="margin-bottom:0">
         <span class="ja"><b>Input Monitoring</b>は登録済みTriggerの検出だけに使い、打鍵を保存しません。<b>Accessibility</b>は対応Applicationへ公式Shortcutを配送するために使います。ChromeがForegroundのときは、Web Applicationの判定、Shortcut Guideの表示、最後に使ったApplicationの設定を開くためにForeground TabのURLを読み、schemeとhostだけを端末内で判定します。完全なURLは保存・送信しません。</span>
-        <span class="en"><b>Input Monitoring</b> detects your registered triggers and stores no keystrokes. <b>Accessibility</b> delivers the official shortcut to the app in front. When Chrome is in the foreground, QuickDraw may read the foreground tab's URL to identify supported web apps, show the Shortcut Guide, or open settings for the last-used app. Only the scheme and host are evaluated locally; the full URL is not stored or transmitted.</span>
+        <span class="en"><b>Input Monitoring</b> detects your registered triggers and stores no keystrokes. <b>Accessibility</b> delivers the official shortcut to the app in front. When Chrome is in the foreground, Rinvio may read the foreground tab's URL to identify supported web apps, show the Shortcut Guide, or open settings for the last-used app. Only the scheme and host are evaluated locally; the full URL is not stored or transmitted.</span>
       </p>
     </div>
     <div>
@@ -452,14 +452,14 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
       <span class="en">The permissions build on each other. If you'd rather see the behavior before anything is sent, Dry Run runs the whole path and delivers nothing.</span>
     </p>
     <ol class="steps">
-      <li><p><span class="ja">起動時のQuickDraw Windowで、ActionとApplicationのMappingを確認する。</span><span class="en">Review the actions and each app's mapping in the window that opens on launch.</span></p>
-        <p class="note"><span class="ja">閉じたあとはMenu Barの<kbd>Open QuickDraw…</kbd>から再表示できる。</span><span class="en">Reopen it later from <kbd>Open QuickDraw…</kbd> in the menu bar.</span></p></li>
+      <li><p><span class="ja">起動時のRinvio Windowで、ActionとApplicationのMappingを確認する。</span><span class="en">Review the actions and each app's mapping in the window that opens on launch.</span></p>
+        <p class="note"><span class="ja">閉じたあとはMenu Barの<kbd>Open Rinvio…</kbd>から再表示できる。</span><span class="en">Reopen it later from <kbd>Open Rinvio…</kbd> in the menu bar.</span></p></li>
       <li><p><span class="ja"><kbd>Settings</kbd>で<kbd>Developer Mode</kbd>をON、<kbd>Information</kbd> → <kbd>Developer Tools</kbd>で<kbd>Dry Run</kbd>を有効にする。</span><span class="en">Turn on <kbd>Developer Mode</kbd> in <kbd>Settings</kbd>, then enable <kbd>Dry Run</kbd> under <kbd>Information</kbd> → <kbd>Developer Tools</kbd>.</span></p>
         <p class="note"><span class="ja">対象ApplicationをForegroundにしてTriggerを押す。Dry Runはshortcutを送信しない。</span><span class="en">Bring a supported app to the front and press a trigger. Dry Run sends no shortcut.</span></p></li>
-      <li><p><span class="ja"><kbd>Information</kbd>の<kbd>Input Monitoring</kbd>から許可を要求し、System Settings → Privacy &amp; Security → Input MonitoringでQuickDraw Shortcutsを許可する。</span><span class="en">Request <kbd>Input Monitoring</kbd> from <kbd>Information</kbd>, then allow QuickDraw Shortcuts in System Settings → Privacy &amp; Security → Input Monitoring.</span></p></li>
-      <li><p><span class="ja">続いて<kbd>Shortcut Delivery</kbd>から許可を要求し、Privacy &amp; Security → AccessibilityでQuickDraw Shortcutsを許可する。</span><span class="en">Then request <kbd>Shortcut Delivery</kbd> and allow QuickDraw Shortcuts under Privacy &amp; Security → Accessibility.</span></p></li>
+      <li><p><span class="ja"><kbd>Information</kbd>の<kbd>Input Monitoring</kbd>から許可を要求し、System Settings → Privacy &amp; Security → Input MonitoringでRinvioを許可する。</span><span class="en">Request <kbd>Input Monitoring</kbd> from <kbd>Information</kbd>, then allow Rinvio in System Settings → Privacy &amp; Security → Input Monitoring.</span></p></li>
+      <li><p><span class="ja">続いて<kbd>Shortcut Delivery</kbd>から許可を要求し、Privacy &amp; Security → AccessibilityでRinvioを許可する。</span><span class="en">Then request <kbd>Shortcut Delivery</kbd> and allow Rinvio under Privacy &amp; Security → Accessibility.</span></p></li>
       <li><p><span class="ja">Dry Runを無効にして、対象ApplicationまたはWeb Application TabをForegroundにしてTriggerを押す。</span><span class="en">Turn Dry Run off, bring a supported app or web app tab to the front, and press a trigger.</span></p>
-        <p class="note"><span class="ja">Input Monitoringが未許可の場合、QuickDrawはTriggerを登録も消費もしない。</span><span class="en">Without Input Monitoring, QuickDraw neither registers nor consumes triggers.</span></p></li>
+        <p class="note"><span class="ja">Input Monitoringが未許可の場合、RinvioはTriggerを登録も消費もしない。</span><span class="en">Without Input Monitoring, Rinvio neither registers nor consumes triggers.</span></p></li>
     </ol>
   </div>
 </section>
@@ -469,7 +469,7 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
     <h2><span class="ja">ソースからビルドする</span><span class="en">Build it from source</span></h2>
     <p class="sub"><span class="ja"><kbd>verify.sh</kbd>はformat lint、unit test、開発用app bundle生成、Info.plist、code signatureをまとめて検証します。</span><span class="en"><kbd>verify.sh</kbd> runs the format lint, the unit tests, the dev app bundle build, and the Info.plist and code signature checks in one pass.</span></p>
 <pre>Scripts/verify.sh
-open '.build/app/QuickDraw Shortcuts.app'</pre>
+open '.build/app/Rinvio.app'</pre>
   </div>
 </section>
 
@@ -477,9 +477,9 @@ open '.build/app/QuickDraw Shortcuts.app'</pre>
 
 <footer>
   <div class="wrap">
-    <div class="fbar"><b>QuickDraw Shortcuts</b></div>
-    <div class="ja">macOS Utility。設定は <kbd>~/Library/Application Support/QuickDraw/configuration.json</kbd> にschema version付きで保存されます。</div>
-    <div class="en">A macOS utility. Settings are stored with a schema version at <kbd>~/Library/Application Support/QuickDraw/configuration.json</kbd>.</div>
+    <div class="fbar"><b>Rinvio</b></div>
+    <div class="ja">macOS Utility。設定は <kbd>~/Library/Application Support/Rinvio/configuration.json</kbd> にschema version付きで保存されます。</div>
+    <div class="en">A macOS utility. Settings are stored with a schema version at <kbd>~/Library/Application Support/Rinvio/configuration.json</kbd>.</div>
   </div>
 </footer>
 
@@ -563,13 +563,13 @@ open '.build/app/QuickDraw Shortcuts.app'</pre>
   /* ---------- screenshot ---------- */
   var shotEl = document.getElementById('shot');
   var SHOT_CAP = {
-    ja:'Meetingカテゴリ。各ActionにQuickDraw Triggerと、Teams / Zoom / Meetそれぞれへ配送する既定Shortcutが並ぶ。表示言語は日本語と英語を切り替えられる。',
-    en:'The Meeting category. Every action carries its QuickDraw trigger and the default shortcut delivered to Teams, Zoom, and Meet. The display language switches between Japanese and English.'
+    ja:'Meetingカテゴリ。各ActionにRinvio Triggerと、Teams / Zoom / Meetそれぞれへ配送する既定Shortcutが並ぶ。表示言語は日本語と英語を切り替えられる。',
+    en:'The Meeting category. Every action carries its Rinvio trigger and the default shortcut delivered to Teams, Zoom, and Meet. The display language switches between Japanese and English.'
   };
   function renderShot(){
     var lang = root.getAttribute('data-lang');
     shotEl.innerHTML =
-      '<img src="assets/shots/'+lang+'/01-meeting.jpeg" width="1160" height="720" alt="QuickDraw settings window, Meeting category">' +
+      '<img src="assets/shots/'+lang+'/01-meeting.jpeg" width="1160" height="720" alt="Rinvio settings window, Meeting category">' +
       '<figcaption>'+SHOT_CAP[lang]+'</figcaption>';
   }
 
