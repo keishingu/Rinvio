@@ -457,4 +457,65 @@ final class QuickDrawConfigurationTests: XCTestCase {
     XCTAssertNoThrow(try store.setTriggerOverride(systemRecommendation, for: .mute))
     XCTAssertEqual(store.trigger(for: .mute), systemRecommendation)
   }
+
+  func testLegacyQuickDrawConfigurationMigratesOnceWithoutLosingUserChoices() throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let legacyURL = directory.appendingPathComponent("QuickDraw/configuration.json")
+    let rinvioURL = directory.appendingPathComponent("Rinvio/configuration.json")
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let legacyStore = QuickDrawConfigurationStore(fileURL: legacyURL)
+    let customTrigger = KeyStroke(
+      virtualKeyCode: 103,
+      modifiers: [],
+      displayValue: "F11"
+    )
+    try legacyStore.setTriggerOverride(customTrigger, for: .mute)
+    try legacyStore.unassignTrigger(for: .openChat)
+    try legacyStore.setApplicationEnabled(false, for: .zoomWorkplace)
+    try legacyStore.setApplicationEnabled(true, for: .finder)
+
+    let migrated = QuickDrawConfigurationStore(
+      fileURL: rinvioURL,
+      legacyFileURL: legacyURL
+    )
+
+    XCTAssertEqual(migrated.trigger(for: .mute), customTrigger)
+    XCTAssertNil(migrated.trigger(for: .openChat))
+    XCTAssertFalse(migrated.isApplicationEnabled(.zoomWorkplace))
+    XCTAssertTrue(migrated.isApplicationEnabled(.finder))
+    XCTAssertTrue(FileManager.default.fileExists(atPath: legacyURL.path))
+    XCTAssertTrue(FileManager.default.fileExists(atPath: rinvioURL.path))
+
+    try legacyStore.resetTrigger(for: .mute)
+    let reloaded = QuickDrawConfigurationStore(
+      fileURL: rinvioURL,
+      legacyFileURL: legacyURL
+    )
+    XCTAssertEqual(reloaded.trigger(for: .mute), customTrigger)
+  }
+
+  func testUnreadableLegacyConfigurationDoesNotCreateRinvioConfiguration() throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let legacyURL = directory.appendingPathComponent("QuickDraw/configuration.json")
+    let rinvioURL = directory.appendingPathComponent("Rinvio/configuration.json")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    try FileManager.default.createDirectory(
+      at: legacyURL.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
+    try Data("not-json".utf8).write(to: legacyURL)
+
+    let store = QuickDrawConfigurationStore(
+      fileURL: rinvioURL,
+      legacyFileURL: legacyURL
+    )
+
+    XCTAssertTrue(store.configuration.triggerOverrides.isEmpty)
+    XCTAssertFalse(store.isApplicationEnabled(.finder))
+    XCTAssertFalse(store.isApplicationEnabled(.macOS))
+    XCTAssertFalse(FileManager.default.fileExists(atPath: rinvioURL.path))
+  }
 }

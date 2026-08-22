@@ -15,7 +15,5 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Verify Swift package and development app
+      - name: Verify Swift package and Rinvio app
         run: Scripts/verify.sh
-      - name: Verify App Store archive
-        run: Scripts/verify-app-store.sh

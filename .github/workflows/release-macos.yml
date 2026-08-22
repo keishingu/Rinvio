@@ -1,0 +1,211 @@
+name: Build notarized Rinvio DMG
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Marketing version for the app and release
+        required: true
+        default: 1.0.0
+        type: string
+      publish:
+        description: Publish a GitHub Release (main branch only)
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-macos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Sign, notarize, and package
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Reject publishing outside main
+        if: inputs.publish && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::A public release can only be created from main"
+          exit 1
+
+      - name: Set up Python for DMG packaging
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install DMG packaging dependencies
+        run: python -m pip install -r Scripts/requirements-dmg.txt
+
+      - name: Validate Apple distribution configuration
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ vars.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ vars.APP_STORE_CONNECT_ISSUER_ID }}
+          DEVELOPER_ID_APPLICATION_P12_BASE64: ${{ secrets.DEVELOPER_ID_APPLICATION_P12_BASE64 }}
+          DEVELOPER_ID_APPLICATION_P12_PASSWORD: ${{ secrets.DEVELOPER_ID_APPLICATION_P12_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8_BASE64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          required_names=(
+            APPLE_TEAM_ID
+            APP_STORE_CONNECT_KEY_ID
+            APP_STORE_CONNECT_ISSUER_ID
+            DEVELOPER_ID_APPLICATION_P12_BASE64
+            DEVELOPER_ID_APPLICATION_P12_PASSWORD
+            APP_STORE_CONNECT_API_KEY_P8_BASE64
+          )
+          missing=0
+          for required_name in "${required_names[@]}"; do
+            if [[ -z "${!required_name}" ]]; then
+              echo "::error::GitHub Actions configuration is missing: ${required_name}"
+              missing=1
+            fi
+          done
+          exit "${missing}"
+
+      - name: Import Developer ID Application certificate
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          DEVELOPER_ID_APPLICATION_P12_BASE64: ${{ secrets.DEVELOPER_ID_APPLICATION_P12_BASE64 }}
+          DEVELOPER_ID_APPLICATION_P12_PASSWORD: ${{ secrets.DEVELOPER_ID_APPLICATION_P12_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          certificate_path="${RUNNER_TEMP}/developer-id-application.p12"
+          keychain_path="${RUNNER_TEMP}/rinvio-signing.keychain-db"
+          keychain_password="$(openssl rand -hex 32)"
+          trap 'rm -f "${certificate_path}"' EXIT
+          echo "SIGNING_KEYCHAIN_PATH=${keychain_path}" >> "${GITHUB_ENV}"
+
+          printf '%s' "${DEVELOPER_ID_APPLICATION_P12_BASE64}" \
+            | base64 --decode > "${certificate_path}"
+          security create-keychain -p "${keychain_password}" "${keychain_path}"
+          security set-keychain-settings -lut 21600 "${keychain_path}"
+          security unlock-keychain -p "${keychain_password}" "${keychain_path}"
+          security import "${certificate_path}" \
+            -k "${keychain_path}" \
+            -P "${DEVELOPER_ID_APPLICATION_P12_PASSWORD}" \
+            -A -t cert -f pkcs12
+          security set-key-partition-list \
+            -S apple-tool:,apple: -s -k "${keychain_password}" "${keychain_path}"
+          security list-keychains -d user -s "${keychain_path}"
+
+          signing_identities="$(
+            security find-identity -v -p codesigning "${keychain_path}" \
+              | awk -F'"' '/Developer ID Application:/ {print $2}'
+          )"
+          identity_count="$(
+            printf '%s\n' "${signing_identities}" \
+              | awk 'NF { count++ } END { print count + 0 }'
+          )"
+          if [[ "${identity_count}" -ne 1 ]]; then
+            echo "::error::Developer ID Application identity must be exactly one; found ${identity_count}"
+            exit 1
+          fi
+          if [[ "${signing_identities}" != *"(${APPLE_TEAM_ID})" ]]; then
+            echo "::error::Developer ID Application identity does not match APPLE_TEAM_ID"
+            exit 1
+          fi
+          echo "SIGNING_IDENTITY=${signing_identities}" >> "${GITHUB_ENV}"
+
+      - name: Run tests and local bundle verification
+        run: Scripts/verify.sh
+
+      - name: Build Universal Rinvio DMG
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          MARKETING_VERSION: ${{ inputs.version }}
+        run: Scripts/build-direct-release.sh
+
+      - name: Notarize and staple DMG
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ vars.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ vars.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8_BASE64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          disk_image_path="build/release/Rinvio-macos-universal.dmg"
+          api_key_path="${RUNNER_TEMP}/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          result_path="${RUNNER_TEMP}/notarization-result.json"
+          trap 'rm -f "${api_key_path}" "${result_path}"' EXIT
+
+          printf '%s' "${APP_STORE_CONNECT_API_KEY_P8_BASE64}" \
+            | base64 --decode > "${api_key_path}"
+          chmod 600 "${api_key_path}"
+
+          submit_exit=0
+          xcrun notarytool submit "${disk_image_path}" \
+            --key "${api_key_path}" \
+            --key-id "${APP_STORE_CONNECT_KEY_ID}" \
+            --issuer "${APP_STORE_CONNECT_ISSUER_ID}" \
+            --wait \
+            --timeout 30m \
+            --output-format json > "${result_path}" || submit_exit=$?
+          cat "${result_path}"
+          if [[ "${submit_exit}" -ne 0 ]]; then
+            echo "::error::Apple notarization submission failed"
+            exit "${submit_exit}"
+          fi
+          notarization_status="$(plutil -extract status raw -o - "${result_path}")"
+          if [[ "${notarization_status}" != "Accepted" ]]; then
+            echo "::error::Apple notarization was not accepted: ${notarization_status}"
+            exit 1
+          fi
+
+          xcrun stapler staple "${disk_image_path}"
+          xcrun stapler validate "${disk_image_path}"
+          codesign --verify --verbose=2 "${disk_image_path}"
+          hdiutil verify "${disk_image_path}"
+          spctl --assess --type open --context context:primary-signature --verbose=4 \
+            "${disk_image_path}"
+          (
+            cd build/release
+            shasum -a 256 Rinvio-macos-universal.dmg \
+              > Rinvio-macos-universal.dmg.sha256
+            shasum -a 256 -c Rinvio-macos-universal.dmg.sha256
+          )
+
+      - name: Upload notarized artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rinvio-macos-notarized-${{ github.run_number }}
+          path: |
+            build/release/Rinvio-macos-universal.dmg
+            build/release/Rinvio-macos-universal.dmg.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Publish GitHub Release
+        if: inputs.publish && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: v${{ inputs.version }}-${{ github.run_number }}
+          RELEASE_TITLE: Rinvio v${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "${RELEASE_TAG}" \
+            build/release/Rinvio-macos-universal.dmg \
+            build/release/Rinvio-macos-universal.dmg.sha256 \
+            --target "${GITHUB_SHA}" \
+            --title "${RELEASE_TITLE}" \
+            --generate-notes
+
+      - name: Remove temporary signing keychain
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          if [[ -n "${SIGNING_KEYCHAIN_PATH:-}" && -f "${SIGNING_KEYCHAIN_PATH}" ]]; then
+            security delete-keychain "${SIGNING_KEYCHAIN_PATH}"
+          fi

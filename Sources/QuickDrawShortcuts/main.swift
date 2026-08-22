@@ -11,12 +11,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var shortcutCheatSheetController: ShortcutCheatSheetController?
   private var appModel: QuickDrawAppModel?
   private let logger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "com.keishingu.quickdraw-shortcuts",
+    subsystem: Bundle.main.bundleIdentifier ?? "com.keishingu.rinvio",
     category: "lifecycle"
   )
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     NSApplication.shared.setActivationPolicy(.regular)
+    RinvioDefaultsMigration.migrateIfNeeded()
 
     let configurationStore = QuickDrawConfigurationStore()
     let foregroundProvider = ForegroundApplicationProvider()
@@ -134,7 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       return permissions
     }
     model.onRefreshDiagnostics = { [weak controller] in
-      controller?.diagnosticsText() ?? "QuickDraw Shortcuts Diagnostics unavailable"
+      controller?.diagnosticsText() ?? "Rinvio Diagnostics unavailable"
     }
     model.onLanguageChange = { [weak menuController, weak applicationMenuController] language in
       menuController?.setLanguage(language)
@@ -225,7 +226,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       model?.requestPostEvent()
     }
     menuController.onCopyDiagnostics = { [weak controller] in
-      controller?.diagnosticsText() ?? "QuickDraw Shortcuts Diagnostics unavailable"
+      controller?.diagnosticsText() ?? "Rinvio Diagnostics unavailable"
     }
     applicationMenuController.onSelectSection = { [weak model, weak windowController] section in
       model?.selectSection(section)
@@ -319,11 +320,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     )
     if let registrationError {
       logger.error(
-        "QuickDraw started without hotkey reason=\(registrationError, privacy: .public)"
+        "Rinvio started without hotkey reason=\(registrationError, privacy: .public)"
       )
     } else {
       logger.info(
-        "QuickDraw started hotkeys=\(controller.triggerSummary, privacy: .public) inputMonitoringAccess=\(permissions.hasInputMonitoringAccess, privacy: .public) postEventAccess=\(permissions.hasPostEventAccess, privacy: .public)"
+        "Rinvio started hotkeys=\(controller.triggerSummary, privacy: .public) inputMonitoringAccess=\(permissions.hasInputMonitoringAccess, privacy: .public) postEventAccess=\(permissions.hasPostEventAccess, privacy: .public)"
       )
     }
 
