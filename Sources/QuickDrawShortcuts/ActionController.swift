@@ -65,7 +65,7 @@ final class ActionController {
   private var lastTarget = "Not detected"
   private var lastAction: Action?
   private let logger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "com.keishingu.quickdraw-shortcuts",
+    subsystem: Bundle.main.bundleIdentifier ?? "com.keishingu.rinvio",
     category: "action-routing"
   )
 
@@ -87,7 +87,7 @@ final class ActionController {
   @discardableResult
   func trigger(_ candidateActions: [Action], forceDryRun: Bool = false) -> Bool {
     guard isEnabled else {
-      logger.debug("Action trigger ignored because QuickDraw is disabled")
+      logger.debug("Action trigger ignored because Rinvio is disabled")
       return false
     }
 
@@ -111,7 +111,7 @@ final class ActionController {
         }
       }
     }
-    logger.debug("Shortcut passed through because no QuickDraw target matched")
+    logger.debug("Shortcut passed through because no Rinvio target matched")
     return false
   }
 
@@ -121,8 +121,8 @@ final class ActionController {
     publishStateChange(
       headline: granted ? "Input Monitoring granted" : "Input Monitoring permission requested",
       detail: granted
-        ? "QuickDraw can now monitor configured triggers"
-        : "Enable QuickDraw in Input Monitoring, then check again",
+        ? "Rinvio can now monitor configured triggers"
+        : "Enable Rinvio in Input Monitoring, then check again",
       isError: !granted
     )
     return granted
@@ -135,7 +135,7 @@ final class ActionController {
       headline: granted ? "Accessibility granted" : "Accessibility permission requested",
       detail: granted
         ? "Return to a supported application and use a configured trigger"
-        : "Enable QuickDraw in Accessibility, then check again",
+        : "Enable Rinvio in Accessibility, then check again",
       isError: !granted
     )
     return granted
@@ -143,7 +143,7 @@ final class ActionController {
 
   func diagnosticsText() -> String {
     var lines = [
-      "QuickDraw Shortcuts Diagnostics",
+      "Rinvio Diagnostics",
       "generatedAt=\(ISO8601DateFormatter().string(from: Date()))",
       "hotkeys=\(areHotKeysRegistered ? "registered" : "notRegistered") \(triggerSummary)",
       "enabled=\(isEnabled)",

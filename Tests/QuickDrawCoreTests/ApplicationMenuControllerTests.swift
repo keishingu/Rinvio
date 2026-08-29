@@ -189,4 +189,34 @@ final class ApplicationMenuControllerTests: XCTestCase {
     XCTAssertTrue(didOpenLastApplicationSettings)
     XCTAssertTrue(didShowShortcutGuide)
   }
+
+  func testRinvioDefaultsMigrationPreservesNewValuesAndRunsOnlyOnce() {
+    let suiteName = "\(#function).\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    defaults.set(AppLanguage.japanese.rawValue, forKey: AppLanguage.defaultsKey)
+
+    RinvioDefaultsMigration.migrateIfNeeded(
+      defaults: defaults,
+      legacyDomain: [
+        AppLanguage.defaultsKey: AppLanguage.english.rawValue,
+        "cheatSheetEnabled": false,
+        "developerModeEnabled": true,
+      ]
+    )
+
+    XCTAssertEqual(defaults.string(forKey: AppLanguage.defaultsKey), AppLanguage.japanese.rawValue)
+    XCTAssertFalse(defaults.bool(forKey: "cheatSheetEnabled"))
+    XCTAssertTrue(defaults.bool(forKey: "developerModeEnabled"))
+
+    RinvioDefaultsMigration.migrateIfNeeded(
+      defaults: defaults,
+      legacyDomain: [
+        "cheatSheetEnabled": true,
+        "developerModeEnabled": false,
+      ]
+    )
+    XCTAssertFalse(defaults.bool(forKey: "cheatSheetEnabled"))
+    XCTAssertTrue(defaults.bool(forKey: "developerModeEnabled"))
+  }
 }

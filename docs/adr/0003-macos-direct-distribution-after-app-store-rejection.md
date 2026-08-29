@@ -89,7 +89,7 @@ GitHub Issuesを利用する場合も、support pageから選択可能な問い�
 - key input、完全なURL、meeting情報、message内容、利用統計を保存・送信しない
 - code signing、notarization、Gatekeeper検証に失敗したartifactを公開しない
 
-Bundle ID、保存先、Sandboxから非Sandboxへの設定移行は、製品名と配布方式の確定後にmigration planを作成する。読み込めない設定から危険なSystem-wide Triggerを有効化しない。
+公開製品名はRinvio、直接配布版のBundle IDは`com.keishingu.rinvio`とする。旧QuickDraw版からはCustom Trigger、Clear済みTrigger、Application Enablement、表示設定だけを一度移行し、読み込めない設定から危険なSystem-wide Triggerを有効化しない。
 
 ## Consequences
 
@@ -127,12 +127,12 @@ App Reviewを迂回する設計になり、利用者の期待、security、maint
 
 ## Follow-up
 
-- 公開製品名を決定し、商標と既存製品を確認する
-- Developer ID release、notarization、DMG作成、verificationを自動化する
+- Rinvioの商標と既存製品の確認を継続する
+- Developer ID release、notarization、DMG作成、verificationを実環境で確認する
 - 決済とlicense方式を決定する
 - 独立したsupport pageとprivacy pageを公開する
 - 直接配布版のupdate方式を決定する
-- Sandbox版から直接配布版への設定migrationを設計する
+- Sandbox版から直接配布版への設定migrationを実機で確認する
 - App Store固有のentitlement、metadata、release手順を整理する
 
 ## References

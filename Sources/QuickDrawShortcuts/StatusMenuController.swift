@@ -53,7 +53,7 @@ final class StatusMenuController: NSObject {
 
     if let button = statusItem.button {
       button.image = Self.quickDrawStatusImage()
-      button.setAccessibilityLabel("QuickDraw Shortcuts")
+      button.setAccessibilityLabel("Rinvio")
     }
 
     let menu = NSMenu()
@@ -200,7 +200,7 @@ final class StatusMenuController: NSObject {
     guard let image = NSImage(named: "StatusBarIcon") else {
       return NSImage(
         systemSymbolName: "link",
-        accessibilityDescription: "QuickDraw Shortcuts"
+        accessibilityDescription: "Rinvio"
       )
     }
     image.isTemplate = true

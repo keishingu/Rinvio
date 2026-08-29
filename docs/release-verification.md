@@ -1,8 +1,10 @@
-# QuickDraw Level 1 validation Verification
+# Rinvio Level 1 validation Verification
+
+この文書には製品名変更前にQuickDrawとして取得したhistorical evidenceを含む。引用されたlogと当時の検証経路は再現性のため原文を残す。
 
 - Date: 2026-08-08
 - Build environment: Xcode 26.3 / Swift 6.2.4 / arm64
-- App: `.build/app/QuickDraw Shortcuts.app`
+- Current app: `.build/app/Rinvio.app`
 
 ## Automated evidence
 
@@ -84,6 +86,6 @@ The following cannot be truthfully marked verified without user permission and a
 - Camera and Raise Hand live delivery in Teams, Zoom, and Meet.
 - Thirty-cycle duplicate/stuck-modifier/focus-theft matrix for each target.
 
-Follow the matrix in the root `README.md`. A delivered result appears in the menu and in Console under subsystem `com.keishingu.quickdraw-shortcuts`.
+Follow the matrix in the root `README.md`. A delivered result appears in the menu and in Console under subsystem `com.keishingu.rinvio`.
 
 For a support handoff, choose `Copy Diagnostics` from the menu. The copied text is limited to the latest 20 attempts and excludes full URLs, non-Meet hosts, tab titles, meeting codes, and captured keys.

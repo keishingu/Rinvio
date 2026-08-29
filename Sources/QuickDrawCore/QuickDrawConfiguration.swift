@@ -112,15 +112,39 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
   private let fileURL: URL?
   private var storedConfiguration: QuickDrawConfiguration
 
-  public init(fileURL: URL? = QuickDrawConfigurationStore.defaultFileURL()) {
+  public convenience init() {
+    self.init(
+      fileURL: Self.defaultFileURL(),
+      legacyFileURL: Self.legacyDefaultFileURL()
+    )
+  }
+
+  public convenience init(fileURL: URL?) {
+    self.init(fileURL: fileURL, legacyFileURL: nil)
+  }
+
+  public init(fileURL: URL?, legacyFileURL: URL?) {
     self.fileURL = fileURL
+    let sourceURL: URL?
+    let isMigratingLegacyConfiguration: Bool
     if let fileURL, FileManager.default.fileExists(atPath: fileURL.path) {
+      sourceURL = fileURL
+      isMigratingLegacyConfiguration = false
+    } else if let legacyFileURL, FileManager.default.fileExists(atPath: legacyFileURL.path) {
+      sourceURL = legacyFileURL
+      isMigratingLegacyConfiguration = true
+    } else {
+      sourceURL = nil
+      isMigratingLegacyConfiguration = false
+    }
+
+    if let sourceURL {
       do {
-        let data = try Data(contentsOf: fileURL)
+        let data = try Data(contentsOf: sourceURL)
         let decoded = try JSONDecoder().decode(QuickDrawConfiguration.self, from: data)
         let migrated = try Self.migrate(decoded)
         storedConfiguration = migrated
-        if migrated != decoded {
+        if isMigratingLegacyConfiguration || migrated != decoded {
           try? persist(migrated)
         }
       } catch {
@@ -132,6 +156,12 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
   }
 
   public static func defaultFileURL(fileManager: FileManager = .default) -> URL? {
+    fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+      .appendingPathComponent("Rinvio", isDirectory: true)
+      .appendingPathComponent("configuration.json", isDirectory: false)
+  }
+
+  public static func legacyDefaultFileURL(fileManager: FileManager = .default) -> URL? {
     fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
       .appendingPathComponent("QuickDraw", isDirectory: true)
       .appendingPathComponent("configuration.json", isDirectory: false)

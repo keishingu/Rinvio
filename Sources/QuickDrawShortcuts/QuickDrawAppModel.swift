@@ -642,7 +642,7 @@ final class QuickDrawAppModel: ObservableObject {
     isError: false
   )
   @Published private(set) var diagnostics =
-    "QuickDraw Shortcuts Diagnostics are not available yet."
+    "Rinvio Diagnostics are not available yet."
   @Published private(set) var applications = ApplicationMapping.current()
   @Published private(set) var configuration: QuickDrawConfiguration
   @Published private(set) var recordingDestination: ShortcutRecordingDestination?

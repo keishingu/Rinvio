@@ -88,7 +88,7 @@ struct QuickDrawRootView: View {
         }
       }
     }
-    .navigationTitle("QuickDraw")
+    .navigationTitle("Rinvio")
     .navigationSplitViewColumnWidth(min: 170, ideal: 200, max: 240)
     .safeAreaInset(edge: .bottom) {
       VStack(alignment: .leading, spacing: 4) {
@@ -105,7 +105,7 @@ struct QuickDrawRootView: View {
           Spacer(minLength: 4)
 
           Toggle(
-            "QuickDraw",
+            "Rinvio",
             isOn: Binding(
               get: { model.isEnabled },
               set: model.setEnabled
@@ -115,7 +115,7 @@ struct QuickDrawRootView: View {
           .toggleStyle(.switch)
           .fixedSize()
           .frame(minWidth: 44, minHeight: 44)
-          .accessibilityLabel("QuickDraw")
+          .accessibilityLabel("Rinvio")
           .accessibilityValue(model.isEnabled ? model.copy.enabled : model.copy.paused)
           .help(model.isEnabled ? model.copy.pauseQuickDraw : model.copy.enableQuickDraw)
         }
@@ -305,7 +305,7 @@ private struct SettingsView: View {
         }
 
         Section(model.copy.aboutQuickDraw) {
-          LabeledContent(model.copy.productName, value: "QuickDraw Shortcuts")
+          LabeledContent(model.copy.productName, value: "Rinvio")
           LabeledContent(model.copy.version, value: model.versionDescription)
           LabeledContent(model.copy.copyright, value: "© 2026 Kei Shingu")
           Button(model.copy.privacyPolicy) {
@@ -318,7 +318,7 @@ private struct SettingsView: View {
       }
       .formStyle(.grouped)
     }
-    .navigationTitle("QuickDraw Shortcuts")
+    .navigationTitle("Rinvio")
   }
 }
 
@@ -364,7 +364,7 @@ private struct ActionsView: View {
       }
       .listStyle(.inset)
     }
-    .navigationTitle("QuickDraw")
+    .navigationTitle("Rinvio")
   }
 
   private var alignmentControls: some View {
@@ -567,7 +567,7 @@ private struct ApplicationsView: View {
         .padding(.bottom, 12)
       }
     }
-    .navigationTitle("QuickDraw")
+    .navigationTitle("Rinvio")
   }
 
   private func domainHeader(_ domain: ActionDomain) -> some View {
@@ -722,7 +722,7 @@ private struct DiagnosticsView: View {
       }
       .formStyle(.grouped)
     }
-    .navigationTitle("QuickDraw")
+    .navigationTitle("Rinvio")
   }
 }
 
