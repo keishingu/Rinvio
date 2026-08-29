@@ -1,3 +1,4 @@
+import ApplicationServices
 import CoreGraphics
 import Foundation
 import QuickDrawCore
@@ -26,7 +27,8 @@ struct ShortcutExecutor: ShortcutDelivering {
 
   @discardableResult
   func requestPostEventAccess() -> Bool {
-    CGRequestPostEventAccess()
+    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
+    return AXIsProcessTrustedWithOptions(options as CFDictionary)
   }
 
   func deliver(_ shortcut: KeyStroke) throws {

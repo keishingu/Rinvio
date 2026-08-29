@@ -36,6 +36,23 @@ dmgbuild \
   -D "background_path=${background_path}" \
   Rinvio \
   "${disk_image_path}"
+
+readonly verification_mount="$(mktemp -d "${TMPDIR:-/tmp}/rinvio-dmg-verification.XXXXXX")"
+cleanup_verification_mount() {
+  hdiutil detach "${verification_mount}" >/dev/null 2>&1 || true
+  rmdir "${verification_mount}" >/dev/null 2>&1 || true
+}
+trap cleanup_verification_mount EXIT
+hdiutil attach \
+  -nobrowse \
+  -readonly \
+  -mountpoint "${verification_mount}" \
+  "${disk_image_path}" >/dev/null
+codesign --verify --deep --strict --verbose=2 "${verification_mount}/Rinvio.app"
+hdiutil detach "${verification_mount}" >/dev/null
+rmdir "${verification_mount}"
+trap - EXIT
+
 codesign \
   --force \
   --sign "${signing_identity}" \

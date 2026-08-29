@@ -108,8 +108,8 @@ final class ApplicationMenuControllerTests: XCTestCase {
     XCTAssertEqual(
       openedURLs.map(\.absoluteString),
       [
-        "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent",
-        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+        "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_ListenEvent",
+        "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility",
       ]
     )
   }

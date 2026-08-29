@@ -29,4 +29,3 @@ icon_locations = {
     "Rinvio.app": (170, 210),
     "Applications": (490, 210),
 }
-hide_extensions = ["Rinvio.app"]
