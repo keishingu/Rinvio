@@ -109,8 +109,8 @@ codesign \
 codesign --verify --deep --strict --verbose=2 "${app_path}"
 codesign --display --verbose=4 "${app_path}"
 readonly signed_entitlements="${output_directory}/signed-entitlements.plist"
-codesign --display --entitlements :- "${app_path}" > "${signed_entitlements}"
-if [[ "$(plutil -extract com.apple.security.automation.apple-events raw "${signed_entitlements}")" != "true" ]]; then
+codesign --display --entitlements - --xml "${app_path}" > "${signed_entitlements}"
+if [[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.automation.apple-events' "${signed_entitlements}")" != "true" ]]; then
   echo "error: signed app is missing the Apple Events entitlement" >&2
   exit 1
 fi
