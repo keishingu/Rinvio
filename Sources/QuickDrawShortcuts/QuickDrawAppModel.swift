@@ -963,8 +963,8 @@ final class QuickDrawAppModel: ObservableObject {
     refreshPermissions()
     if !hasInputMonitoringPermission {
       openFirstAvailableURL([
-        "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent",
         "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_ListenEvent",
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent",
       ])
     }
   }
@@ -974,8 +974,8 @@ final class QuickDrawAppModel: ObservableObject {
     refreshPermissions()
     if !hasPostEventPermission {
       openFirstAvailableURL([
-        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
         "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility",
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
       ])
     }
   }
