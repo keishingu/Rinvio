@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rinvio Support</title>
+<meta name="description" content="Install, update, and troubleshoot Rinvio for macOS.">
+<meta name="theme-color" content="#000000">
+<link rel="canonical" href="https://keishingu.github.io/QuickDraw/support.html">
+<link rel="icon" type="image/png" href="assets/icon-128.png">
+<link rel="stylesheet" href="assets/info.css">
+
+<header><div class="wrap bar">
+  <a class="brand" href="index.html">Rinvio</a>
+  <nav class="nav" aria-label="Rinvio"><a href="index.html#download">Download</a><a href="privacy.html">Privacy</a><a href="https://github.com/keishingu/QuickDraw/issues">GitHub Issues</a></nav>
+</div></header>
+
+<main class="wrap">
+  <p class="eyebrow">Support</p>
+  <h1>Rinvio Support</h1>
+  <p class="lede">インストール、権限、更新、問題の切り分けを案内します。Rinvioは現在無料で配布しています。</p>
+  <div class="jump"><a href="#ja">日本語</a><a href="#en">English</a></div>
+
+  <section class="language" id="ja" lang="ja">
+    <h2>日本語</h2>
+    <h3>動作環境</h3>
+    <ul><li>macOS 15以降</li><li>Apple silicon／Intel Mac</li><li>Input MonitoringとAccessibilityの明示的な許可</li></ul>
+
+    <h3>インストール</h3>
+    <ol><li><a href="https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg">最新版のDMG</a>をダウンロードします。</li><li>DMGを開き、RinvioをApplicationsへドラッグします。</li><li>ApplicationsからRinvioを起動します。</li><li>RinvioのInformation画面からInput MonitoringとShortcut Deliveryを順に許可します。</li></ol>
+
+    <h3>Triggerが反応しない場合</h3>
+    <ol><li>RinvioのInformation画面でInput MonitoringとShortcut Deliveryが許可済みか確認します。</li><li>System SettingsでRinvioがONになっていることを確認し、Rinvioを終了して起動し直します。</li><li>Applications画面でForegroundアプリがRinvioの対象になっていることを確認します。</li><li>Developer ModeのDry RunがONの場合は、検証後にOFFへ戻します。</li></ol>
+    <div class="panel"><p>権限が未許可、対象外Application、対応Mappingなしの場合、RinvioはTriggerを消費せず元のキー入力をForegroundアプリへ渡します。</p></div>
+
+    <h3>更新</h3>
+    <p>最新版のDMGをダウンロードし、Applications内のRinvioを置き換えてください。設定は<code>~/Library/Application Support/Rinvio/</code>に保持されます。現時点では自動更新を行いません。</p>
+
+    <h3>問い合わせ</h3>
+    <p>不具合や対応Applicationの要望は<a href="https://github.com/keishingu/QuickDraw/issues">GitHub Issues</a>へお寄せください。Information画面のDeveloper ToolsにあるCopy Diagnosticsは、キー入力や完全なURLを含まない直近のルーティング情報だけをコピーします。</p>
+  </section>
+
+  <section class="language" id="en" lang="en">
+    <h2>English</h2>
+    <h3>Requirements</h3>
+    <ul><li>macOS 15 or later</li><li>Apple silicon or Intel Mac</li><li>Explicit Input Monitoring and Accessibility permission</li></ul>
+
+    <h3>Install</h3>
+    <ol><li>Download the <a href="https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg">latest DMG</a>.</li><li>Open it and drag Rinvio into Applications.</li><li>Launch Rinvio from Applications.</li><li>Use Rinvio’s Information screen to allow Input Monitoring and Shortcut Delivery in order.</li></ol>
+
+    <h3>If a trigger does not respond</h3>
+    <ol><li>Confirm that Information shows Input Monitoring and Shortcut Delivery as allowed.</li><li>Confirm that Rinvio is enabled in System Settings, then quit and reopen Rinvio.</li><li>Confirm that the foreground app is enabled under Applications.</li><li>If Developer Mode’s Dry Run is on, turn it off after testing.</li></ol>
+    <div class="panel"><p>When permission is missing, an app is excluded, or no mapping is available, Rinvio does not consume the trigger and leaves the original key available to the foreground app.</p></div>
+
+    <h3>Update</h3>
+    <p>Download the latest DMG and replace Rinvio in Applications. Settings remain in <code>~/Library/Application Support/Rinvio/</code>. Automatic updates are not available yet.</p>
+
+    <h3>Contact</h3>
+    <p>Report bugs or request app support through <a href="https://github.com/keishingu/QuickDraw/issues">GitHub Issues</a>. Copy Diagnostics under Information → Developer Tools includes only recent routing details and excludes keystrokes and full URLs.</p>
+  </section>
+</main>
+
+<footer><div class="wrap">Rinvio · <a href="privacy.html">Privacy</a> · <a href="https://github.com/keishingu/QuickDraw">Source</a></div></footer>
+</html>

@@ -2,6 +2,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rinvio — Shortcuts for macOS</title>
+<meta name="description" content="Rinvio unifies different keyboard shortcuts across meeting, chat, mail, development, and browser apps on macOS. Free, signed, and notarized.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="Rinvio — Shortcuts for macOS">
+<meta property="og:description" content="One trigger you press. Each foreground app receives its own official shortcut.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://keishingu.github.io/QuickDraw/">
+<meta property="og:image" content="https://keishingu.github.io/QuickDraw/assets/icon.png">
+<link rel="canonical" href="https://keishingu.github.io/QuickDraw/">
+<link rel="icon" type="image/png" href="assets/icon-128.png">
 
 <style>
 /* ===================== tokens =====================
@@ -81,6 +90,17 @@ header{position:sticky;top:0;z-index:30;background:#000000E6;backdrop-filter:sat
   background:transparent;color:var(--fg-dim);border:0;border-radius:6px;
 }
 .langtoggle button[aria-pressed="true"]{color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue-ring);font-weight:600}
+.header-tools{display:flex;align-items:center;gap:10px}
+.download-button{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;
+  min-height:42px;padding:10px 16px;border-radius:9px;background:var(--steel);color:#0A0A0B;
+  font-size:13px;font-weight:650;letter-spacing:-.01em;
+  box-shadow:inset 0 -1px 0 #FFFFFFB3,inset 0 1px 0 #FFFFFF80,0 2px 0 -1px #5A6066;
+}
+.download-button:hover{filter:brightness(1.06)}
+.download-button:active{transform:translateY(1px);box-shadow:inset 0 -1px 0 #FFFFFFB3,inset 0 1px 0 #FFFFFF80}
+.header-download{min-height:32px;padding:7px 12px;font-size:12px;border-radius:7px}
+@media(max-width:560px){.header-download{display:none}}
 
 /* ===================== hero ===================== */
 .hero{padding:96px 0 20px;position:relative;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center}
@@ -111,6 +131,9 @@ h1 .out{color:var(--blue)}
 h1 .brk{display:none}
 [data-lang="ja"] h1 .brk{display:inline}
 .lede{position:relative;font-size:clamp(16px,1.8vw,19px);max-width:33em;color:var(--fg-mid);margin:0}
+.hero-actions{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin-top:28px}
+.hero-actions .download-button{font-size:15px;min-height:48px;padding:13px 20px;border-radius:11px}
+.release-meta{font-family:var(--mono);font-size:11px;line-height:1.6;letter-spacing:.02em;color:var(--fg-dim);margin:0}
 
 /* ===================== router (signature) ===================== */
 .router{margin:64px 0 0;position:relative}
@@ -256,6 +279,18 @@ figcaption{margin-top:14px;font-size:13.5px;color:var(--fg-mid);max-width:44em}
 }
 .steps li > p{grid-column:2;margin:0;font-size:15px}
 .steps .note{color:var(--fg-mid);font-size:13.5px;margin-top:6px}
+.download-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:start}
+@media(max-width:800px){.download-grid{grid-template-columns:1fr;gap:36px}}
+.release-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px}
+.release-file{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:18px;border-bottom:1px solid var(--line-soft)}
+.release-file strong{font-family:var(--mono);font-size:13px;font-weight:500}
+.release-file span{font-family:var(--mono);font-size:11px;color:var(--blue)}
+.release-list{list-style:none;padding:0;margin:16px 0 0}
+.release-list li{display:flex;justify-content:space-between;gap:20px;padding:8px 0;font-size:13.5px;color:var(--fg-mid)}
+.release-list b{color:var(--fg);font-weight:500;text-align:right}
+.install-steps{margin-top:52px}
+.text-link{color:var(--blue);text-decoration:none;border-bottom:1px solid var(--blue-ring)}
+.text-link:hover{border-bottom-color:var(--blue)}
 kbd{
   font-family:var(--mono);font-size:.85em;padding:2px 6px;border-radius:4px;
   background:var(--surface-2);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line);
@@ -268,6 +303,9 @@ pre{
 footer{border-top:1px solid var(--line-soft);padding:40px 0 72px;color:var(--fg-dim);font-size:13px}
 footer .fbar{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 footer .fbar img{width:22px;height:22px;border-radius:5px}
+.footer-links{display:flex;flex-wrap:wrap;gap:16px;margin-top:18px}
+.footer-links a{color:var(--fg-mid);text-decoration:none}
+.footer-links a:hover{color:var(--fg)}
 
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -282,9 +320,14 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
     <div class="mark">
       <span class="txt">Rinvio <span class="sub">Shortcuts for macOS</span></span>
     </div>
-    <div class="langtoggle" role="group" aria-label="Display language / 表示言語">
-      <button type="button" data-setlang="ja" aria-pressed="true">JA</button>
-      <button type="button" data-setlang="en" aria-pressed="false">EN</button>
+    <div class="header-tools">
+      <a class="download-button header-download" href="https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg">
+        <span class="ja">無料ダウンロード</span><span class="en">Free download</span>
+      </a>
+      <div class="langtoggle" role="group" aria-label="Display language / 表示言語">
+        <button type="button" data-setlang="ja" aria-pressed="true">JA</button>
+        <button type="button" data-setlang="en" aria-pressed="false">EN</button>
+      </div>
     </div>
   </div>
 </header>
@@ -306,6 +349,12 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
       <span class="ja">ミュートのショートカットはTeamsとZoomとMeetで違います。Rinvioはその差を吸収し、共通のTriggerを、前面のアプリが理解できるキーへ変換して送ります。</span>
       <span class="en">Mute is a different chord in Teams, Zoom, and Meet. Rinvio absorbs the difference: one trigger, converted into the key the foreground app already understands.</span>
     </p>
+    <div class="hero-actions">
+      <a class="download-button" href="https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg">
+        <span class="ja">Rinvioを無料でダウンロード</span><span class="en">Download Rinvio for free</span>
+      </a>
+      <p class="release-meta"><span class="ja">macOS 15以降 · Apple silicon / Intel · 署名・公証済み</span><span class="en">macOS 15+ · Apple silicon / Intel · signed &amp; notarized</span></p>
+    </div>
     </div>
     <div class="heroicon"><img src="assets/icon.png" alt="Rinvio app icon" width="512" height="512"></div>
   </div>
@@ -444,6 +493,43 @@ footer .fbar img{width:22px;height:22px;border-radius:5px}
   </div>
 </section>
 
+<section id="download">
+  <div class="wrap">
+    <div class="download-grid">
+      <div>
+        <p class="eyebrow">Direct download</p>
+        <h2><span class="ja">無料で始める</span><span class="en">Start for free</span></h2>
+        <p class="sub">
+          <span class="ja">Rinvioは現在、アカウント登録やLicense Keyなしで無料配布しています。Developer IDで署名し、Appleのnotary serviceで公証したUniversal版です。</span>
+          <span class="en">Rinvio is currently free, with no account or license key required. The universal build is signed with Developer ID and notarized by Apple.</span>
+        </p>
+        <a class="download-button" href="https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg">
+          <span class="ja">DMGをダウンロード</span><span class="en">Download the DMG</span>
+        </a>
+        <p class="release-meta" style="margin-top:14px">
+          <span class="ja">最新版はGitHub Releasesから取得します。設定は更新後もMac内に保持されます。</span>
+          <span class="en">The latest build comes from GitHub Releases. Your local settings remain in place when you update.</span>
+        </p>
+      </div>
+      <div class="release-card" aria-label="Rinvio download details">
+        <div class="release-file"><strong>Rinvio-macos-universal.dmg</strong><span>NOTARIZED</span></div>
+        <ul class="release-list">
+          <li><span><span class="ja">対応OS</span><span class="en">Requires</span></span><b>macOS 15+</b></li>
+          <li><span><span class="ja">アーキテクチャ</span><span class="en">Architecture</span></span><b>Apple silicon + Intel</b></li>
+          <li><span><span class="ja">配布形式</span><span class="en">Format</span></span><b>Signed DMG</b></li>
+          <li><span><span class="ja">価格</span><span class="en">Price</span></span><b><span class="ja">無料</span><span class="en">Free</span></b></li>
+        </ul>
+      </div>
+    </div>
+
+    <ol class="steps install-steps">
+      <li><p><span class="ja">ダウンロードしたDMGを開き、RinvioをApplicationsへドラッグする。</span><span class="en">Open the downloaded DMG and drag Rinvio into Applications.</span></p></li>
+      <li><p><span class="ja">ApplicationsからRinvioを起動する。Appleによる公証済みなので、通常の初回確認後に開けます。</span><span class="en">Launch Rinvio from Applications. It is notarized by Apple and opens after the standard first-launch confirmation.</span></p></li>
+      <li><p><span class="ja">下の「最初の5分」に沿ってInput MonitoringとAccessibilityを許可する。</span><span class="en">Follow “The first five minutes” below to allow Input Monitoring and Accessibility.</span></p></li>
+    </ol>
+  </div>
+</section>
+
 <section>
   <div class="wrap">
     <h2><span class="ja">最初の5分</span><span class="en">The first five minutes</span></h2>
@@ -480,6 +566,12 @@ open '.build/app/Rinvio.app'</pre>
     <div class="fbar"><b>Rinvio</b></div>
     <div class="ja">macOS Utility。現在のbuildでは、設定は <kbd>~/Library/Application Support/Rinvio/configuration.json</kbd> にschema version付きで保存されます。</div>
     <div class="en">A macOS utility. In current builds, settings are stored with a schema version at <kbd>~/Library/Application Support/Rinvio/configuration.json</kbd>.</div>
+    <nav class="footer-links" aria-label="Rinvio links">
+      <a href="support.html"><span class="ja">サポート</span><span class="en">Support</span></a>
+      <a href="privacy.html"><span class="ja">プライバシー</span><span class="en">Privacy</span></a>
+      <a href="https://github.com/keishingu/QuickDraw/releases"><span class="ja">リリース</span><span class="en">Releases</span></a>
+      <a href="https://github.com/keishingu/QuickDraw">GitHub</a>
+    </nav>
   </div>
 </footer>
 
