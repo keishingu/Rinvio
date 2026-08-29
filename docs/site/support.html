@@ -32,6 +32,9 @@
     <ol><li>RinvioのInformation画面でInput MonitoringとShortcut Deliveryが許可済みか確認します。</li><li>System SettingsでRinvioがONになっていることを確認し、Rinvioを終了して起動し直します。</li><li>Applications画面でForegroundアプリがRinvioの対象になっていることを確認します。</li><li>Developer ModeのDry RunがONの場合は、検証後にOFFへ戻します。</li></ol>
     <div class="panel"><p>権限が未許可、対象外Application、対応Mappingなしの場合、RinvioはTriggerを消費せず元のキー入力をForegroundアプリへ渡します。</p></div>
 
+    <h3>権限を取り消す</h3>
+    <p>System Settings → Privacy &amp; Securityで、Input MonitoringとAccessibilityのRinvioをOFFにします。Input Monitoringを取り消すとTriggerを登録・消費しません。Accessibilityを取り消すとShortcutを配送できず、検出したTriggerは元のキー入力としてForegroundアプリへ渡します。</p>
+
     <h3>更新</h3>
     <p>最新版のDMGをダウンロードし、Applications内のRinvioを置き換えてください。設定は<code>~/Library/Application Support/Rinvio/</code>に保持されます。現時点では自動更新を行いません。</p>
 
@@ -50,6 +53,9 @@
     <h3>If a trigger does not respond</h3>
     <ol><li>Confirm that Information shows Input Monitoring and Shortcut Delivery as allowed.</li><li>Confirm that Rinvio is enabled in System Settings, then quit and reopen Rinvio.</li><li>Confirm that the foreground app is enabled under Applications.</li><li>If Developer Mode’s Dry Run is on, turn it off after testing.</li></ol>
     <div class="panel"><p>When permission is missing, an app is excluded, or no mapping is available, Rinvio does not consume the trigger and leaves the original key available to the foreground app.</p></div>
+
+    <h3>Revoke permissions</h3>
+    <p>In System Settings → Privacy &amp; Security, turn Rinvio off under Input Monitoring and Accessibility. Revoking Input Monitoring stops Rinvio from registering or consuming triggers. Revoking Accessibility prevents shortcut delivery, and detected triggers pass through to the foreground app as their original keys.</p>
 
     <h3>Update</h3>
     <p>Download the latest DMG and replace Rinvio in Applications. Settings remain in <code>~/Library/Application Support/Rinvio/</code>. Automatic updates are not available yet.</p>
