@@ -622,7 +622,7 @@ final class QuickDrawAppModel: ObservableObject {
   static let privacyPolicyURL = URL(
     string: "https://github.com/keishingu/QuickDraw/blob/main/docs/privacy-policy.md"
   )!
-  static let supportURL = URL(string: "https://github.com/keishingu/QuickDraw/issues")!
+  static let supportURL = URL(string: "https://keishingu.github.io/QuickDraw/support.html")!
   private static let cheatSheetEnabledKey = "cheatSheetEnabled"
   private static let developerModeEnabledKey = "developerModeEnabled"
 
