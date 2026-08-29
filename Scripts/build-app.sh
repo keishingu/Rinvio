@@ -3,7 +3,7 @@ set -euo pipefail
 
 project_root="${0:A:h:h}"
 configuration="${1:-debug}"
-app_name="QuickDraw Shortcuts.app"
+app_name="Rinvio.app"
 output_root="$project_root/.build/app"
 app_bundle="$output_root/$app_name"
 
@@ -15,7 +15,7 @@ swift build \
 binary_path="$(swift build --package-path "$project_root" --configuration "$configuration" --show-bin-path)/QuickDrawShortcuts"
 
 mkdir -p "$app_bundle/Contents/MacOS" "$app_bundle/Contents/Resources"
-cp "$binary_path" "$app_bundle/Contents/MacOS/QuickDrawShortcuts"
+cp "$binary_path" "$app_bundle/Contents/MacOS/Rinvio"
 cp "$project_root/AppResources/Info.plist" "$app_bundle/Contents/Info.plist"
 cp \
     "$project_root/Sources/QuickDrawCore/Resources/built-in-catalog.json" \
@@ -38,8 +38,8 @@ xcrun actool \
     --app-icon AppIcon \
     --output-partial-info-plist "$output_root/asset-info.plist"
 
-if [[ -n "${QUICKDRAW_CODE_SIGN_IDENTITY:-}" ]]; then
-    identity="$QUICKDRAW_CODE_SIGN_IDENTITY"
+if [[ -n "${RINVIO_CODE_SIGN_IDENTITY:-}" ]]; then
+    identity="$RINVIO_CODE_SIGN_IDENTITY"
 else
     identity="$(
         security find-identity -v -p codesigning 2>/dev/null \
@@ -52,7 +52,7 @@ fi
 codesign \
     --force \
     --sign "$identity" \
-    --identifier com.keishingu.quickdraw-shortcuts \
+    --identifier com.keishingu.rinvio \
     --timestamp=none \
     "$app_bundle"
 

@@ -360,7 +360,7 @@ public enum ActionRoutingFailure: Error, Equatable, Sendable {
     case .unsupportedApplication(let bundleIdentifier):
       "Unsupported foreground application (\(bundleIdentifier))"
     case .disabledApplication(let target):
-      "\(target.displayName) is disabled in QuickDraw"
+      "\(target.displayName) is disabled in Rinvio"
     case .inactiveDomain(let domain, let target):
       "\(target.displayName) is not active for the \(domain.rawValue) category"
     case .unsupportedAction(let action, let target):

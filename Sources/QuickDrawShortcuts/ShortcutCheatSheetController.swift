@@ -368,7 +368,7 @@ private struct ShortcutCheatSheetView: View {
 
       HStack(spacing: 10) {
         Spacer(minLength: 0)
-        Text("QuickDraw")
+        Text("Rinvio")
           .frame(width: shortcutColumnWidth, alignment: .center)
         Divider()
         Text(content.applicationName)

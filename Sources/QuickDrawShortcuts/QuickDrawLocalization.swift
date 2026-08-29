@@ -38,13 +38,13 @@ struct QuickDrawCopy {
   var chooseLanguage: String { text("表示言語を切り替える", "Change display language") }
   var enabled: String { text("有効", "Enabled") }
   var paused: String { text("停止中", "Paused") }
-  var enableQuickDraw: String { text("QuickDrawを有効にする", "Enable QuickDraw") }
-  var pauseQuickDraw: String { text("QuickDrawを一時停止する", "Pause QuickDraw") }
+  var enableQuickDraw: String { text("Rinvioを有効にする", "Enable Rinvio") }
+  var pauseQuickDraw: String { text("Rinvioを一時停止する", "Pause Rinvio") }
   var inspector: String { text("インスペクタ", "Inspector") }
   var showInspector: String { text("インスペクタを表示", "Show Inspector") }
   var hideInspector: String { text("インスペクタを隠す", "Hide Inspector") }
-  var quickDrawEnabled: String { text("QuickDraw 有効", "QuickDraw enabled") }
-  var quickDrawPaused: String { text("QuickDraw 停止中", "QuickDraw paused") }
+  var quickDrawEnabled: String { text("Rinvio 有効", "Rinvio enabled") }
+  var quickDrawPaused: String { text("Rinvio 停止中", "Rinvio paused") }
   var actions: String { text("アクション", "Actions") }
   var applications: String { text("アプリケーション", "Applications") }
   var lastUsedApplicationSettings: String {
@@ -56,7 +56,7 @@ struct QuickDrawCopy {
   var closeWindow: String { text("ウインドウを閉じる", "Close Window") }
   var settings: String { text("設定", "Settings") }
   var settingsSubtitle: String {
-    text("QuickDrawの表示と動作を設定します。", "Configure QuickDraw's appearance and behavior.")
+    text("Rinvioの表示と動作を設定します。", "Configure Rinvio's appearance and behavior.")
   }
   var developerMode: String { text("開発者モード", "Developer Mode") }
   var developerModeDescription: String {
@@ -68,7 +68,7 @@ struct QuickDrawCopy {
   var developerTools: String { text("開発者ツール", "Developer Tools") }
   var diagnostics: String { text("情報", "Information") }
   var aboutQuickDraw: String {
-    text("QuickDraw Shortcutsについて", "About QuickDraw Shortcuts")
+    text("Rinvioについて", "About Rinvio")
   }
   var productName: String { text("製品名", "Product Name") }
   var version: String { text("バージョン", "Version") }
@@ -115,8 +115,8 @@ struct QuickDrawCopy {
   }
   var shortcutGuideDescription: String {
     text(
-      "QuickDrawまたはアプリ側ショートカットの修飾キーを約0.6秒長押しすると、そこから実行できるActionを表示します。キー入力は消費しません。",
-      "Hold QuickDraw or app shortcut modifier keys for about 0.6 seconds to see the available Actions. The modifier keys remain available to the app."
+      "Rinvioまたはアプリ側ショートカットの修飾キーを約0.6秒長押しすると、そこから実行できるActionを表示します。キー入力は消費しません。",
+      "Hold Rinvio or app shortcut modifier keys for about 0.6 seconds to see the available Actions. The modifier keys remain available to the app."
     )
   }
   var previewShortcutGuide: String { text("プレビュー", "Preview") }
@@ -154,7 +154,7 @@ struct QuickDrawCopy {
   var detected: String { text("検出済み", "Detected") }
   var excluded: String { text("対象外", "Excluded") }
   var notInstalled: String { text("未インストール", "Not installed") }
-  var quickDrawTarget: String { text("QuickDrawの対象", "Use with QuickDraw") }
+  var quickDrawTarget: String { text("Rinvioの対象", "Use with Rinvio") }
   var managedBySystemSettings: String {
     text("システム設定で管理", "Managed by System Settings")
   }
@@ -175,8 +175,8 @@ struct QuickDrawCopy {
   }
   var systemShortcutSettingsDescription: String {
     text(
-      "QuickDrawはOSショートカットを横取り・書き換えません。システム設定で割り当てると、同じキーを使うForegroundアプリの操作が置き換わる場合があります。",
-      "QuickDraw does not intercept or modify OS shortcuts. Assigning one in System Settings may replace the same shortcut in the foreground app."
+      "RinvioはOSショートカットを横取り・書き換えません。システム設定で割り当てると、同じキーを使うForegroundアプリの操作が置き換わる場合があります。",
+      "Rinvio does not intercept or modify OS shortcuts. Assigning one in System Settings may replace the same shortcut in the foreground app."
     )
   }
 
@@ -242,7 +242,7 @@ struct QuickDrawCopy {
   var quickDrawTargetDescription: String {
     text(
       "OFFにすると、このアプリではTriggerを消費せず、ショートカットガイドも表示しません。",
-      "When off, QuickDraw passes triggers through in this app and does not show its Shortcut Guide."
+      "When off, Rinvio passes triggers through in this app and does not show its Shortcut Guide."
     )
   }
   var noInstalledApplications: String {
@@ -250,8 +250,8 @@ struct QuickDrawCopy {
   }
   var installToUseMappings: String {
     text(
-      "インストール後、このアプリのActionマッピングをQuickDrawで利用できます。",
-      "Install this app to use its Action mappings with QuickDraw."
+      "インストール後、このアプリのActionマッピングをRinvioで利用できます。",
+      "Install this app to use its Action mappings with Rinvio."
     )
   }
   var openOfficialWebsite: String { text("公式サイトを開く", "Open Official Website") }
@@ -264,8 +264,8 @@ struct QuickDrawCopy {
 
   var diagnosticsSubtitle: String {
     text(
-      "QuickDrawの状態、権限、プライバシーを確認できます。",
-      "Review QuickDraw's status, permissions, and privacy."
+      "Rinvioの状態、権限、プライバシーを確認できます。",
+      "Review Rinvio's status, permissions, and privacy."
     )
   }
   var currentStatus: String { text("現在の状態", "Current status") }
@@ -318,8 +318,8 @@ struct QuickDrawCopy {
   func triggerConflictDescription(_ conflicts: [TriggerConflict]) -> String {
     let names = conflicts.map(triggerConflictName).joined(separator: text("、", ", "))
     return text(
-      "macOSの「\(names)」と競合します。対応アプリではQuickDrawが優先され、それ以外では元のショートカットが動作します。",
-      "Conflicts with macOS “\(names)”. QuickDraw takes priority in a supported app; elsewhere, the original shortcut continues to work."
+      "macOSの「\(names)」と競合します。対応アプリではRinvioが優先され、それ以外では元のショートカットが動作します。",
+      "Conflicts with macOS “\(names)”. Rinvio takes priority in a supported app; elsewhere, the original shortcut continues to work."
     )
   }
 
@@ -375,7 +375,7 @@ struct QuickDrawCopy {
   var inputMonitoringDescription: String {
     text(
       "設定済みのTriggerだけを判定するために使用します。キー入力は記録・保存・送信しません。",
-      "Used only to recognize configured Triggers. QuickDraw never records, stores, or transmits key input."
+      "Used only to recognize configured Triggers. Rinvio never records, stores, or transmits key input."
     )
   }
   var shortcutDeliveryDescription: String {
@@ -408,9 +408,9 @@ struct QuickDrawCopy {
   }
 
   var menuTitle: String {
-    "QuickDraw Shortcuts"
+    "Rinvio"
   }
-  var openQuickDraw: String { text("QuickDrawを開く…", "Open QuickDraw…") }
+  var openQuickDraw: String { text("Rinvioを開く…", "Open Rinvio…") }
   var dryRunMenu: String {
     text("ドライラン（キーを送信しない）", "Dry Run (does not send keys)")
   }
@@ -436,7 +436,7 @@ struct QuickDrawCopy {
     )
   }
   var quitQuickDraw: String {
-    text("QuickDraw Shortcutsを終了", "Quit QuickDraw Shortcuts")
+    text("Rinvioを終了", "Quit Rinvio")
   }
   var accessibilityGrantedMenu: String {
     text("アクセシビリティ: 許可済み", "Accessibility: Granted")
@@ -977,12 +977,12 @@ struct QuickDrawCopy {
         "設定したTriggerでショートカットを送らずに経路だけを記録します",
       "Return to a supported application and use a configured trigger":
         "対応アプリへ戻り設定したTriggerを使用してください",
-      "Enable QuickDraw in Accessibility, then check again":
-        "システム設定のアクセシビリティでQuickDrawを有効にして、もう一度確認してください",
-      "QuickDraw can now monitor configured triggers":
-        "QuickDrawは設定済みTriggerを監視できます",
-      "Enable QuickDraw in Input Monitoring, then check again":
-        "システム設定の入力監視でQuickDrawを有効にして、もう一度確認してください",
+      "Enable Rinvio in Accessibility, then check again":
+        "システム設定のアクセシビリティでRinvioを有効にして、もう一度確認してください",
+      "Rinvio can now monitor configured triggers":
+        "Rinvioは設定済みTriggerを監視できます",
+      "Enable Rinvio in Input Monitoring, then check again":
+        "システム設定の入力監視でRinvioを有効にして、もう一度確認してください",
       "Input Monitoring permission is required": "入力監視の許可が必要です",
     ]
     if let localized = exact[value] { return localized }

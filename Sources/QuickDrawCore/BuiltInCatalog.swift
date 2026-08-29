@@ -249,12 +249,12 @@ public enum ActionCatalog {
       Bundle.main.url(forResource: "built-in-catalog", withExtension: "json")
       ?? Bundle.module.url(forResource: "built-in-catalog", withExtension: "json")
     guard let url else {
-      fatalError("Built-in QuickDraw catalog is missing")
+      fatalError("Built-in Rinvio catalog is missing")
     }
     do {
       return try BuiltInCatalog(data: Data(contentsOf: url))
     } catch {
-      fatalError("Built-in QuickDraw catalog is invalid: \(error)")
+      fatalError("Built-in Rinvio catalog is invalid: \(error)")
     }
   }()
 

@@ -1,0 +1,703 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rinvio — Shortcuts for macOS</title>
+
+<style>
+/* ===================== tokens =====================
+   Monotone black, after the app icon: black ground, brushed steel hardware.
+   One accent only — the macOS system highlight blue the app itself uses.
+   Committed single (dark) appearance; the product's own UI is dark.
+=================================================== */
+:root{
+  --bg:#000000;
+  --surface:#0B0B0C;
+  --surface-2:#131315;
+  --line:#232326;
+  --line-soft:#1A1A1C;
+  --fg:#F5F5F7;
+  --fg-mid:#A1A1A8;
+  --fg-dim:#6E6E76;
+
+  /* macOS highlight. Rule: blue is never a fill — only a hairline ring + its own text.
+     The only material that gets filled on this page is steel. */
+  --blue:#5AA9FF;
+  --blue-ring:#0A84FF66;
+  --blue-ring-soft:#0A84FF33;
+
+  /* brushed steel — the shortcut the app receives */
+  --steel:linear-gradient(160deg,#F2F4F6 0%,#C9CDD2 38%,#8E9399 62%,#DDE1E5 100%);
+  /* same alloy, lifted for use as text on black */
+  --steel-text:linear-gradient(165deg,#FFFFFF 0%,#EDEFF1 34%,#B7BDC3 68%,#F0F2F4 100%);
+  --steel-edge:#6E747A;
+
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);
+  font-size:16px;line-height:1.65;letter-spacing:-.011em;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+@media(max-width:640px){.wrap{padding:0 20px}}
+
+[data-lang="ja"] .en{display:none}
+[data-lang="en"] .ja{display:none}
+[data-lang="ja"]{letter-spacing:0}
+
+a{color:var(--fg)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:4px}
+
+/* ===================== keycaps ===================== */
+.cap{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12px;line-height:1;letter-spacing:0;
+  padding:6px 8px;min-width:30px;border-radius:6px;white-space:nowrap;
+}
+/* trigger — the physical key under your finger. machined steel. */
+.cap.trigger{
+  background:var(--steel);color:#0A0A0B;font-weight:600;
+  box-shadow:inset 0 -1px 0 #FFFFFFB3,inset 0 1px 0 #FFFFFF80,0 1px 2px #000000A6;
+}
+/* delivered — what the app receives. hollow: a ring, never a fill. */
+.cap.deliver{color:var(--blue);background:transparent;box-shadow:inset 0 0 0 1px var(--blue-ring)}
+.cap.none{color:var(--fg-dim);background:transparent;box-shadow:inset 0 0 0 1px var(--line);min-width:30px}
+
+/* ===================== header ===================== */
+header{position:sticky;top:0;z-index:30;background:#000000E6;backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line-soft)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0}
+.mark{display:flex;align-items:center;gap:11px}
+.mark img{width:28px;height:28px;border-radius:7px;display:block;box-shadow:inset 0 0 0 1px var(--line)}
+.mark .txt{display:flex;align-items:baseline;gap:9px;font-size:15px;font-weight:600;letter-spacing:-.02em}
+.mark .sub{color:var(--fg-dim);font-weight:400;font-size:13px;letter-spacing:0}
+@media(max-width:520px){.mark .sub{display:none}}
+.langtoggle{display:flex;padding:2px;gap:2px;background:var(--surface-2);border-radius:8px}
+.langtoggle button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:5px 10px;cursor:pointer;
+  background:transparent;color:var(--fg-dim);border:0;border-radius:6px;
+}
+.langtoggle button[aria-pressed="true"]{color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue-ring);font-weight:600}
+
+/* ===================== hero ===================== */
+.hero{padding:96px 0 20px;position:relative;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center}
+.heroicon{position:relative;width:260px;height:260px;flex:none;justify-self:end}
+.heroicon img{width:100%;height:100%;display:block;
+  -webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);
+  mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);
+}
+.hero > .copy{min-width:0}
+@media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:72px}.heroicon{display:none}}
+.hero::before{
+  content:"";position:absolute;left:50%;top:-140px;width:900px;height:420px;transform:translateX(-50%);
+  background:radial-gradient(closest-side,#FFFFFF14,transparent 70%);pointer-events:none;
+}
+.eyebrow{
+  position:relative;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--fg-dim);margin:0 0 20px;
+}
+h1{
+  position:relative;font-size:clamp(36px,5vw,62px);line-height:1.05;letter-spacing:-.038em;font-weight:700;
+  margin:0 0 24px;max-width:15em;
+}
+[data-lang="ja"] h1{font-size:clamp(30px,4.3vw,54px);letter-spacing:-.04em;line-height:1.22;font-weight:700;max-width:none}
+h1 .swap{
+  background:var(--steel-text);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+h1 .out{color:var(--blue)}
+h1 .brk{display:none}
+[data-lang="ja"] h1 .brk{display:inline}
+.lede{position:relative;font-size:clamp(16px,1.8vw,19px);max-width:33em;color:var(--fg-mid);margin:0}
+
+/* ===================== router (signature) ===================== */
+.router{margin:64px 0 0;position:relative}
+.router-top{display:flex;flex-direction:column;align-items:center;gap:14px}
+.hint{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-dim);text-align:center;margin:0}
+.hint b{color:var(--fg);font-weight:400}
+.bigkey{
+  display:flex;align-items:center;gap:14px;
+  font-family:var(--mono);font-size:clamp(24px,4vw,34px);font-weight:500;
+  padding:18px 24px;border-radius:14px;background:var(--steel);color:#0A0A0B;
+  box-shadow:inset 0 -2px 0 #FFFFFFC7,inset 0 2px 0 #FFFFFF8C,0 4px 0 -1px #5A6066,0 26px 50px -28px #000;
+  transition:transform .1s ease,box-shadow .1s ease;
+}
+.bigkey.pressed{transform:translateY(3px);box-shadow:inset 0 -2px 0 #FFFFFFC7,inset 0 2px 0 #FFFFFF8C,0 1px 0 -1px #5A6066,0 18px 34px -26px #000}
+.bigkey .lbl{font-family:var(--font);font-size:14px;color:#3C4146;font-weight:500;letter-spacing:-.01em}
+
+.wires{display:block;width:100%;height:64px;overflow:visible}
+.wires path{fill:none;stroke:var(--line);stroke-width:1}
+.wires path.live{stroke:#0A84FF8C}
+
+.targets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.target{
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:20px 16px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;min-height:130px;justify-content:center;text-align:center;
+}
+.target .app{font-size:12px;letter-spacing:.02em;color:var(--fg-dim)}
+.target .out{font-family:var(--mono);font-size:clamp(18px,2.5vw,24px);font-weight:600;color:var(--blue)}
+.target .out.dash{color:var(--fg-dim);font-weight:400;opacity:.6}
+.target .what{font-size:13px;color:var(--fg-mid);line-height:1.4}
+.target.flip .out{animation:flip .3s ease}
+@keyframes flip{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(max-width:640px){
+  .targets{grid-template-columns:1fr;gap:8px}
+  .target{min-height:0;flex-direction:row;justify-content:space-between;text-align:left;padding:14px}
+  .target .what{display:none}
+  /* the fan-out only reads as routing when the targets sit side by side */
+  .wires{display:none}
+  .targets{margin-top:22px}
+}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:24px}
+.chip{
+  font-family:var(--mono);font-size:12px;cursor:pointer;padding:7px 11px;border-radius:7px;
+  background:transparent;color:var(--fg-dim);border:1px solid var(--line);
+}
+.chip[aria-pressed="true"]{color:var(--blue);border-color:var(--blue-ring);background:transparent}
+
+/* ===================== sections ===================== */
+section{padding:96px 0;border-top:1px solid var(--line-soft)}
+h2{font-size:clamp(26px,3.4vw,38px);line-height:1.12;letter-spacing:-.032em;font-weight:700;margin:0 0 14px;text-wrap:balance}
+[data-lang="ja"] h2{font-size:clamp(24px,2.9vw,33px);letter-spacing:-.03em;line-height:1.32}
+[data-lang="ja"] h1,[data-lang="ja"] h2{word-break:auto-phrase}
+.sub{color:var(--fg-mid);max-width:38em;margin:0 0 36px;font-size:15.5px}
+h3{font-size:16px;font-weight:600;margin:0 0 6px;letter-spacing:-.015em}
+
+/* ---- facts ---- */
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.facts{grid-template-columns:1fr}}
+.fact{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;padding:24px 20px}
+.fact .k{
+  font-size:40px;font-weight:600;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
+  background:var(--steel-text);-webkit-background-clip:text;background-clip:text;color:transparent;width:fit-content;
+}
+.fact .v{font-size:13.5px;color:var(--fg-mid);margin-top:10px;line-height:1.5}
+
+/* ---- table ---- */
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:18px;padding:3px;background:var(--surface-2);border-radius:9px;width:fit-content}
+.tabs button{
+  font-size:13px;padding:6px 13px;cursor:pointer;border-radius:6px;
+  background:transparent;border:0;color:var(--fg-mid);
+}
+.tabs button[aria-selected="true"]{color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue-ring);font-weight:500}
+.tablewrap{overflow-x:auto;border:1px solid var(--line-soft);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+thead th{
+  font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--fg-dim);font-weight:400;
+  background:var(--surface-2);
+}
+thead th.trig{color:var(--fg)}
+th.trig,td.trig{border-right:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:none}
+td.act{font-size:14px;min-width:190px;color:var(--fg)}
+
+/* ---- screenshot ---- */
+figure{margin:0}
+figure img{
+  display:block;width:100%;height:auto;border-radius:14px;border:1px solid var(--line);
+  background:var(--surface);
+}
+figcaption{margin-top:14px;font-size:13.5px;color:var(--fg-mid);max-width:44em}
+
+/* ---- coverage roster ---- */
+.coverage{margin-top:72px;border-top:1px solid var(--line-soft)}
+.cov{display:grid;grid-template-columns:210px 1fr;gap:28px;padding:22px 0;border-bottom:1px solid var(--line-soft);align-items:start}
+@media(max-width:700px){.cov{grid-template-columns:1fr;gap:12px;padding:20px 0}}
+.cov-h{display:flex;align-items:baseline;gap:12px}
+.cov-n{
+  font-size:30px;font-weight:600;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
+  background:var(--steel-text);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.cov-l{font-size:14px;color:var(--fg-mid)}
+.cov-cat{font-size:15px;font-weight:600;margin-bottom:4px;letter-spacing:-.015em}
+.cov-apps{display:flex;flex-wrap:wrap;gap:6px}
+.cov-apps span{
+  font-size:12.5px;color:var(--fg-mid);padding:5px 10px;border-radius:7px;
+  box-shadow:inset 0 0 0 1px var(--line);white-space:nowrap;
+}
+.cov-apps span.ref{color:var(--fg-dim);box-shadow:inset 0 0 0 1px var(--line-soft)}
+.cov-note{font-size:13px;color:var(--fg-dim);margin:18px 0 0}
+
+/* ---- guide / hud ---- */
+.two{display:grid;grid-template-columns:1.12fr .88fr;gap:48px;align-items:center}
+@media(max-width:800px){.two{grid-template-columns:1fr;gap:32px}}
+.hud{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 30px 60px -30px #000}
+.hud-head{
+  font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-dim);
+  display:flex;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line-soft);
+}
+.hud-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.hud-row:last-child{border-bottom:none}
+.hud-row .n{font-size:14px}
+/* fixed columns so the triggers, arrows, and delivered keys line up vertically */
+.hud-keys{display:grid;grid-template-columns:54px 14px 74px;gap:8px;align-items:center;flex:none}
+.hud-keys .cap{width:100%}
+.hud-keys .sep{color:var(--fg-dim);font-family:var(--mono);font-size:11px;text-align:center}
+
+/* ---- privacy ---- */
+.nolist{list-style:none;padding:0;margin:0;display:grid;gap:0}
+.nolist li{display:flex;gap:14px;align-items:center;font-size:15px;padding:14px 0;border-bottom:1px solid var(--line-soft)}
+.nolist li:last-child{border-bottom:none}
+.nolist .x{font-family:var(--mono);font-size:11px;color:var(--fg-dim);flex:none;width:26px}
+
+/* ---- steps ---- */
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{
+  counter-increment:s;display:grid;grid-template-columns:36px 1fr;gap:18px;
+  padding:20px 0;border-bottom:1px solid var(--line-soft);
+}
+.steps li:last-child{border-bottom:none}
+.steps li::before{
+  content:counter(s);font-family:var(--mono);font-size:12px;color:var(--fg-dim);grid-column:1;grid-row:1;
+  padding-top:3px;
+}
+.steps li > p{grid-column:2;margin:0;font-size:15px}
+.steps .note{color:var(--fg-mid);font-size:13.5px;margin-top:6px}
+kbd{
+  font-family:var(--mono);font-size:.85em;padding:2px 6px;border-radius:4px;
+  background:var(--surface-2);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line);
+}
+
+pre{
+  background:var(--surface);border:1px solid var(--line-soft);color:var(--fg);
+  font-family:var(--mono);font-size:13px;line-height:1.7;padding:18px 20px;border-radius:12px;overflow-x:auto;margin:0;
+}
+footer{border-top:1px solid var(--line-soft);padding:40px 0 72px;color:var(--fg-dim);font-size:13px}
+footer .fbar{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+footer .fbar img{width:22px;height:22px;border-radius:5px}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+
+<div id="root" data-lang="ja">
+
+<header>
+  <div class="wrap bar">
+    <div class="mark">
+      <span class="txt">Rinvio <span class="sub">Shortcuts for macOS</span></span>
+    </div>
+    <div class="langtoggle" role="group" aria-label="Display language / 表示言語">
+      <button type="button" data-setlang="ja" aria-pressed="true">JA</button>
+      <button type="button" data-setlang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="copy">
+    <p class="eyebrow">
+      <span class="ja">Foreground Applicationへ、公式Shortcutを配送する</span>
+      <span class="en">Delivers each app's own official shortcut to the foreground</span>
+    </p>
+    <h1>
+      <span class="ja">押すキーは<span class="swap">ひとつ</span>。<br>届くのは<br class="brk">各アプリの<span class="out">正規キー</span>。</span>
+      <span class="en"><span class="swap">One key</span> you press.<br>Each app's <span class="out">own shortcut</span> arrives.</span>
+    </h1>
+    <p class="lede">
+      <span class="ja">ミュートのショートカットはTeamsとZoomとMeetで違います。Rinvioはその差を吸収し、共通のTriggerを、前面のアプリが理解できるキーへ変換して送ります。</span>
+      <span class="en">Mute is a different chord in Teams, Zoom, and Meet. Rinvio absorbs the difference: one trigger, converted into the key the foreground app already understands.</span>
+    </p>
+    </div>
+    <div class="heroicon"><img src="assets/icon.png" alt="Rinvio app icon" width="512" height="512"></div>
+  </div>
+
+  <div class="router">
+    <div class="router-top">
+      <p class="hint" id="routerHint">
+        <span class="ja">キーボードで <b>⌥M</b> を押してみてください</span>
+        <span class="en">Press <b>⌥M</b> on your keyboard</span>
+      </p>
+      <div class="bigkey" id="bigkey">
+        <span id="bigkeyGlyph">⌥M</span>
+        <span class="lbl" id="bigkeyLabel"></span>
+      </div>
+    </div>
+
+    <svg class="wires" viewBox="0 0 900 64" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M450 0 V20 H150 V64" />
+      <path d="M450 0 V64" />
+      <path d="M450 0 V20 H750 V64" />
+    </svg>
+
+    <div class="targets" id="targets">
+      <div class="target" data-app="teams"><span class="app">Microsoft Teams</span><span class="out">⌘⇧M</span><span class="what"></span></div>
+      <div class="target" data-app="zoom"><span class="app">Zoom Workplace</span><span class="out">⌘⇧A</span><span class="what"></span></div>
+      <div class="target" data-app="meet"><span class="app">Google Meet</span><span class="out">⌘D</span><span class="what"></span></div>
+    </div>
+
+    <div class="chips" id="chips" role="group" aria-label="Trigger"></div>
+  </div>
+
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="facts">
+      <div class="fact"><div class="k">85</div><div class="v"><span class="ja">Built-in Action。System / Finder / Meeting / Chat / Mail / Development / Browserに分類。</span><span class="en">Built-in actions, filed under System, Finder, Meeting, Chat, Mail, Development, and Browser.</span></div></div>
+      <div class="fact"><div class="k">32</div><div class="v"><span class="ja">対応Application。Teams、Zoom、Meet、Slack、Discord、Xcode、JetBrains系IDE、主要ブラウザほか。</span><span class="en">Supported apps, from Teams and Zoom to Xcode, the JetBrains IDEs, and every major browser.</span></div></div>
+      <div class="fact"><div class="k">0</div><div class="v"><span class="ja">保存するキー入力。Triggerの検出だけに権限を使い、打鍵は記録しない。</span><span class="en">Keystrokes stored. The permission detects your triggers and nothing else.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="ja">変換表</span><span class="en">The conversion table</span></h2>
+    <p class="sub">
+      <span class="ja">左のTriggerを押すと、前面のアプリの列にある既定Shortcutが送られます。「—」はそのアプリに対応する操作がないことを示し、その場合Rinvioはキーを消費せずアプリへそのまま渡します。</span>
+      <span class="en">Press the trigger on the left; the shortcut in the foreground app's column is what gets sent. A dash means that app has no matching command — Rinvio passes the key straight through instead of consuming it.</span>
+    </p>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="tablewrap"><table id="mapTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="ja">Actionを選び、Triggerを決める</span><span class="en">Pick an action, decide its trigger</span></h2>
+    <p class="sub">
+      <span class="ja">左のSidebarはActionのカテゴリ、中央は各Actionと配送先の一覧、右のInspectorでTriggerとApplication Mappingを編集します。</span>
+      <span class="en">The sidebar holds the action categories, the middle column lists every action with its targets, and the inspector on the right is where you edit the trigger and each app's mapping.</span>
+    </p>
+    <figure id="shot"></figure>
+
+    <div class="coverage" id="coverage"></div>
+    <p class="cov-note">
+      <span class="ja">数はBuilt-in Catalogの実数です。JetBrains系IDEはmacOS既定キーマップを共有し、Application設定では個別に表示・Overrideできます。</span>
+      <span class="en">Counts come from the built-in catalog. The JetBrains IDEs share one macOS keymap and are still listed and overridable individually.</span>
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap two">
+    <div>
+      <h2><span class="ja">忘れても、押さえたままでいい</span><span class="en">Forgot one? Just keep holding</span></h2>
+      <p class="sub">
+        <span class="ja">修飾キーを約0.6秒押したままにすると、前面のアプリで今使えるActionを画面中央に表示します。押さえたまま組み合わせを変えれば内容は即座に切り替わり、キーを離すと消えます。キー入力自体は消費しないため、<kbd>⌥Tab</kbd>のような元の操作はそのまま動きます。</span>
+        <span class="en">Hold a modifier for about 0.6 seconds and the actions available in the foreground app appear in the center of the screen. Change the combination while holding and the list updates instantly; release to dismiss. The keys aren't consumed, so <kbd>⌥Tab</kbd> and friends still behave normally.</span>
+      </p>
+      <p class="sub" style="margin-bottom:0">
+        <span class="ja">各行はRinvio Triggerと、実際にアプリへ届くShortcutを分けて表示します。</span>
+        <span class="en">Each row separates the Rinvio trigger from the shortcut the app actually receives.</span>
+      </p>
+    </div>
+    <div class="hud" role="img" aria-label="Shortcut Guide overlay showing Option-key actions for Zoom Workplace">
+      <div class="hud-head"><span>Zoom Workplace</span><span>⌥ HELD</span></div>
+      <div class="hud-row"><span class="n"><span class="ja">ミュート切り替え</span><span class="en">Mute Toggle</span></span><span class="hud-keys"><span class="cap trigger">⌥M</span><span class="sep">→</span><span class="cap deliver">⌘⇧A</span></span></div>
+      <div class="hud-row"><span class="n"><span class="ja">カメラ切り替え</span><span class="en">Camera Toggle</span></span><span class="hud-keys"><span class="cap trigger">⌥C</span><span class="sep">→</span><span class="cap deliver">⌘⇧V</span></span></div>
+      <div class="hud-row"><span class="n"><span class="ja">挙手</span><span class="en">Raise Hand</span></span><span class="hud-keys"><span class="cap trigger">⌥H</span><span class="sep">→</span><span class="cap deliver">⌥Y</span></span></div>
+      <div class="hud-row"><span class="n"><span class="ja">画面共有</span><span class="en">Share Screen</span></span><span class="hud-keys"><span class="cap trigger">⌥S</span><span class="sep">→</span><span class="cap deliver">⌘⇧S</span></span></div>
+      <div class="hud-row"><span class="n"><span class="ja">参加者を表示</span><span class="en">Show Participants</span></span><span class="hud-keys"><span class="cap trigger">⌥P</span><span class="sep">→</span><span class="cap deliver">⌘U</span></span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="ja">既定値は出発点</span><span class="en">The defaults are a starting point</span></h2>
+    <div class="two" style="align-items:start;gap:56px">
+      <div>
+        <h3><span class="ja">Triggerを変える</span><span class="en">Change a trigger</span></h3>
+        <p class="sub"><span class="ja">Actionを呼び出すグローバルキーを、Fキーや未使用の<kbd>⌘⌥</kbd>／<kbd>⌃⌥</kbd>の組み合わせへ差し替えられます。macOSや他アプリの既存ショートカットと重なる場合は、Action Inspectorが警告を出します。</span><span class="en">Swap the global key that invokes an action for an F-key or an unused <kbd>⌘⌥</kbd> / <kbd>⌃⌥</kbd> combination. If it collides with a macOS or app shortcut you already use, the action inspector says so before you commit.</span></p>
+        <h3><span class="ja">配送先を変える</span><span class="en">Change what gets sent</span></h3>
+        <p class="sub" style="margin-bottom:0"><span class="ja">アプリ側で既定を変えている場合は、そのApplicationのMappingだけをOverrideします。<kbd>Restore Default</kbd>でいつでもBuilt-in Catalogの値に戻せます。</span><span class="en">If you've customized a shortcut inside an app, override just that app's mapping. <kbd>Restore Default</kbd> returns it to the built-in catalog at any time.</span></p>
+      </div>
+      <div>
+        <h3><span class="ja">アプリ単位で外す</span><span class="en">Exclude an app</span></h3>
+        <p class="sub"><span class="ja">Applicationごとに対象のON/OFFを切り替えられます。OFFのアプリではTriggerを消費せず、Shortcutも配送せず、Guideも表示しません。Overrideは保持されるので、戻せばそのまま使えます。</span><span class="en">Turn any app on or off individually. While it's off, Rinvio consumes no triggers, delivers no shortcuts, and shows no guide there — your overrides are kept for when you turn it back on.</span></p>
+        <h3><span class="ja">アプリの流儀に寄せる</span><span class="en">Match an app's conventions</span></h3>
+        <p class="sub" style="margin-bottom:0"><span class="ja">各設定画面の「〜に寄せる」から、そのアプリで対応済みのShortcutをTriggerへ一括反映できます。曖昧になるActionは現在のTriggerのまま残します。</span><span class="en">Adopt one app's existing shortcuts as your triggers in a single step. Actions that would become ambiguous keep the trigger they have.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap two">
+    <div>
+      <h2><span class="ja">2つの権限、決まった用途</span><span class="en">Two permissions, two jobs</span></h2>
+      <p class="sub" style="margin-bottom:0">
+        <span class="ja"><b>Input Monitoring</b>は登録済みTriggerの検出だけに使い、打鍵を保存しません。<b>Accessibility</b>は対応Applicationへ公式Shortcutを配送するために使います。ChromeがForegroundのときは、Web Applicationの判定、Shortcut Guideの表示、最後に使ったApplicationの設定を開くためにForeground TabのURLを読み、schemeとhostだけを端末内で判定します。完全なURLは保存・送信しません。</span>
+        <span class="en"><b>Input Monitoring</b> detects your registered triggers and stores no keystrokes. <b>Accessibility</b> delivers the official shortcut to the app in front. When Chrome is in the foreground, Rinvio may read the foreground tab's URL to identify supported web apps, show the Shortcut Guide, or open settings for the last-used app. Only the scheme and host are evaluated locally; the full URL is not stored or transmitted.</span>
+      </p>
+    </div>
+    <div>
+      <ul class="nolist">
+        <li><span class="x">no</span><span class="ja">キー入力の記録</span><span class="en">key logging</span></li>
+        <li><span class="x">no</span><span class="ja">完全なURLの保存</span><span class="en">full URL storage</span></li>
+        <li><span class="x">no</span><span class="ja">テレメトリ</span><span class="en">telemetry</span></li>
+        <li><span class="x">no</span><span class="ja">ポーリング</span><span class="en">polling</span></li>
+        <li><span class="x">no</span><span class="ja">UIオートメーション</span><span class="en">UI automation</span></li>
+        <li><span class="x">no</span><span class="ja">バックグラウンドのルーティング</span><span class="en">background routing</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="ja">最初の5分</span><span class="en">The first five minutes</span></h2>
+    <p class="sub">
+      <span class="ja">権限は順番に効いてきます。配送前に挙動を確かめたい場合は、Dry Runで一度も送らずに試せます。</span>
+      <span class="en">The permissions build on each other. If you'd rather see the behavior before anything is sent, Dry Run runs the whole path and delivers nothing.</span>
+    </p>
+    <ol class="steps">
+      <li><p><span class="ja">起動時のRinvio Windowで、ActionとApplicationのMappingを確認する。</span><span class="en">Review the actions and each app's mapping in the window that opens on launch.</span></p>
+        <p class="note"><span class="ja">閉じたあとはMenu Barの<kbd>Open Rinvio…</kbd>から再表示できる。</span><span class="en">Reopen it later from <kbd>Open Rinvio…</kbd> in the menu bar.</span></p></li>
+      <li><p><span class="ja"><kbd>Information</kbd>の<kbd>Input Monitoring</kbd>から許可を要求し、System Settings → Privacy &amp; Security → Input MonitoringでRinvioを許可する。</span><span class="en">Request <kbd>Input Monitoring</kbd> from <kbd>Information</kbd>, then allow Rinvio in System Settings → Privacy &amp; Security → Input Monitoring.</span></p></li>
+      <li><p><span class="ja"><kbd>Settings</kbd>で<kbd>Developer Mode</kbd>をON、<kbd>Information</kbd> → <kbd>Developer Tools</kbd>で<kbd>Dry Run</kbd>を有効にする。</span><span class="en">Turn on <kbd>Developer Mode</kbd> in <kbd>Settings</kbd>, then enable <kbd>Dry Run</kbd> under <kbd>Information</kbd> → <kbd>Developer Tools</kbd>.</span></p>
+        <p class="note"><span class="ja">対象ApplicationをForegroundにしてTriggerを押す。Dry Runはshortcutを送信しない。</span><span class="en">Bring a supported app to the front and press a trigger. Dry Run sends no shortcut.</span></p></li>
+      <li><p><span class="ja">続いて<kbd>Shortcut Delivery</kbd>から許可を要求し、Privacy &amp; Security → AccessibilityでRinvioを許可する。</span><span class="en">Then request <kbd>Shortcut Delivery</kbd> and allow Rinvio under Privacy &amp; Security → Accessibility.</span></p></li>
+      <li><p><span class="ja">Dry Runを無効にして、対象ApplicationまたはWeb Application TabをForegroundにしてTriggerを押す。</span><span class="en">Turn Dry Run off, bring a supported app or web app tab to the front, and press a trigger.</span></p>
+        <p class="note"><span class="ja">Input Monitoringが未許可の場合、RinvioはTriggerを登録も消費もしない。</span><span class="en">Without Input Monitoring, Rinvio neither registers nor consumes triggers.</span></p></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2><span class="ja">ソースからビルドする</span><span class="en">Build it from source</span></h2>
+    <p class="sub"><span class="ja"><kbd>verify.sh</kbd>はformat lint、unit test、開発用app bundle生成、Info.plist、code signatureをまとめて検証します。</span><span class="en"><kbd>verify.sh</kbd> runs the format lint, the unit tests, the dev app bundle build, and the Info.plist and code signature checks in one pass.</span></p>
+<pre>Scripts/verify.sh
+open '.build/app/Rinvio.app'</pre>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fbar"><b>Rinvio</b></div>
+    <div class="ja">macOS Utility。現在のbuildでは、設定は <kbd>~/Library/Application Support/Rinvio/configuration.json</kbd> にschema version付きで保存されます。</div>
+    <div class="en">A macOS utility. In current builds, settings are stored with a schema version at <kbd>~/Library/Application Support/Rinvio/configuration.json</kbd>.</div>
+  </div>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var root = document.getElementById('root');
+
+  /* ---------- router data: real built-in meeting mappings ---------- */
+  var ACTIONS = [
+    {code:'KeyM', trig:'⌥M', ja:'ミュート切り替え', en:'Mute Toggle',       teams:'⌘⇧M', zoom:'⌘⇧A', meet:'⌘D'},
+    {code:'KeyC', trig:'⌥C', ja:'カメラ切り替え',   en:'Camera Toggle',     teams:'⌘⇧O', zoom:'⌘⇧V', meet:'⌘E'},
+    {code:'KeyH', trig:'⌥H', ja:'挙手',             en:'Raise Hand',        teams:'⌘⇧K', zoom:'⌥Y',  meet:'⌃⌘H'},
+    {code:'KeyS', trig:'⌥S', ja:'画面共有',         en:'Share Screen',      teams:'⌘⇧E', zoom:'⌘⇧S', meet:'⌃⌘T'},
+    {code:'KeyP', trig:'⌥P', ja:'参加者を表示',     en:'Show Participants', teams:null,  zoom:'⌘U',  meet:'⌃⌘P'},
+    {code:'KeyG', trig:'⌥G', ja:'会議から退出',     en:'Leave Meeting',     teams:'⌘⇧H', zoom:'⌘W',  meet:'⌘['}
+  ];
+  var current = 0, auto = null, userTook = false;
+
+  var chips = document.getElementById('chips');
+  ACTIONS.forEach(function(a, i){
+    var b = document.createElement('button');
+    b.type='button'; b.className='chip'; b.textContent = a.trig;
+    b.setAttribute('aria-pressed', String(i===0));
+    b.addEventListener('click', function(){ takeOver(i); });
+    chips.appendChild(b);
+  });
+
+  var bigkey  = document.getElementById('bigkey');
+  var glyph   = document.getElementById('bigkeyGlyph');
+  var label   = document.getElementById('bigkeyLabel');
+  var targets = document.getElementById('targets').querySelectorAll('.target');
+  var wires   = document.querySelectorAll('.wires path');
+
+  function paintRouter(silent){
+    var a = ACTIONS[current], lang = root.getAttribute('data-lang');
+    glyph.textContent = a.trig;
+    label.textContent = lang === 'ja' ? a.ja : a.en;
+    targets.forEach(function(t, i){
+      var v = a[t.dataset.app];
+      var out = t.querySelector('.out'), what = t.querySelector('.what');
+      out.textContent = v || '—';
+      out.classList.toggle('dash', !v);
+      what.textContent = v ? (lang==='ja' ? a.ja : a.en)
+                           : (lang==='ja' ? 'このアプリには該当なし — キーはそのまま通過' : 'no match here — the key passes through');
+      wires[i].classList.toggle('live', !!v);
+      if(!silent){ t.classList.remove('flip'); void t.offsetWidth; t.classList.add('flip'); }
+    });
+    chips.querySelectorAll('.chip').forEach(function(c, i){
+      c.setAttribute('aria-pressed', String(i===current));
+    });
+  }
+  function press(){
+    bigkey.classList.add('pressed');
+    setTimeout(function(){ bigkey.classList.remove('pressed'); }, 130);
+  }
+  function takeOver(i){
+    userTook = true;
+    if(auto){ clearInterval(auto); auto = null; }
+    current = i; press(); paintRouter();
+    var hint = document.getElementById('routerHint');
+    hint.querySelector('.ja').innerHTML = '他のTriggerも押してみてください — <b>⌥C</b> <b>⌥H</b> <b>⌥S</b>';
+    hint.querySelector('.en').innerHTML = 'Try the others — <b>⌥C</b> <b>⌥H</b> <b>⌥S</b>';
+  }
+  document.addEventListener('keydown', function(e){
+    if(!e.altKey || e.metaKey || e.ctrlKey) return;
+    for(var i=0;i<ACTIONS.length;i++){
+      if(ACTIONS[i].code === e.code){ e.preventDefault(); takeOver(i); return; }
+    }
+  });
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduce){
+    auto = setInterval(function(){
+      if(userTook) return;
+      current = (current + 1) % ACTIONS.length;
+      press(); paintRouter();
+    }, 2600);
+  }
+
+  /* ---------- screenshot ---------- */
+  var shotEl = document.getElementById('shot');
+  var SHOT_CAP = {
+    ja:'Meetingカテゴリ。各ActionにRinvio Triggerと、Teams / Zoom / Meetそれぞれへ配送する既定Shortcutが並ぶ。表示言語は日本語と英語を切り替えられる。',
+    en:'The Meeting category. Every action carries its Rinvio trigger and the default shortcut delivered to Teams, Zoom, and Meet. The display language switches between Japanese and English.'
+  };
+  function renderShot(){
+    var lang = root.getAttribute('data-lang');
+    shotEl.innerHTML =
+      '<img src="assets/shots/'+lang+'/01-meeting.jpeg" width="1160" height="720" alt="Rinvio settings window, Meeting category">' +
+      '<figcaption>'+SHOT_CAP[lang]+'</figcaption>';
+  }
+
+  /* ---------- coverage: real counts from built-in-catalog.json ---------- */
+  var COVERAGE = [
+    {n:16, ja:'Meeting',     en:'Meeting',     apps:['Microsoft Teams','Zoom Workplace','Google Meet']},
+    {n:28, ja:'Development', en:'Development', apps:['Codex','Claude','Visual Studio Code','Cursor','Xcode','IntelliJ IDEA','WebStorm','RubyMine','PyCharm','GoLand','CLion','Rider','Android Studio','Terminal','iTerm2','Ghostty']},
+    {n:6,  ja:'Chat',        en:'Chat',        apps:['Slack','Microsoft Teams','Discord','Cairn']},
+    {n:8,  ja:'Mail',        en:'Mail',        apps:['Apple Mail','Gmail','Microsoft Outlook']},
+    {n:6,  ja:'Browser',     en:'Browser',     apps:['Safari','Google Chrome','Firefox','Microsoft Edge','Brave','Arc']},
+    {n:5,  ja:'Finder',      en:'Finder',      apps:['Finder']},
+    {n:16, ja:'macOS',       en:'macOS',       apps:[], ref:{ja:'macOSが直接実行 — 参照と推奨値の提示のみ',en:'run by macOS itself — shown for reference only'}}
+  ];
+  var covEl = document.getElementById('coverage');
+  function renderCoverage(){
+    var lang = root.getAttribute('data-lang');
+    var unit = lang==='ja' ? 'Action' : 'actions';
+    covEl.innerHTML = COVERAGE.map(function(c){
+      var apps = c.apps.length
+        ? c.apps.map(function(a){ return '<span>'+a+'</span>'; }).join('')
+        : '<span class="ref">'+c.ref[lang]+'</span>';
+      return '<div class="cov"><div><div class="cov-cat">'+c[lang]+'</div>' +
+             '<div class="cov-h"><span class="cov-n">'+c.n+'</span><span class="cov-l">'+unit+'</span></div></div>' +
+             '<div class="cov-apps">'+apps+'</div></div>';
+    }).join('');
+  }
+
+  /* ---------- conversion table ---------- */
+  var CATS = {
+    meeting:{
+      label:'Meeting',
+      cols:['Microsoft Teams','Zoom Workplace','Google Meet'],
+      rows:[
+        ['⌥M','ミュート切り替え','Mute Toggle','⌘⇧M','⌘⇧A','⌘D'],
+        ['⌥C','カメラ切り替え','Camera Toggle','⌘⇧O','⌘⇧V','⌘E'],
+        ['⌥H','挙手','Raise Hand Toggle','⌘⇧K','⌥Y','⌃⌘H'],
+        ['⌥O','チャットを表示','Show Chat',null,'⌘⇧H','⌃⌘C'],
+        ['⌥P','参加者を表示','Show Participants',null,'⌘U','⌃⌘P'],
+        ['⌥L','字幕切り替え','Captions Toggle','⌘⇧A',null,'C'],
+        ['⌥S','画面共有','Share Screen','⌘⇧E','⌘⇧S','⌃⌘T'],
+        ['⌥G','会議から退出','Leave Meeting','⌘⇧H','⌘W','⌘[']
+      ]
+    },
+    chat:{
+      label:'Chat',
+      cols:['Slack','Microsoft Teams','Discord','Cairn'],
+      rows:[
+        ['⌘⌥J','会話へ移動','Jump to Conversation','⌘K','⌘G','⌘K',null],
+        ['⌘⌥F','メッセージを検索','Search Messages','⌘G','⌘E','⌘⇧F','⌘⇧F'],
+        ['⌘⌥W','新規メッセージ','New Message','⌘N','⌘N',null,null],
+        ['⌘⌥Page Up','前の会話','Previous Conversation','⌥↑',null,'⌥↑','⌥↑'],
+        ['⌘⌥Page Down','次の会話','Next Conversation','⌥↓',null,'⌥↓','⌥↓'],
+        ['⌘⌥U','未読を開く','Open Unreads','⌘⇧A',null,null,null]
+      ]
+    },
+    mail:{
+      label:'Mail',
+      cols:['Apple Mail','Gmail','Microsoft Outlook'],
+      rows:[
+        ['⌘N','新規メッセージ','New Message','⌘N','C','⌘N'],
+        ['⇧⌘F','全メールを検索','Search All Mail','⌘⌥F','/','⇧⌘F'],
+        ['⌥R','返信','Reply','⌘R','R','⌘R'],
+        ['⇧⌥R','全員に返信','Reply All','⇧⌘R','A','⇧⌘R'],
+        ['⌥F','転送','Forward','⇧⌘F','F','⌘J'],
+        ['⌥A','アーカイブ','Archive','⌃⌘A','E','⌃E'],
+        ['⌥G','新着を確認','Check for New Mail','⇧⌘N','⌘R','⌃⌘K']
+      ]
+    },
+    dev:{
+      label:'Development',
+      cols:['VS Code / Cursor','Xcode','JetBrains','Codex'],
+      rows:[
+        ['⌘⌥7','定義へ移動','Go to Definition','F12','⌃⌘J','⌘B',null],
+        ['⌘⌥8','戻る','Navigate Back','⌃-','⌃⌘←','⌘⌥←',null],
+        ['⌥K','コマンドパレット','Command Palette','⌘⇧P',null,'⌘⇧A','⌘K'],
+        ['⌥O','クイックオープン','Quick Open','⌘P','⌘⇧O','⌘⇧O','⌘P'],
+        ['⌃⌥F','ドキュメントを整形','Format Document','⇧⌥F',null,'⌘⌥L',null],
+        ['⌃⌥R','シンボル名を変更','Rename Symbol','F2',null,'⇧F6',null],
+        ['⌃⌥/','行コメント切り替え','Toggle Line Comment','⌘/','⌘/','⌘/',null],
+        ['⌃⌥G','プロジェクトを実行','Run Project','⌃F5','⌘R','⌃R',null],
+        ['⌥T','ターミナル切り替え','Toggle Terminal','⌃`',null,'⌥F12','⌘J']
+      ]
+    }
+  };
+  var catKeys = Object.keys(CATS), currentCat = 'meeting';
+
+  var tabs = document.getElementById('tabs');
+  catKeys.forEach(function(k){
+    var b = document.createElement('button');
+    b.type='button'; b.setAttribute('role','tab'); b.textContent = CATS[k].label;
+    b.setAttribute('aria-selected', String(k===currentCat));
+    b.addEventListener('click', function(){ currentCat = k; renderTable(); });
+    tabs.appendChild(b);
+  });
+
+  function renderTable(){
+    var lang = root.getAttribute('data-lang'), c = CATS[currentCat];
+    tabs.querySelectorAll('button').forEach(function(b, i){
+      b.setAttribute('aria-selected', String(catKeys[i]===currentCat));
+    });
+    document.querySelector('#mapTable thead').innerHTML =
+      '<tr><th>Action</th><th class="trig">' + (lang==='ja'?'押すキー':'You press') + '</th>' +
+      c.cols.map(function(n){ return '<th>' + n + '</th>'; }).join('') + '</tr>';
+    document.querySelector('#mapTable tbody').innerHTML = c.rows.map(function(r){
+      var name = lang==='ja' ? r[1] : r[2];
+      var cells = r.slice(3).map(function(v){
+        return '<td>' + (v ? '<span class="cap deliver">'+v+'</span>' : '<span class="cap none">—</span>') + '</td>';
+      }).join('');
+      return '<tr><td class="act">' + name + '</td><td class="trig"><span class="cap trigger">' + r[0] + '</span></td>' + cells + '</tr>';
+    }).join('');
+  }
+
+  /* ---------- language ---------- */
+  function setLang(l){
+    root.setAttribute('data-lang', l);
+    document.documentElement.lang = l;
+    document.querySelectorAll('[data-setlang]').forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.dataset.setlang === l));
+    });
+    try{ localStorage.setItem('qd-lang', l); }catch(e){}
+    renderTable(); renderShot(); renderCoverage(); paintRouter(true);
+  }
+  document.querySelectorAll('[data-setlang]').forEach(function(b){
+    b.addEventListener('click', function(){ setLang(b.dataset.setlang); });
+  });
+
+  var saved = null;
+  try{ saved = localStorage.getItem('qd-lang'); }catch(e){}
+  setLang(saved === 'en' ? 'en' : 'ja');
+})();
+</script>
