@@ -3,6 +3,23 @@ import QuickDrawCore
 import XCTest
 
 final class QuickDrawConfigurationTests: XCTestCase {
+  func testDevelopmentBundleUsesIsolatedConfigurationPath() throws {
+    let productionURL = try XCTUnwrap(
+      QuickDrawConfigurationStore.defaultFileURL(bundleIdentifier: "com.keishingu.rinvio")
+    )
+    let developmentURL = try XCTUnwrap(
+      QuickDrawConfigurationStore.defaultFileURL(bundleIdentifier: "com.keishingu.rinvio.dev")
+    )
+
+    XCTAssertEqual(productionURL.deletingLastPathComponent().lastPathComponent, "Rinvio")
+    XCTAssertEqual(developmentURL.deletingLastPathComponent().lastPathComponent, "Rinvio Dev")
+    XCTAssertNil(
+      QuickDrawConfigurationStore.legacyDefaultFileURL(
+        bundleIdentifier: "com.keishingu.rinvio.dev"
+      )
+    )
+  }
+
   func testDefaultsComeFromCatalogWithoutStoredOverrides() {
     let store = QuickDrawConfigurationStore(fileURL: nil)
 
