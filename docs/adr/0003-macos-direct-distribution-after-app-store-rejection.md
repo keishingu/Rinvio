@@ -60,7 +60,7 @@ Mac App Store向けにReference-onlyの別Applicationを提供する可能性は
 
 初期配布形式は署名・notarization済みDMGを想定する。販売、license、update、download hostingの具体的な方式は別のDecisionで定める。
 
-2026-08-30追記: 初期公開は需要と実機環境での挙動を確認するため、アカウント登録やLicense Keyのない無料配布とする。DMGはGitHub Releasesで公開し、LPから最新版へ直接リンクする。決済・licenseの検討は削除せず、将来の有料化を判断した時点で[Issue #13](https://github.com/keishingu/QuickDraw/issues/13)を再開する。
+2026-08-30追記: 初期公開は需要と実機環境での挙動を確認するため、アカウント登録やLicense Keyのない無料配布とする。DMGはGitHub Releasesで公開し、LPから最新版へ直接リンクする。決済・licenseの検討は削除せず、将来の有料化を判断した時点で[Issue #13](https://github.com/keishingu/Rinvio/issues/13)を再開する。
 
 ### 3. 公開製品名から`QuickDraw`を外す
 

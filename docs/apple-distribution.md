@@ -2,7 +2,7 @@
 
 RinvioはMac App Storeではなく、Developer ID Applicationで署名し、Appleのnotary serviceで検証したDMGとして直接配布する。初期公開はアカウント登録やLicense Keyのない無料配布とする。GitHub Actionsの`Build notarized Rinvio DMG`はUniversal appのbuild、署名、DMG作成、notarization、staple、checksum作成までを行う。
 
-配布判断の背景は[ADR-0003](adr/0003-macos-direct-distribution-after-app-store-rejection.md)、決済・licenseの検討は[GitHub Issue #13](https://github.com/keishingu/QuickDraw/issues/13)を参照する。
+配布判断の背景は[ADR-0003](adr/0003-macos-direct-distribution-after-app-store-rejection.md)、決済・licenseの検討は[GitHub Issue #13](https://github.com/keishingu/Rinvio/issues/13)を参照する。
 
 ## 配布物と識別子
 
@@ -50,12 +50,12 @@ RepositoryのSettings → Secrets and variables → Actions → Variablesへ登�
 
 ```sh
 base64 -i DeveloperIDApplication.p12 \
-  | gh secret set DEVELOPER_ID_APPLICATION_P12_BASE64 --repo keishingu/QuickDraw
+  | gh secret set DEVELOPER_ID_APPLICATION_P12_BASE64 --repo keishingu/Rinvio
 
-gh secret set DEVELOPER_ID_APPLICATION_P12_PASSWORD --repo keishingu/QuickDraw
+gh secret set DEVELOPER_ID_APPLICATION_P12_PASSWORD --repo keishingu/Rinvio
 
 base64 -i AuthKey_KEYID.p8 \
-  | gh secret set APP_STORE_CONNECT_API_KEY_P8_BASE64 --repo keishingu/QuickDraw
+  | gh secret set APP_STORE_CONNECT_API_KEY_P8_BASE64 --repo keishingu/Rinvio
 ```
 
 `.p12`、`.p8`、password、base64文字列をrepositoryへcommitしない。
@@ -74,14 +74,14 @@ base64 -i AuthKey_KEYID.p8 \
 公開後の最新版DMGは次の固定URLから取得できる。
 
 ```text
-https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg
+https://github.com/keishingu/Rinvio/releases/latest/download/Rinvio-macos-universal.dmg
 ```
 
 LP、README、Support pageはこのURLを参照する。GitHub Releaseのtagが変わってもリンクの更新は不要である。
 
 ## Website公開
 
-公開サイトは`docs/site/`を正本とし、<https://keishingu.github.io/QuickDraw/>で配信する。現在のGitHub Pages sourceは`gh-pages` branchであり、mainへのmergeだけではサイトへ反映されない。
+公開サイトは`docs/site/`を正本とし、<https://keishingu.github.io/Rinvio/>で配信する。現在のGitHub Pages sourceは`gh-pages` branchであり、mainへのmergeだけではサイトへ反映されない。
 
 初回無料公開は次の順序で行う。
 

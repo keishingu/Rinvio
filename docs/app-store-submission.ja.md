@@ -18,9 +18,9 @@
 | 基準価格 | US$7.99 |
 | 日本価格 | ¥800（手動指定） |
 | Copyright | © 2026 Kei Shingu |
-| Privacy Policy URL | https://github.com/keishingu/QuickDraw/blob/main/docs/privacy-policy.md |
-| Support URL | https://github.com/keishingu/QuickDraw/issues |
-| Marketing URL | https://github.com/keishingu/QuickDraw |
+| Privacy Policy URL | https://github.com/keishingu/Rinvio/blob/main/docs/privacy-policy.md |
+| Support URL | https://github.com/keishingu/Rinvio/issues |
+| Marketing URL | https://github.com/keishingu/Rinvio |
 
 有料配信にはAccount HolderによるPaid Apps Agreement、税務情報、入金口座の設定が必要。アメリカ合衆国を基準ストアフロントとしてUS$7.99を指定し、日本だけ¥800へ手動調整する。その他のストアフロントはUS$7.99を基準とするAppleの自動換算を使う。
 

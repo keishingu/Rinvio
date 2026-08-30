@@ -31,10 +31,10 @@
 
 Rinvioは現在、アカウントやLicense Keyなしで無料配布しています。
 
-- [Rinvio公式サイト](https://keishingu.github.io/QuickDraw/)
-- [最新版DMGをダウンロード](https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg)
-- [サポート](https://keishingu.github.io/QuickDraw/support.html)
-- [プライバシーポリシー](https://keishingu.github.io/QuickDraw/privacy.html)
+- [Rinvio公式サイト](https://keishingu.github.io/Rinvio/)
+- [最新版DMGをダウンロード](https://github.com/keishingu/Rinvio/releases/latest/download/Rinvio-macos-universal.dmg)
+- [サポート](https://keishingu.github.io/Rinvio/support.html)
+- [プライバシーポリシー](https://keishingu.github.io/Rinvio/privacy.html)
 
 macOS 15以降のApple silicon／Intel Macに対応しています。DMGを開いてRinvioをApplicationsへドラッグし、Applicationsから起動してください。配布物はDeveloper IDで署名し、Appleのnotary serviceで公証しています。
 

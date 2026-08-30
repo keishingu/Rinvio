@@ -9,14 +9,14 @@ final class ApplicationMenuControllerTests: XCTestCase {
   func testSupportURLPointsToPublicHelpPage() {
     XCTAssertEqual(
       QuickDrawAppModel.supportURL.absoluteString,
-      "https://keishingu.github.io/QuickDraw/support.html"
+      "https://keishingu.github.io/Rinvio/support.html"
     )
   }
 
   func testPrivacyURLPointsToPublicPolicyPage() {
     XCTAssertEqual(
       QuickDrawAppModel.privacyPolicyURL.absoluteString,
-      "https://keishingu.github.io/QuickDraw/privacy.html"
+      "https://keishingu.github.io/Rinvio/privacy.html"
     )
   }
 

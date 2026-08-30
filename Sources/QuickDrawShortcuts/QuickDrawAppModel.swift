@@ -620,9 +620,9 @@ struct TriggerAlignmentNotice: Equatable {
 @MainActor
 final class QuickDrawAppModel: ObservableObject {
   static let privacyPolicyURL = URL(
-    string: "https://keishingu.github.io/QuickDraw/privacy.html"
+    string: "https://keishingu.github.io/Rinvio/privacy.html"
   )!
-  static let supportURL = URL(string: "https://keishingu.github.io/QuickDraw/support.html")!
+  static let supportURL = URL(string: "https://keishingu.github.io/Rinvio/support.html")!
   private static let cheatSheetEnabledKey = "cheatSheetEnabled"
   private static let developerModeEnabledKey = "developerModeEnabled"
 
