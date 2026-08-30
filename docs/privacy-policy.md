@@ -24,7 +24,7 @@ Rinvio does not include third-party advertising, analytics, or tracking SDKs. Na
 
 ### Changes and contact
 
-Material changes to this policy will be published on the [Rinvio website](https://keishingu.github.io/QuickDraw/privacy.html) and in this repository. For privacy questions or support, see the [support page](https://keishingu.github.io/QuickDraw/support.html) or open an issue at <https://github.com/keishingu/QuickDraw/issues>.
+Material changes to this policy will be published on the [Rinvio website](https://keishingu.github.io/Rinvio/privacy.html) and in this repository. For privacy questions or support, see the [support page](https://keishingu.github.io/Rinvio/support.html) or open an issue at <https://github.com/keishingu/Rinvio/issues>.
 
 ## 日本語
 
@@ -48,4 +48,4 @@ Rinvioは第三者の広告、解析、Tracking SDKを含みません。対応�
 
 ### 変更と問い合わせ
 
-本ポリシーの重要な変更は[Rinvio公式サイト](https://keishingu.github.io/QuickDraw/privacy.html)とこのリポジトリで公開します。プライバシーに関する質問やサポートは、[サポートページ](https://keishingu.github.io/QuickDraw/support.html)を確認するか、<https://github.com/keishingu/QuickDraw/issues>でIssueを作成してください。
+本ポリシーの重要な変更は[Rinvio公式サイト](https://keishingu.github.io/Rinvio/privacy.html)とこのリポジトリで公開します。プライバシーに関する質問やサポートは、[サポートページ](https://keishingu.github.io/Rinvio/support.html)を確認するか、<https://github.com/keishingu/Rinvio/issues>でIssueを作成してください。
