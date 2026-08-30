@@ -27,6 +27,17 @@
 
 設計全体は [Rinvio プロダクト・技術設計書](docs/quickdraw-product-design.ja.md)、修飾キーの意味とmacOS / Finderのopt-in方針は [ショートカット設計原則とSystem / Finder opt-in設計](docs/shortcut-design-principles.ja.md) を参照してください。Browser ExtensionをRinvio.appのAdapterとして段階的モノレポで管理する判断は [ADR-0001](docs/adr/0001-browser-extension-adapter-and-monorepo.md) に記録しています。
 
+## Download
+
+Rinvioは現在、アカウントやLicense Keyなしで無料配布しています。
+
+- [Rinvio公式サイト](https://keishingu.github.io/QuickDraw/)
+- [最新版DMGをダウンロード](https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg)
+- [サポート](https://keishingu.github.io/QuickDraw/support.html)
+- [プライバシーポリシー](https://keishingu.github.io/QuickDraw/privacy.html)
+
+macOS 15以降のApple silicon／Intel Macに対応しています。DMGを開いてRinvioをApplicationsへドラッグし、Applicationsから起動してください。配布物はDeveloper IDで署名し、Appleのnotary serviceで公証しています。
+
 ## Build and test
 
 ```sh

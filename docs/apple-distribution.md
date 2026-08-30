@@ -1,6 +1,6 @@
 # RinvioのDeveloper ID署名とnotarization
 
-RinvioはMac App Storeではなく、Developer ID Applicationで署名し、Appleのnotary serviceで検証したDMGとして直接配布する。GitHub Actionsの`Build notarized Rinvio DMG`はUniversal appのbuild、署名、DMG作成、notarization、staple、checksum作成までを行う。
+RinvioはMac App Storeではなく、Developer ID Applicationで署名し、Appleのnotary serviceで検証したDMGとして直接配布する。初期公開はアカウント登録やLicense Keyのない無料配布とする。GitHub Actionsの`Build notarized Rinvio DMG`はUniversal appのbuild、署名、DMG作成、notarization、staple、checksum作成までを行う。
 
 配布判断の背景は[ADR-0003](adr/0003-macos-direct-distribution-after-app-store-rejection.md)、決済・licenseの検討は[GitHub Issue #13](https://github.com/keishingu/QuickDraw/issues/13)を参照する。
 
@@ -67,9 +67,30 @@ base64 -i AuthKey_KEYID.p8 \
 3. `version`へmarketing versionを入力する。
 4. 初回確認では`publish`をOFFのまま実行する。
 5. 成功後、7日間保持される`Rinvio-macos-notarized-*` artifactをdownloadして実機確認する。
-6. 決済・license・support pageを含む公開準備が整った後だけ、mainで`publish`をONにして実行する。
+6. Download、Support、Privacyの公開ページと実機検証が整った後だけ、mainで`publish`をONにして実行する。
 
 `publish`はmain以外では失敗する。VariablesまたはSecretsが不足している場合、Developer ID identityがTeam IDと一致しない場合、notarizationが`Accepted`以外の場合もartifactやReleaseを公開せず失敗する。
+
+公開後の最新版DMGは次の固定URLから取得できる。
+
+```text
+https://github.com/keishingu/QuickDraw/releases/latest/download/Rinvio-macos-universal.dmg
+```
+
+LP、README、Support pageはこのURLを参照する。GitHub Releaseのtagが変わってもリンクの更新は不要である。
+
+## Website公開
+
+公開サイトは`docs/site/`を正本とし、<https://keishingu.github.io/QuickDraw/>で配信する。現在のGitHub Pages sourceは`gh-pages` branchであり、mainへのmergeだけではサイトへ反映されない。
+
+初回無料公開は次の順序で行う。
+
+1. mainで`Build notarized Rinvio DMG`を`publish: ON`にして実行し、GitHub Releaseを作成する。
+2. `releases/latest/download/Rinvio-macos-universal.dmg`が200を返すことを確認する。
+3. `docs/site/`の内容を`gh-pages`へ公開する。
+4. 本番LPのDownload、Support、Privacyリンクを確認する。
+
+Releaseより先にLPを更新するとDownloadボタンが未公開URLを指すため、この順序を入れ替えない。
 
 ## Workflowが行うこと
 
@@ -123,7 +144,7 @@ spctl \
 
 Bundle IDが旧版から変わるため、既に開発版を使っていたMacではInput MonitoringとAccessibilityをRinvioへ改めて許可する必要がある。旧QuickDraw版の権限項目は不要になった時点でSystem Settingsから削除できる。
 
-現時点のworkflowは署名済み配布物を安全に生成するところまでを対象とする。license発行、購入者限定download、automatic updateは別途実装するまで提供しない。
+現時点のworkflowは署名済み配布物を安全に生成し、明示指定時だけ無料公開するところまでを対象とする。更新は最新版DMGでApplications内のRinvioを置き換える。license発行、購入者限定download、automatic updateは将来必要になった時点で別途実装する。
 
 ## 公式資料
 

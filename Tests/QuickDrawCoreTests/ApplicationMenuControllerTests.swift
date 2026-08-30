@@ -6,6 +6,20 @@ import XCTest
 
 @MainActor
 final class ApplicationMenuControllerTests: XCTestCase {
+  func testSupportURLPointsToPublicHelpPage() {
+    XCTAssertEqual(
+      QuickDrawAppModel.supportURL.absoluteString,
+      "https://keishingu.github.io/QuickDraw/support.html"
+    )
+  }
+
+  func testPrivacyURLPointsToPublicPolicyPage() {
+    XCTAssertEqual(
+      QuickDrawAppModel.privacyPolicyURL.absoluteString,
+      "https://keishingu.github.io/QuickDraw/privacy.html"
+    )
+  }
+
   func testDefinesForegroundApplicationShortcuts() {
     let controller = ApplicationMenuController()
     let items = controller.mainMenu.items.flatMap { $0.submenu?.items ?? [] }
