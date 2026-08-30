@@ -51,6 +51,9 @@ public enum ActionExecutionMode: String, Equatable, Sendable {
 
 public enum BrowserClassification: String, Equatable, Sendable {
   case googleMeet
+  case microsoftTeamsWeb
+  case zoomWeb
+  case notionWeb
   case gmail
   case other
   case unavailable
@@ -58,6 +61,9 @@ public enum BrowserClassification: String, Equatable, Sendable {
   public var displayName: String {
     switch self {
     case .googleMeet: "Google Meet"
+    case .microsoftTeamsWeb: "Microsoft Teams (Web)"
+    case .zoomWeb: "Zoom (Web)"
+    case .notionWeb: "Notion (Web)"
     case .gmail: "Gmail"
     case .other: "Other web page"
     case .unavailable: "Unavailable"
@@ -277,6 +283,9 @@ public final class ActionPipeline {
     guard url.scheme?.lowercased() == "https" else { return .other }
     return switch url.host?.lowercased() {
     case "meet.google.com": .googleMeet
+    case "teams.cloud.microsoft", "teams.microsoft.com": .microsoftTeamsWeb
+    case "app.zoom.us": .zoomWeb
+    case "www.notion.so", "notion.so": .notionWeb
     case "mail.google.com": .gmail
     default: .other
     }

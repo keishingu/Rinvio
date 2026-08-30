@@ -39,6 +39,32 @@ final class ActionPipelineTests: XCTestCase {
     XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["⌘E"])
   }
 
+  func testTeamsWebLiveRunUsesMatchingMeetingTarget() {
+    let fixture = makeFixture(
+      bundleIdentifier: "com.google.Chrome",
+      activeTabURL: URL(string: "https://teams.cloud.microsoft/v2/")!
+    )
+
+    let report = fixture.pipeline.run(action: .mute, mode: .live)
+
+    XCTAssertEqual(report.outcome.route?.target, .microsoftTeamsWeb)
+    XCTAssertEqual(report.browserClassification, .microsoftTeamsWeb)
+    XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["⌘⇧M"])
+  }
+
+  func testNotionLiveRunUsesNoteTarget() {
+    let fixture = makeFixture(
+      bundleIdentifier: "com.google.Chrome",
+      activeTabURL: URL(string: "https://www.notion.so/workspace/page")!
+    )
+
+    let report = fixture.pipeline.run(action: .openNote, mode: .live)
+
+    XCTAssertEqual(report.outcome.route?.target, .notionWeb)
+    XCTAssertEqual(report.browserClassification, .notionWeb)
+    XCTAssertEqual(fixture.deliverer.shortcuts.map(\.displayValue), ["⌘P"])
+  }
+
   func testGmailLiveRunQueriesTabAndDeliversRequestedAction() {
     let fixture = makeFixture(
       bundleIdentifier: "com.google.Chrome",
@@ -200,7 +226,7 @@ final class ActionPipelineTests: XCTestCase {
 
     for action in [
       Action.finderParentFolder, .finderOpenSelectedItem, .finderHome, .finderDesktop,
-      .finderDownloads,
+      .finderDownloads, .finderCopyPath,
     ] {
       let finderReport = finder.pipeline.run(action: action, mode: .live)
       XCTAssertEqual(finderReport.outcome.route?.target, .finder)
@@ -209,7 +235,7 @@ final class ActionPipelineTests: XCTestCase {
 
     XCTAssertEqual(
       finder.deliverer.shortcuts.map(\.displayValue),
-      ["⌘↑", "⌘↓", "⇧⌘H", "⇧⌘D", "⌘⌥L"]
+      ["⌘↑", "⌘↓", "⇧⌘H", "⇧⌘D", "⌘⌥L", "⌥⌘C"]
     )
     XCTAssertFalse(otherReport.outcome.consumesTrigger)
     XCTAssertTrue(otherApplication.deliverer.shortcuts.isEmpty)

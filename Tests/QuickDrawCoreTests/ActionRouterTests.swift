@@ -48,6 +48,85 @@ final class ActionRouterTests: XCTestCase {
       modifiers: [.command, .control], display: "⌃⌘H")
   }
 
+  func testRoutesTeamsWebByActiveTabInsteadOfFirstMeetingWebTarget() throws {
+    let url = URL(string: "https://teams.cloud.microsoft/v2/")
+    try assertRoute(
+      .mute, bundleIdentifier: "com.google.Chrome", activeTabURL: url, keyCode: 46,
+      modifiers: [.command, .shift], display: "⌘⇧M")
+  }
+
+  func testZoomWebIsDetectedButReportsUnavailableKeyboardMappings() {
+    assertFailure(
+      action: .mute,
+      bundleIdentifier: "com.google.Chrome",
+      activeTabURL: URL(string: "https://app.zoom.us/wc/123/join"),
+      expected: .unsupportedAction(action: .mute, target: .zoomWeb)
+    )
+  }
+
+  func testRoutesNoteActions() throws {
+    let notionURL = URL(string: "https://www.notion.so/workspace/page")
+    try assertRoute(
+      .openNote, bundleIdentifier: "com.google.Chrome", activeTabURL: notionURL,
+      keyCode: 35, modifiers: [.command], display: "⌘P")
+    try assertRoute(
+      .findInNote, bundleIdentifier: "com.google.Chrome", activeTabURL: notionURL,
+      keyCode: 3, modifiers: [.command], display: "⌘F")
+    try assertRoute(
+      .addComment, bundleIdentifier: "com.google.Chrome", activeTabURL: notionURL,
+      keyCode: 46, modifiers: [.command, .shift], display: "⇧⌘M")
+    try assertRoute(
+      .goUpOneLevel, bundleIdentifier: "com.google.Chrome", activeTabURL: notionURL,
+      keyCode: 32, modifiers: [.command, .shift], display: "⇧⌘U")
+    try assertRoute(
+      .openBlockMenu, bundleIdentifier: "com.google.Chrome", activeTabURL: notionURL,
+      keyCode: 44, modifiers: [.command], display: "⌘/")
+    try assertRoute(
+      .duplicateBlock, bundleIdentifier: "com.google.Chrome", activeTabURL: notionURL,
+      keyCode: 2, modifiers: [.command], display: "⌘D")
+
+    XCTAssertEqual(
+      try route(.newNote, bundleIdentifier: "notion.id").target,
+      .notion
+    )
+    try assertRoute(
+      .newNote, bundleIdentifier: "notion.id", keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+    try assertRoute(
+      .openNote, bundleIdentifier: "notion.id", keyCode: 35,
+      modifiers: [.command], display: "⌘P")
+
+    try assertRoute(
+      .newNote, bundleIdentifier: "md.obsidian", keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+    try assertRoute(
+      .openNote, bundleIdentifier: "md.obsidian", keyCode: 31,
+      modifiers: [.command], display: "⌘O")
+    try assertRoute(
+      .addComment, bundleIdentifier: "md.obsidian", keyCode: 44,
+      modifiers: [.command], display: "⌘/")
+
+    try assertRoute(
+      .openNote, bundleIdentifier: "com.apple.Notes", keyCode: 3,
+      modifiers: [.command, .option], display: "⌥⌘F")
+    try assertRoute(
+      .previousNote, bundleIdentifier: "com.apple.Notes", keyCode: 33,
+      modifiers: [.command, .option], display: "⌥⌘[")
+
+    try assertRoute(
+      .openNote, bundleIdentifier: "com.microsoft.onenote.mac", keyCode: 3,
+      modifiers: [.command, .option], display: "⌘⌥F")
+    try assertRoute(
+      .nextNote, bundleIdentifier: "com.microsoft.onenote.mac", keyCode: 121,
+      modifiers: [.command], display: "⌘Page Down")
+  }
+
+  func testRoutesCopySelectedFinderPath() throws {
+    try assertRoute(
+      .finderCopyPath, bundleIdentifier: "com.apple.finder", keyCode: 8,
+      modifiers: [.command, .option], display: "⌥⌘C")
+  }
+
   func testRoutesMailActionsForAppleMail() throws {
     let bundleIdentifier = "com.apple.mail"
     try assertRoute(
@@ -195,6 +274,9 @@ final class ActionRouterTests: XCTestCase {
       modifiers: [.command], display: "⌘N")
     try assertRoute(
       .newSession, bundleIdentifier: "com.anthropic.claudefordesktop", keyCode: 45,
+      modifiers: [.command], display: "⌘N")
+    try assertRoute(
+      .newSession, bundleIdentifier: "com.google.antigravity", keyCode: 45,
       modifiers: [.command], display: "⌘N")
   }
 

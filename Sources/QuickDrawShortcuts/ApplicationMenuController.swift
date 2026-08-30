@@ -18,6 +18,7 @@ final class ApplicationMenuController: NSObject {
   private let quitItem = NSMenuItem()
   private let closeWindowItem = NSMenuItem()
   private let meetingItem = NSMenuItem()
+  private let noteItem = NSMenuItem()
   private let chatItem = NSMenuItem()
   private let mailItem = NSMenuItem()
   private let developmentItem = NSMenuItem()
@@ -76,6 +77,7 @@ final class ApplicationMenuController: NSObject {
     fileMenu.addItem(closeWindowItem)
 
     configure(meetingItem, section: .meeting, key: "m")
+    configure(noteItem, section: .note, key: "n")
     configure(chatItem, section: .chat, key: "c")
     configure(mailItem, section: .mail, key: "e")
     configure(developmentItem, section: .development, key: "d")
@@ -91,6 +93,7 @@ final class ApplicationMenuController: NSObject {
       modifiers: [.option, .shift]
     )
     navigateMenu.addItem(meetingItem)
+    navigateMenu.addItem(noteItem)
     navigateMenu.addItem(chatItem)
     navigateMenu.addItem(mailItem)
     navigateMenu.addItem(developmentItem)
@@ -146,6 +149,7 @@ final class ApplicationMenuController: NSObject {
     quitItem.title = copy.quitQuickDraw
     closeWindowItem.title = copy.closeWindow
     meetingItem.title = copy.sectionTitle(.meeting)
+    noteItem.title = copy.sectionTitle(.note)
     chatItem.title = copy.sectionTitle(.chat)
     mailItem.title = copy.sectionTitle(.mail)
     developmentItem.title = copy.sectionTitle(.development)

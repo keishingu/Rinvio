@@ -7,11 +7,38 @@ public enum CatalogExecutionMethod: String, Codable, Sendable {
 public struct CatalogWebApplication: Codable, Equatable, Sendable {
   public let browserTarget: ActionTarget
   public let scheme: String
-  public let host: String
+  public let hosts: [String]
+
+  public var host: String { hosts[0] }
+
+  private enum CodingKeys: String, CodingKey {
+    case browserTarget
+    case scheme
+    case host
+    case hosts
+  }
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    browserTarget = try container.decode(ActionTarget.self, forKey: .browserTarget)
+    scheme = try container.decode(String.self, forKey: .scheme)
+    if let hosts = try container.decodeIfPresent([String].self, forKey: .hosts) {
+      self.hosts = hosts
+    } else {
+      self.hosts = [try container.decode(String.self, forKey: .host)]
+    }
+  }
+
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(browserTarget, forKey: .browserTarget)
+    try container.encode(scheme, forKey: .scheme)
+    try container.encode(hosts, forKey: .hosts)
+  }
 
   public func matches(_ url: URL) -> Bool {
     url.scheme?.lowercased() == scheme.lowercased()
-      && url.host?.lowercased() == host.lowercased()
+      && hosts.contains { $0.lowercased() == url.host?.lowercased() }
   }
 }
 
@@ -203,6 +230,9 @@ public struct BuiltInCatalog: Sendable {
       guard let webApplication = application.webApplication else { continue }
       guard
         webApplication.browserTarget != application.target,
+        !webApplication.scheme.isEmpty,
+        !webApplication.hosts.isEmpty,
+        webApplication.hosts.allSatisfy({ !$0.isEmpty }),
         document.applications.contains(where: {
           $0.target == webApplication.browserTarget && !$0.bundleIdentifiers.isEmpty
         })
