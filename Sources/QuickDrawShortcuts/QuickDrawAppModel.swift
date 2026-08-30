@@ -681,6 +681,35 @@ struct TriggerAlignmentNotice: Equatable {
   let skippedDuplicateCount: Int
 }
 
+struct ShortcutGuideModifierCombination: Identifiable {
+  private static let modifierOrder: [(ModifierKey, String)] = [
+    (.command, "⌘"),
+    (.option, "⌥"),
+    (.control, "⌃"),
+    (.shift, "⇧"),
+  ]
+
+  static let all: [Self] = [
+    [.command], [.option], [.control], [.shift],
+    [.command, .option], [.command, .control], [.command, .shift],
+    [.option, .control], [.option, .shift], [.control, .shift],
+    [.command, .option, .control], [.command, .option, .shift],
+    [.command, .control, .shift], [.option, .control, .shift],
+    [.command, .option, .control, .shift],
+  ].map(Self.init(modifiers:))
+
+  let modifiers: Set<ModifierKey>
+
+  var id: String {
+    Self.modifierOrder.compactMap { modifiers.contains($0.0) ? $0.0.rawValue : nil }
+      .joined(separator: "+")
+  }
+
+  var symbols: String {
+    Self.modifierOrder.compactMap { modifiers.contains($0.0) ? $0.1 : nil }.joined()
+  }
+}
+
 @MainActor
 final class QuickDrawAppModel: ObservableObject {
   static let privacyPolicyURL = URL(
@@ -688,12 +717,14 @@ final class QuickDrawAppModel: ObservableObject {
   )!
   static let supportURL = URL(string: "https://keishingu.github.io/Rinvio/support.html")!
   private static let cheatSheetEnabledKey = "cheatSheetEnabled"
+  private static let cheatSheetModifierCombinationsKey = "cheatSheetModifierCombinations"
   private static let developerModeEnabledKey = "developerModeEnabled"
 
   @Published private(set) var language: AppLanguage
   @Published private(set) var isEnabled = true
   @Published private(set) var isDryRunEnabled = false
   @Published private(set) var isCheatSheetEnabled: Bool
+  @Published private(set) var cheatSheetModifierCombinations: Set<Set<ModifierKey>>
   @Published private(set) var isDeveloperModeEnabled: Bool
   @Published private(set) var hasInputMonitoringPermission = false
   @Published private(set) var hasPostEventPermission = false
@@ -726,6 +757,7 @@ final class QuickDrawAppModel: ObservableObject {
   var onSetEnabled: ((Bool) -> Void)?
   var onSetDryRun: ((Bool) -> Void)?
   var onSetCheatSheetEnabled: ((Bool) -> Void)?
+  var onSetCheatSheetModifierCombinations: ((Set<Set<ModifierKey>>) -> Void)?
   var onSetDeveloperMode: ((Bool) -> Void)?
   var onPreviewCheatSheet: (() -> Void)?
   var onRunDryCheck: ((Action) -> Void)?
@@ -756,6 +788,16 @@ final class QuickDrawAppModel: ObservableObject {
     language = AppLanguage.preferred(defaults: defaults)
     isCheatSheetEnabled =
       defaults.object(forKey: Self.cheatSheetEnabledKey) as? Bool ?? true
+    if let storedIDs = defaults.stringArray(forKey: Self.cheatSheetModifierCombinationsKey) {
+      cheatSheetModifierCombinations = Set(
+        ShortcutGuideModifierCombination.all.compactMap {
+          storedIDs.contains($0.id) ? $0.modifiers : nil
+        })
+    } else {
+      cheatSheetModifierCombinations = Set(
+        ShortcutGuideModifierCombination.all.map(\.modifiers)
+      )
+    }
     isDeveloperModeEnabled =
       defaults.object(forKey: Self.developerModeEnabledKey) as? Bool ?? false
     configuration = configurationStore.configuration
@@ -811,6 +853,24 @@ final class QuickDrawAppModel: ObservableObject {
     isCheatSheetEnabled = enabled
     defaults.set(enabled, forKey: Self.cheatSheetEnabledKey)
     onSetCheatSheetEnabled?(enabled)
+  }
+
+  func setCheatSheetModifierCombination(
+    _ modifiers: Set<ModifierKey>,
+    enabled: Bool
+  ) {
+    if enabled {
+      cheatSheetModifierCombinations.insert(modifiers)
+    } else {
+      cheatSheetModifierCombinations.remove(modifiers)
+    }
+    defaults.set(
+      ShortcutGuideModifierCombination.all.compactMap {
+        cheatSheetModifierCombinations.contains($0.modifiers) ? $0.id : nil
+      },
+      forKey: Self.cheatSheetModifierCombinationsKey
+    )
+    onSetCheatSheetModifierCombinations?(cheatSheetModifierCombinations)
   }
 
   func setDeveloperModeEnabled(_ enabled: Bool) {

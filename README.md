@@ -42,7 +42,7 @@ macOS 15以降のApple silicon／Intel Macに対応しています。DMGを開�
 
 ```sh
 Scripts/verify.sh
-open '.build/app/Rinvio.app'
+open '.build/app/Rinvio Dev.app'
 ```
 
 `Scripts/verify.sh` はformat lint、unit test、開発用app bundle生成、Info.plist、code signatureをまとめて検証します。Developer ID署名、Universal build、DMG、notarizationの準備とGitHub Actions設定は[直接配布ガイド](docs/apple-distribution.md)を参照してください。App Store用Target、`Scripts/verify-app-store.sh`、提出資料は却下経緯の再現・記録のため残していますが、通常CIと公開経路には使用しません。
@@ -87,7 +87,7 @@ Rinvio自身がForegroundの間は、通常のApplication Shortcutで画面と�
 | Close Window | `⌘W` |
 | Quit Rinvio | `⌘Q` |
 
-対応ApplicationをForegroundにして、Rinvio TriggerまたはApplication Shortcutの修飾キー（`⌘⌥`や`⌘⇧`など）を約0.6秒長押しすると、その修飾キーから実行できるActionを画面中央のHUDへ表示します。Rinvio Triggerが未割り当てでも、対象ApplicationにShortcutがあればApplication側の項目として表示します。HUD表示中に修飾キーの組み合わせを変えた場合は、閉じたり再度待ったりせず内容を即時更新します。修飾キーを離す、通常キーを押す、またはRinvio Shortcutを実行すると閉じ、修飾キーをすべて離すまで再表示しません。キー入力自体は消費しないため、`⌥Tab`など元の操作はそのまま動作します。各ActionにはRinvio Triggerと、対象Applicationへ配送する既定Shortcut（Mapping Overrideがあれば変更後の値）を罫線で分けて表示します。修飾キーを持たないShortcutは長押し表示の対象外ですが、`Preview`では確認できます。
+対応ApplicationをForegroundにして、Settingsで選択した修飾キーの組み合わせ（`⌘`、`⌘⌥`、`⇧`など）を約0.6秒長押しすると、その修飾キーから実行できるActionを画面中央のHUDへ表示します。15通りの組み合わせを個別にON/OFFでき、初期状態ではすべてONです。Rinvio Triggerが未割り当てでも、対象ApplicationにShortcutがあればApplication側の項目として表示します。HUD表示中に修飾キーの組み合わせを変えた場合は、閉じたり再度待ったりせず内容を即時更新します。修飾キーを離す、通常キーを押す、またはRinvio Shortcutを実行すると閉じ、修飾キーをすべて離すまで再表示しません。キー入力自体は消費しないため、`⌥Tab`など元の操作はそのまま動作します。各ActionにはRinvio Triggerと、対象Applicationへ配送する既定Shortcut（Mapping Overrideがあれば変更後の値）を罫線で分けて表示します。修飾キーを持たないShortcutは長押し表示の対象外ですが、`Preview`では確認できます。
 
 Sidebarの`Settings`から表示をON/OFFでき、`Preview`で最後に使った対応Application向けの内容を確認できます。設定はUserDefaultsへ保存します。
 

@@ -53,7 +53,7 @@ final class ApplicationMenuController: NSObject {
   }
 
   private func configureMenus() {
-    addTopLevelMenu(appMenu, title: "Rinvio")
+    addTopLevelMenu(appMenu, title: applicationDisplayName)
     addTopLevelMenu(fileMenu, title: "File")
     addTopLevelMenu(navigateMenu, title: "Navigate")
     addTopLevelMenu(helpMenu, title: "Help")

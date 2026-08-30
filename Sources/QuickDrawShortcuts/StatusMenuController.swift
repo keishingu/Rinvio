@@ -53,7 +53,7 @@ final class StatusMenuController: NSObject {
 
     if let button = statusItem.button {
       button.image = Self.quickDrawStatusImage()
-      button.setAccessibilityLabel("Rinvio")
+      button.setAccessibilityLabel(applicationDisplayName)
     }
 
     let menu = NSMenu()

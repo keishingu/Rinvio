@@ -88,7 +88,7 @@ struct QuickDrawRootView: View {
         }
       }
     }
-    .navigationTitle("Rinvio")
+    .navigationTitle(applicationDisplayName)
     .navigationSplitViewColumnWidth(min: 170, ideal: 200, max: 240)
     .safeAreaInset(edge: .bottom) {
       VStack(alignment: .leading, spacing: 4) {
@@ -105,7 +105,7 @@ struct QuickDrawRootView: View {
           Spacer(minLength: 4)
 
           Toggle(
-            "Rinvio",
+            applicationDisplayName,
             isOn: Binding(
               get: { model.isEnabled },
               set: model.setEnabled
@@ -115,7 +115,7 @@ struct QuickDrawRootView: View {
           .toggleStyle(.switch)
           .fixedSize()
           .frame(minWidth: 44, minHeight: 44)
-          .accessibilityLabel("Rinvio")
+          .accessibilityLabel(applicationDisplayName)
           .accessibilityValue(model.isEnabled ? model.copy.enabled : model.copy.paused)
           .help(model.isEnabled ? model.copy.pauseQuickDraw : model.copy.enableQuickDraw)
         }
@@ -284,6 +284,47 @@ private struct SettingsView: View {
           Text(model.copy.shortcutGuideDescription)
             .font(.caption)
             .foregroundStyle(.secondary)
+          VStack(alignment: .leading, spacing: 8) {
+            Text(model.copy.modifierCombinationsToShow)
+              .font(.caption.weight(.medium))
+              .foregroundStyle(.secondary)
+            LazyVGrid(
+              columns: [GridItem(.adaptive(minimum: 54, maximum: 72), spacing: 8)],
+              spacing: 8
+            ) {
+              ForEach(ShortcutGuideModifierCombination.all) { combination in
+                let isSelected = model.cheatSheetModifierCombinations.contains(
+                  combination.modifiers
+                )
+                Button {
+                  model.setCheatSheetModifierCombination(
+                    combination.modifiers,
+                    enabled: !isSelected
+                  )
+                } label: {
+                  Text(combination.symbols)
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: 30)
+                    .background(
+                      isSelected ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.08),
+                      in: RoundedRectangle(cornerRadius: 7)
+                    )
+                    .overlay {
+                      RoundedRectangle(cornerRadius: 7)
+                        .stroke(
+                          isSelected ? Color.accentColor : Color.secondary.opacity(0.2),
+                          lineWidth: isSelected ? 1.5 : 1
+                        )
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(model.copy.showShortcutGuideFor(combination.symbols))
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+              }
+            }
+          }
+          .disabled(!model.isCheatSheetEnabled)
+          .opacity(model.isCheatSheetEnabled ? 1 : 0.5)
           Button(model.copy.previewShortcutGuide) {
             model.previewCheatSheet()
           }
@@ -303,7 +344,7 @@ private struct SettingsView: View {
         }
 
         Section(model.copy.aboutQuickDraw) {
-          LabeledContent(model.copy.productName, value: "Rinvio")
+          LabeledContent(model.copy.productName, value: applicationDisplayName)
           LabeledContent(model.copy.version, value: model.versionDescription)
           LabeledContent(model.copy.copyright, value: "© 2026 Kei Shingu")
           Button(model.copy.privacyPolicy) {
@@ -316,7 +357,7 @@ private struct SettingsView: View {
       }
       .formStyle(.grouped)
     }
-    .navigationTitle("Rinvio")
+    .navigationTitle(applicationDisplayName)
   }
 }
 
@@ -361,7 +402,7 @@ private struct ActionsView: View {
       }
       .listStyle(.inset)
     }
-    .navigationTitle("Rinvio")
+    .navigationTitle(applicationDisplayName)
   }
 
   private var alignmentControls: some View {
@@ -570,7 +611,7 @@ private struct ApplicationsView: View {
         .padding(.bottom, 12)
       }
     }
-    .navigationTitle("Rinvio")
+    .navigationTitle(applicationDisplayName)
   }
 
   private func domainHeader(_ domain: ActionDomain) -> some View {
@@ -725,7 +766,7 @@ private struct DiagnosticsView: View {
       }
       .formStyle(.grouped)
     }
-    .navigationTitle("Rinvio")
+    .navigationTitle(applicationDisplayName)
   }
 }
 

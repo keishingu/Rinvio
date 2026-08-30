@@ -3,7 +3,15 @@ set -euo pipefail
 
 project_root="${0:A:h:h}"
 configuration="${1:-debug}"
-app_name="Rinvio.app"
+if [[ "$configuration" == "debug" ]]; then
+    app_name="Rinvio Dev.app"
+    display_name="Rinvio Dev"
+    bundle_identifier="com.keishingu.rinvio.dev"
+else
+    app_name="Rinvio.app"
+    display_name="Rinvio"
+    bundle_identifier="com.keishingu.rinvio"
+fi
 output_root="$project_root/.build/app"
 app_bundle="$output_root/$app_name"
 
@@ -17,6 +25,9 @@ binary_path="$(swift build --package-path "$project_root" --configuration "$conf
 mkdir -p "$app_bundle/Contents/MacOS" "$app_bundle/Contents/Resources"
 cp "$binary_path" "$app_bundle/Contents/MacOS/Rinvio"
 cp "$project_root/AppResources/Info.plist" "$app_bundle/Contents/Info.plist"
+plutil -replace CFBundleDisplayName -string "$display_name" "$app_bundle/Contents/Info.plist"
+plutil -replace CFBundleName -string "$display_name" "$app_bundle/Contents/Info.plist"
+plutil -replace CFBundleIdentifier -string "$bundle_identifier" "$app_bundle/Contents/Info.plist"
 cp \
     "$project_root/Sources/QuickDrawCore/Resources/built-in-catalog.json" \
     "$app_bundle/Contents/Resources/built-in-catalog.json"
@@ -52,7 +63,7 @@ fi
 codesign \
     --force \
     --sign "$identity" \
-    --identifier com.keishingu.rinvio \
+    --identifier "$bundle_identifier" \
     --timestamp=none \
     "$app_bundle"
 
