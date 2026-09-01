@@ -49,6 +49,16 @@ final class ShortcutCheatSheetController {
     pendingPreviewDismissal != nil && panel.isVisible
   }
 
+  var isPresentationPending: Bool { pendingPresentation != nil }
+
+  var allowedModifierCombinations = Set(
+    ShortcutGuideModifierCombination.all.map(\.modifiers)
+  ) {
+    didSet {
+      if !allowedModifierCombinations.contains(currentModifiers) { reset() }
+    }
+  }
+
   var isCheatSheetEnabled = true {
     didSet {
       if !isCheatSheetEnabled { reset() }
@@ -110,6 +120,10 @@ final class ShortcutCheatSheetController {
       return
     }
     guard isCheatSheetEnabled, isQuickDrawEnabled, !isSuppressed else {
+      return
+    }
+    guard allowedModifierCombinations.contains(modifiers) else {
+      reset()
       return
     }
 
@@ -368,7 +382,7 @@ private struct ShortcutCheatSheetView: View {
 
       HStack(spacing: 10) {
         Spacer(minLength: 0)
-        Text("Rinvio")
+        Text(applicationDisplayName)
           .frame(width: shortcutColumnWidth, alignment: .center)
         Divider()
         Text(content.applicationName)

@@ -46,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       languageProvider: { [weak model] in model?.language ?? .english }
     )
     cheatSheetController.isCheatSheetEnabled = model.isCheatSheetEnabled
+    cheatSheetController.allowedModifierCombinations = model.cheatSheetModifierCombinations
     let windowController = ConfigurationWindowController(model: model)
     let coordinator = HotKeyConfigurationCoordinator(
       registrar: GlobalHotKeyRegistrar(),
@@ -95,6 +96,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     model.onSetCheatSheetEnabled = { [weak cheatSheetController] enabled in
       cheatSheetController?.isCheatSheetEnabled = enabled
+    }
+    model.onSetCheatSheetModifierCombinations = { [weak cheatSheetController] combinations in
+      cheatSheetController?.allowedModifierCombinations = combinations
     }
     model.onSetDeveloperMode = { [weak menuController] enabled in
       menuController?.setDeveloperMode(enabled)

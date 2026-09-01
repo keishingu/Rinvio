@@ -108,6 +108,27 @@ final class ApplicationMenuControllerTests: XCTestCase {
     XCTAssertTrue(reloadedModel.isDeveloperModeEnabled)
   }
 
+  func testShortcutGuideModifierCombinationsDefaultToAllAndPersist() {
+    let suiteName = "\(#function).\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+
+    let model = QuickDrawAppModel(
+      defaults: defaults,
+      configurationStore: QuickDrawConfigurationStore(fileURL: nil)
+    )
+    XCTAssertEqual(ShortcutGuideModifierCombination.all.count, 15)
+    XCTAssertEqual(model.cheatSheetModifierCombinations.count, 15)
+
+    model.setCheatSheetModifierCombination([.command, .option], enabled: false)
+    let reloadedModel = QuickDrawAppModel(
+      defaults: defaults,
+      configurationStore: QuickDrawConfigurationStore(fileURL: nil)
+    )
+    XCTAssertFalse(reloadedModel.cheatSheetModifierCombinations.contains([.command, .option]))
+    XCTAssertTrue(reloadedModel.cheatSheetModifierCombinations.contains([.shift]))
+  }
+
   func testDisablingDeveloperModeAlsoDisablesDryRun() {
     let model = QuickDrawAppModel(
       defaults: UserDefaults(suiteName: #function)!,

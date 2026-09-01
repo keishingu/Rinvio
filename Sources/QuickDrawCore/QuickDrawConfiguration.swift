@@ -103,6 +103,7 @@ public enum QuickDrawConfigurationError: LocalizedError, Equatable {
 public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
   ApplicationEnablementProviding, @unchecked Sendable
 {
+  private static let developmentBundleIdentifier = "com.keishingu.rinvio.dev"
   private static let functionKeyCodes: Set<UInt16> = [
     122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111, 105, 107, 113, 106, 64, 79,
     80, 90,
@@ -112,10 +113,10 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
   private let fileURL: URL?
   private var storedConfiguration: QuickDrawConfiguration
 
-  public convenience init() {
+  public convenience init(bundleIdentifier: String? = Bundle.main.bundleIdentifier) {
     self.init(
-      fileURL: Self.defaultFileURL(),
-      legacyFileURL: Self.legacyDefaultFileURL()
+      fileURL: Self.defaultFileURL(bundleIdentifier: bundleIdentifier),
+      legacyFileURL: Self.legacyDefaultFileURL(bundleIdentifier: bundleIdentifier)
     )
   }
 
@@ -155,14 +156,23 @@ public final class QuickDrawConfigurationStore: ShortcutOverrideProviding,
     }
   }
 
-  public static func defaultFileURL(fileManager: FileManager = .default) -> URL? {
-    fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
-      .appendingPathComponent("Rinvio", isDirectory: true)
+  public static func defaultFileURL(
+    fileManager: FileManager = .default,
+    bundleIdentifier: String? = Bundle.main.bundleIdentifier
+  ) -> URL? {
+    let directoryName =
+      bundleIdentifier == developmentBundleIdentifier ? "Rinvio Dev" : "Rinvio"
+    return fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+      .appendingPathComponent(directoryName, isDirectory: true)
       .appendingPathComponent("configuration.json", isDirectory: false)
   }
 
-  public static func legacyDefaultFileURL(fileManager: FileManager = .default) -> URL? {
-    fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+  public static func legacyDefaultFileURL(
+    fileManager: FileManager = .default,
+    bundleIdentifier: String? = Bundle.main.bundleIdentifier
+  ) -> URL? {
+    guard bundleIdentifier != developmentBundleIdentifier else { return nil }
+    return fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
       .appendingPathComponent("QuickDraw", isDirectory: true)
       .appendingPathComponent("configuration.json", isDirectory: false)
   }

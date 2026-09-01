@@ -1,6 +1,9 @@
 import Foundation
 import QuickDrawCore
 
+let applicationDisplayName =
+  Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Rinvio"
+
 enum AppLanguage: String, CaseIterable, Identifiable {
   case japanese = "ja"
   case english = "en"
@@ -118,8 +121,17 @@ struct QuickDrawCopy {
   }
   var shortcutGuideDescription: String {
     text(
-      "Rinvioまたはアプリ側ショートカットの修飾キーを約0.6秒長押しすると、そこから実行できるActionを表示します。キー入力は消費しません。",
-      "Hold Rinvio or app shortcut modifier keys for about 0.6 seconds to see the available Actions. The modifier keys remain available to the app."
+      "選択した修飾キーを約0.6秒長押しすると、そこから実行できるActionを表示します。キー入力は消費しません。",
+      "Hold a selected modifier combination for about 0.6 seconds to see the available Actions. The modifier keys remain available to the app."
+    )
+  }
+  var modifierCombinationsToShow: String {
+    text("表示する修飾キー", "Modifier combinations")
+  }
+  func showShortcutGuideFor(_ modifiers: String) -> String {
+    text(
+      "\(modifiers)の長押しでショートカットガイドを表示",
+      "Show the Shortcut Guide when holding \(modifiers)"
     )
   }
   var previewShortcutGuide: String { text("プレビュー", "Preview") }
@@ -411,7 +423,7 @@ struct QuickDrawCopy {
   }
 
   var menuTitle: String {
-    "Rinvio"
+    applicationDisplayName
   }
   var openQuickDraw: String { text("Rinvioを開く…", "Open Rinvio…") }
   var dryRunMenu: String {

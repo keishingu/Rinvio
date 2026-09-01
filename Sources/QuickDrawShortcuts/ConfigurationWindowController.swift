@@ -7,7 +7,7 @@ final class ConfigurationWindowController: NSWindowController, NSWindowDelegate 
     let content = QuickDrawRootView(model: model)
     let hostingController = NSHostingController(rootView: content)
     let window = NSWindow(contentViewController: hostingController)
-    window.title = "Rinvio"
+    window.title = applicationDisplayName
     window.setContentSize(NSSize(width: 1_160, height: 720))
     window.minSize = NSSize(width: 860, height: 560)
     window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]

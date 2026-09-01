@@ -51,4 +51,22 @@ final class ShortcutCheatSheetControllerTests: XCTestCase {
     XCTAssertTrue(controller.isPreviewVisible)
     controller.reset()
   }
+
+  func testOnlySelectedModifierCombinationsScheduleHUD() {
+    let controller = ShortcutCheatSheetController(
+      configurationStore: QuickDrawConfigurationStore(fileURL: nil),
+      foregroundProvider: ForegroundApplicationProvider(),
+      activeTabProvider: ChromeActiveTabProvider(),
+      languageProvider: { .english }
+    )
+    controller.allowedModifierCombinations = []
+
+    controller.handleModifierChange([.option])
+    XCTAssertFalse(controller.isPresentationPending)
+
+    controller.allowedModifierCombinations = [[.option]]
+    controller.handleModifierChange([.option])
+    XCTAssertTrue(controller.isPresentationPending)
+    controller.reset()
+  }
 }
